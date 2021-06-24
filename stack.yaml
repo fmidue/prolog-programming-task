@@ -1,0 +1,7 @@
+resolver: lts-16.31
+packages:
+- .
+extra-deps:
+- git: https://github.com/owestphal/prolog
+  commit: 0d98961f66b441f26e611e1b777390e616454839
+- prolog-graph-lib-0.2.1.1

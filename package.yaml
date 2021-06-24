@@ -1,0 +1,50 @@
+name:                prolog-programming-task
+version:             0.1.0.0
+github:              "fmidue/prolog-programming-task"
+license:             MIT
+maintainer:          "marcellus.siegburg@uni-due.de"
+copyright:           "2020 Formal Methods in Computer Science - University of Duisburg-Essen"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+synopsis:            A task type for prolog programming developed for the e-learning platform Autotool
+category:            E-Learning
+
+description:         Please see the README on GitHub at <https://github.com/fmidue/prolog-programming-task#readme>
+
+dependencies:
+- MonadRandom
+- base >= 4.7 && < 5
+- bytestring
+- containers
+- graphviz
+- mtl
+- parsec
+- prolog
+- prolog-graph-lib
+- random-shuffle
+- raw-strings-qq
+- text
+- wl-pprint-text
+
+library:
+  source-dirs: src
+  ghc-options:
+  - -Wall
+  - -Werror
+  - -Wwarn=incomplete-patterns
+
+tests:
+  prolog-programming-task-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - prolog-programming-task
+    - HUnit
+    - hspec

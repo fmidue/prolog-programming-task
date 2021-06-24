@@ -1,0 +1,7 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "prolog-programming-task:lib"
+
+    - path: "./test"
+      component: "prolog-programming-task:test:prolog-programming-task-test"
