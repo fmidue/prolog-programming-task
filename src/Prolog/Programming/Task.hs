@@ -181,8 +181,8 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
               explainResultWith inform drawTree s e
               reject (text . pack $
                 "tests passed: " ++ show passed
-                ++ if notRun > 0 -- only show remaingin tests if there is at least one test that was not run
-                   then ", test not run: " ++ show notRun
+                ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
+                   then ", tests not run: " ++ show notRun
                    else "")
 
 explainResultWith
