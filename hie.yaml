@@ -5,3 +5,6 @@ cradle:
 
     - path: "./test"
       component: "prolog-programming-task:test:prolog-programming-task-test"
+
+    - path: "./app"
+      component: "prolog-programming-task:test-task-prolog"

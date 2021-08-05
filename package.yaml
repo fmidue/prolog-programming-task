@@ -36,6 +36,18 @@ library:
   - -Werror
   - -Wwarn=incomplete-patterns
 
+executables:
+  test-task-prolog:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+      - prolog-programming-task
+
 tests:
   prolog-programming-task-test:
     main:                Spec.hs
