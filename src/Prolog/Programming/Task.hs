@@ -123,7 +123,7 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
     Left err -> reject . text . pack $ show err
     Right inProg -> do
       newDefs <- case findNewPredicateDefs specs inProg of
-        Left err -> reject . text $ pack err
+        Left err -> [] <$ (reject . text $ pack err)
         Right newDefs -> pure newDefs
       let newFacts = connectNewDefsAndTests newDefs
           newSpecs = useFoundDefs newDefs specs
