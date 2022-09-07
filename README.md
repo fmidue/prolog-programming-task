@@ -4,7 +4,7 @@
 
 This library is providing a Prolog Programming Task Type for the e-learning system
 [Autotool](https://gitlab.imn.htwk-leipzig.de/autotool/all0).
-This task type is using a [Prolog interpreter](https://github.com/owestphal/prolog)
+This task type is using a [Prolog interpreter](https://github.com/fmidue/prolog)
 written in Haskell.
 
 ## Issues & Pull requests
