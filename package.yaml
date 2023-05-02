@@ -35,6 +35,7 @@ library:
   - -Wall
   - -Werror
   - -Wwarn=incomplete-patterns
+  - -Wwarn=incomplete-uni-patterns
 
 executables:
   test-task-prolog:

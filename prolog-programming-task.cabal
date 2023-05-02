@@ -33,7 +33,7 @@ library
       Paths_prolog_programming_task
   hs-source-dirs:
       src
-  ghc-options: -Wall -Werror -Wwarn=incomplete-patterns
+  ghc-options: -Wall -Werror -Wwarn=incomplete-patterns -Wwarn=incomplete-uni-patterns
   build-depends:
       MonadRandom
     , base >=4.7 && <5
