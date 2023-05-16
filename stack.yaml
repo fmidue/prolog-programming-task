@@ -3,5 +3,5 @@ packages:
 - .
 extra-deps:
 - git: https://github.com/fmidue/prolog
-  commit: 4f0eca7899e8bab80135d97074792b3e25dfd0bd
+  commit: 2ebf14c51ba8662e4f0fd4f34e3b60eaa42ecb9b
 - prolog-graph-lib-0.2.1.1
