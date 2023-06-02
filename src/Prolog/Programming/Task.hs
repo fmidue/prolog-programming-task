@@ -13,9 +13,6 @@ module Prolog.Programming.Task where
 import qualified Text.RawString.QQ                as RS (r)
 
 import Prolog.Programming.Data
-import Prolog.Programming.GraphViz (
-  asInlineSvg, resolveFirstWithTree, resolveWithTree,
-  )
 
 import Control.Arrow                    ((>>>), (&&&), second)
 import Control.Monad                    (forM, void, when)
@@ -31,7 +28,7 @@ import Language.Prolog                  (
   Atom, Clause (..), Goal, Program, Term (..), Unifier, VariableName (..),
   apply, consultString, lhs, term, terms,
   )
-import Language.Prolog.GraphViz
+import Language.Prolog.GraphViz (Graph, asInlineSvg, resolveFirstTree, resolveTree)
 import Text.Parsec                      hiding (Ok)
 import Text.PrettyPrint.Leijen.Text (
   Doc, (<+>), hsep, nest, parens, text, vcat,
@@ -283,10 +280,10 @@ actual =~= expected =
     isSublistOf xs ys = null (xs \\ ys)
 
 solutions :: Program -> [Goal] -> Either String ([Unifier], Graph)
-solutions = resolveWithTree
+solutions = resolveTree
 
 firstSolution :: Program -> [Goal] -> Either String (Maybe Unifier, Graph)
-firstSolution = resolveFirstWithTree
+firstSolution = resolveFirstTree
 
 applySolutions :: [Unifier] -> [Goal] -> [[Term]]
 applySolutions xs q = map (\s -> map (apply s) q) xs

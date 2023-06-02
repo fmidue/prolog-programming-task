@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -27,7 +27,6 @@ source-repository head
 library
   exposed-modules:
       Prolog.Programming.Data
-      Prolog.Programming.GraphViz
       Prolog.Programming.Task
   other-modules:
       Paths_prolog_programming_task
@@ -39,7 +38,6 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
-    , graphviz
     , mtl
     , parsec
     , prolog
@@ -62,7 +60,6 @@ executable test-task-prolog
     , base >=4.7 && <5
     , bytestring
     , containers
-    , graphviz
     , mtl
     , parsec
     , prolog
@@ -88,7 +85,6 @@ test-suite prolog-programming-task-test
     , base >=4.7 && <5
     , bytestring
     , containers
-    , graphviz
     , hspec
     , mtl
     , parsec
