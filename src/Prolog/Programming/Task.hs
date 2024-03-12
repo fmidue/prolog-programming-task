@@ -31,10 +31,11 @@ import Language.Prolog                  (
 import Language.Prolog.GraphViz (Graph, asInlineSvg, resolveFirstTree, resolveTree)
 import Text.Parsec                      hiding (Ok)
 import Text.PrettyPrint.Leijen.Text (
-  Doc, (<+>), hsep, nest, parens, text, vcat,
+  Doc, (<+>), hsep, nest, parens, text, vcat, (<$$>), empty,
   )
 import System.Random.Shuffle            (shuffleM)
 import System.Timeout                   (timeout)
+import Data.List.NonEmpty (NonEmpty(..))
 
 exampleConfig :: Config
 exampleConfig = Config
@@ -170,12 +171,17 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
           testResult <- liftIO $ runTests testCases checkWithTimeout
 
           case testResult of
-            (Ok,_,_) -> inform $ text "ok"
-            (e,Just s,(passed,notRun)) -> do
+            (Finished AllOk,_) -> inform $ text "ok"
+            (Finished (SomeTimeouts (t :| ts)),_) -> do
+              inform (text "No.")
+              inform $ indent $
+                hsep [describeSpec t, text "*appears to be non-terminating* (test case timeout)"]
+                <$$> if not (null ts) then text (pack $ show (length ts) ++ " additional test cases also timed out") else empty
+            (Aborted reason,(passed,notRun)) -> do
               inform $ vcat
                 [ text "No."
                 , text "The following test case failed:"]
-              explainResultWith inform drawTree s e
+              explainResultWith inform drawTree reason
               reject (text . pack $
                 "tests passed: " ++ show passed
                 ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
@@ -186,28 +192,24 @@ explainResultWith
   :: Monad m
   => (Doc -> m ())
   -> (Graph -> m ())
-  -> Spec
-  -> TestResult [Unifier]
+  -> AbortReason Spec [Unifier]
   -> m ()
 explainResultWith inform drawTree = explainResult
   where
-    explainResult x Timeout
-      = inform $ indent $ hsep
-        [describeSpec x, text "*appears to be non-terminating*"]
-    explainResult x (ErrorMsg msg)
+    explainResult (OnErrorMsg x msg)
       = inform $ indent $ vcat
         [describeSpec x
         ,indent $ vcat [text "The following error occurred:",text $ pack msg]
         ]
-    explainResult x@(Spec (Hidden _) _ _ _ _) _
+    explainResult (OnWrong x@(Spec (Hidden _) _ _ _ _) _ _)
       = inform $ indent $ describeSpec x
-    explainResult x (Wrong Nothing actual)
+    explainResult (OnWrong x Nothing actual)
       = inform $ indent $ vcat
         [describeSpec x
         ,indent $ vcat [text "Your submission gives:",
                         indent . text . pack $ printResult actual]
         ]
-    explainResult x (Wrong (Just tree) actual)
+    explainResult (OnWrong x (Just tree) actual)
       = do
         inform $ indent $ vcat
           [describeSpec x
@@ -253,24 +255,40 @@ isOk :: TestResult res -> Bool
 isOk Ok = True
 isOk _ = False
 
+data TestSuiteResult a res
+  = Finished (AreAllOk a)
+  | Aborted (AbortReason a res)
+
+data AreAllOk a
+  = AllOk
+  | SomeTimeouts (NonEmpty a)
+
+data AbortReason a res
+  = OnWrong a (Maybe Graph) res
+  | OnErrorMsg a String
+
 {- |
 run a sequence of tests until the first error
 returns the result and the test that produced the error
 additionally the number of passed tests and tests that were not run is returned
+(timeout are not counted as errors unless no other error occurs)
 -}
 runTests
   :: Monad m
   => [a]
   -> (a -> m (TestResult r))
-  -> m (TestResult r, Maybe a, (Int,Int))
-runTests = runTests' 0
+  -> m (TestSuiteResult a r, (Int,Int))
+runTests = runTests' 0 []
   where
-    runTests' n [] _ = pure (Ok, Nothing, (n,0))
-    runTests' n (x:xs) check = do
+    runTests' n [] [] _ = pure (Finished AllOk, (n,0))
+    runTests' n (t:ts) [] _ = pure (Finished $ SomeTimeouts (t :| ts), (n,0))
+    runTests' n ts (x:xs) check = do
       res <- check x
       case res of
-        Ok -> runTests' (n+1) xs check
-        notOk -> pure (notOk, Just x, (n,length xs))
+        Ok -> runTests' (n+1) ts xs check
+        Wrong g r -> pure (Aborted $ OnWrong x g r, (n,length xs))
+        ErrorMsg msg -> pure (Aborted $ OnErrorMsg x msg, (n,length xs))
+        Timeout -> runTests' n (x:ts) xs check
 
 (=~=) :: [[Term]] -> [[Term]] -> Bool
 actual =~= expected =
