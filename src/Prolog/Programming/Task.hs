@@ -301,7 +301,8 @@ reorderTests = shuffleConcat . classify
       ys3 <- shuffleM xs3
       ys4 <- shuffleM xs4
       ys5 <- shuffleM xs5
-      pure $ ys1 ++ ys2 ++ ys3 ++ ys4 ++ ys5 ++ xs6
+      ys6 <- shuffleM xs6
+      pure $ ys1 ++ ys2 ++ ys3 ++ ys4 ++ ys5 ++ ys6
     -- there is no Monoid instance for 6-tuples for some reason,
     -- so we use nested tuples instead
     -- results in a tuple (non-hidden, hidden)
