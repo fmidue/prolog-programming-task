@@ -31,7 +31,7 @@ import Language.Prolog                  (
 import Language.Prolog.GraphViz (Graph, asInlineSvg, resolveFirstTree, resolveTree)
 import Text.Parsec                      hiding (Ok)
 import Text.PrettyPrint.Leijen.Text (
-  Doc, (<+>), hsep, nest, parens, text, vcat, (<$$>), empty,
+  Doc, (<+>), nest, parens, text, vcat, empty, line, align, (<$$>),
   )
 import System.Random.Shuffle            (shuffleM)
 import System.Timeout                   (timeout)
@@ -171,64 +171,81 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
           testResult <- liftIO $ runTests testCases checkWithTimeout
 
           case testResult of
-            (Finished AllOk,_) -> inform $ text "ok"
-            (Finished (SomeTimeouts (t :| ts)),_) -> do
-              inform (text "No.")
-              inform $ indent $
-                hsep [describeSpec t, text "*appears to be non-terminating* (test case timeout)"]
-                <$$> if not (null ts) then text (pack $ show (length ts) ++ " additional test cases also timed out") else empty
-            (Aborted reason,(passed,notRun)) -> do
+            (Finished AllOk,(passed,_)) ->
+              inform $ vcat
+                [ text "Ok"
+                , text (pack $ show passed ++ " tests were run")
+                ]
+            (Finished (SomeTimeouts (t :| ts)),(passed,_)) -> do
               inform $ vcat
                 [ text "No."
-                , text "The following test case failed:"]
-              explainResultWith inform drawTree reason
+                , text (pack $ show passed ++ " tests were run")
+                ] <> nested
+                  (line <> describeSpec t
+                    <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
+                    <> line <> if not (null ts)
+                      then text (pack $ show (length ts) ++ " additional test "++ plural (length ts) "case" "cases"++" also timed out")
+                      else empty
+                  )
+            (Aborted reason,(passed,notRun)) -> do
+              let (reasonDoc,mTree) = explainReason reason
+              inform $ vcat
+                [ text "No."
+                , text (pack $ show passed ++ " tests were run")
+                , text "The following test case failed:"
+                ] <> reasonDoc
+              maybe (pure ()) drawTree mTree
               reject (text . pack $
                 "tests passed: " ++ show passed
                 ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
                    then ", tests not run: " ++ show notRun
                    else "")
 
-explainResultWith
-  :: Monad m
-  => (Doc -> m ())
-  -> (Graph -> m ())
-  -> AbortReason Spec [Unifier]
-  -> m ()
-explainResultWith inform drawTree = explainResult
+plural :: (Eq a, Num a) => a -> b -> b -> b
+plural 1 x _ = x
+plural _ _ y = y
+
+explainReason :: AbortReason Spec [Unifier] -> (Doc, Maybe Graph)
+explainReason = explainResult
   where
     explainResult (OnErrorMsg x msg)
-      = inform $ indent $ vcat
+      = (nested $ line <> vcat
         [describeSpec x
-        ,indent $ vcat [text "The following error occurred:",text $ pack msg]
+        , text "The following error occurred:" <> nested (line <> text (pack msg))
         ]
+        , Nothing)
     explainResult (OnWrong x@(Spec (Hidden _) _ _ _ _) _ _)
-      = inform $ indent $ describeSpec x
+      = (nested $ line <> describeSpec x, Nothing)
     explainResult (OnWrong x Nothing actual)
-      = inform $ indent $ vcat
-        [describeSpec x
-        ,indent $ vcat [text "Your submission gives:",
-                        indent . text . pack $ printResult actual]
-        ]
+      = (nested $
+          line <> describeSpec x
+          <$$> text "Your" <> align
+            (text " submission gives:"
+            <$$> if null actual then text "false" else (vcat . map (text . pack . printUnifier)) actual)
+        , Nothing)
     explainResult (OnWrong x (Just tree) actual)
-      = do
-        inform $ indent $ vcat
-          [describeSpec x
-          ,indent $ vcat [text "Your submission gives:",
-                          indent . text . pack $ printResult actual]
-          ,indent $ text "derivation tree:"]
-        drawTree tree
+      = (nested $
+          line <> describeSpec x
+          <$$> text "Your" <> align
+            (text " submission gives:"
+            <$$> if null actual then text "false" else (vcat . map (text . pack . printUnifier)) actual)
+          <> line <> text "Derivation tree:"
+        , Just tree)
 
-indent :: Doc -> Doc
-indent = nest 4
+nested :: Doc -> Doc
+nested = nest 4
 
 {-|
 pretty-print the interpreter result
 -}
 printResult :: [Unifier] -> String
 printResult [] = "false"
-printResult [[]] = "true"
 printResult us = intercalate ";\n" $
-  map (intercalate ", " . map (\(x,t) -> show x ++ " = " ++ show t)) (nub us)
+  map printUnifier $ nub us
+
+printUnifier :: Unifier -> String
+printUnifier [] = "true"
+printUnifier xs = intercalate ", " $ map (\(x,t) -> show x ++ " = " ++ show t) xs
 
 describeSpec :: Spec -> Doc
 describeSpec (Spec (Hidden str) _ _ _ _) = text . pack $
@@ -514,10 +531,8 @@ commentBlock = do
   let startMarker =            string "/* "
   let separator   = endOfLine >> string " * "
   let endMarker   = endOfLine >> string " */"
-  let line = many $ do notFollowedBy separator
-                       notFollowedBy endMarker
-                       anyToken
-  between startMarker endMarker $ line `sepBy` try separator
+  let content     = many $ notFollowedBy separator >> notFollowedBy endMarker >> anyToken
+  between startMarker endMarker $ content `sepBy` try separator
 
 sourceText :: Parsec String u (String, String)
 sourceText = do
