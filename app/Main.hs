@@ -1,5 +1,7 @@
 module Main where
 
+import qualified Data.ByteString as BS
+
 import System.Environment (getArgs)
 
 import Text.PrettyPrint.Leijen.Text ()
@@ -20,4 +22,7 @@ main = do
 runMain :: Config -> Code -> IO ()
 runMain config code = do
   verifyConfig config
-  checkTask (fail . show) print (\_ -> putStrLn "*** image output is currently not supported") config code
+  checkTask (fail . show) print writeTreeToDisk config code
+
+writeTreeToDisk :: BS.ByteString -> IO ()
+writeTreeToDisk g = BS.writeFile "tree.svg" g >> putStrLn "wrote tree to file://tree.svg"
