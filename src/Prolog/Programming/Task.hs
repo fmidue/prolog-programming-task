@@ -21,14 +21,14 @@ import Control.Monad.Trans              (MonadIO (liftIO))
 import Control.Exception                (evaluate)
 import Data.ByteString                  (ByteString)
 import Data.List                        ((\\), intercalate, isPrefixOf, nub)
-import Data.Maybe                       (catMaybes, fromMaybe, isNothing)
-import Data.Either                      (partitionEithers)
+import Data.Maybe                       (catMaybes, fromMaybe, isNothing, listToMaybe)
 import Data.Text.Lazy                   (pack)
 import Language.Prolog                  (
   Atom, Clause (..), Goal, Program, Term (..), Unifier, VariableName (..),
   apply, consultString, lhs, term, terms,
   )
-import Language.Prolog.GraphViz (Graph, asInlineSvg, resolveFirstTree, resolveTree)
+import Language.Prolog.GraphViz (Graph, asInlineSvgWith, resolveFirstTree, resolveTree)
+import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 import Text.Parsec                      hiding (Ok)
 import Text.PrettyPrint.Leijen.Text (
   Doc, (<+>), nest, parens, text, vcat, empty, line, align, (<$$>),
@@ -42,6 +42,8 @@ exampleConfig = Config
   [RS.r|/* % comments for test cases have to start with an extra %
  * % timeout per test in ms (defaults to 10000, only the first timeout is used)
  * Global timeout: 10000
+ * % style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
+ * Tree style: query
  * % prefixing a test with [<time out in ms>] sets a local timeout for that test
  * a_predicate(Foo,Bar): a_predicate(expected_foo1,expected_bar1), a_predicate(expected_foo2,expected_bar2)
  * a_statement_that_has_to_be_true
@@ -87,7 +89,7 @@ verifyConfig (Config cfg) =
 describeTask :: Config -> Doc
 describeTask (Config cfg) = text . pack $ either
   (const "Error in task configuration!")
-  (\(_,_,(visible_facts,_)) -> visible_facts)
+  (\(_,_,_,(visible_facts,_)) -> visible_facts)
   (parseConfig cfg)
 
 initialTask :: Config -> Code
@@ -99,7 +101,7 @@ initialTask (Config cfg) = Code $
       "% Any additional definitions can go below this line"
       newDecls
   where
-    Right (_,specs,_) = parseConfig cfg
+    Right (_,_,specs,_) = parseConfig cfg
     newDecls = filter isNewPredDecl specs
 
 checkTask
@@ -111,11 +113,11 @@ checkTask
   -> Code
   -> m ()
 checkTask reject inform drawPicture (Config cfg) (Code input) = do
-  let drawTree tree = do
-        svg <- liftIO $ asInlineSvg tree
-        drawPicture svg
-  let Right (globalTO,specs,(visible_facts,hidden_facts)) = parseConfig cfg
+  let Right (globalTO,treeStyle,specs,(visible_facts,hidden_facts)) = parseConfig cfg
       facts = visible_facts ++ "\n" ++ hidden_facts
+  let drawTree tree = do
+        svg <- liftIO $ asInlineSvgWith (grapFormatting treeStyle) tree
+        drawPicture svg
 
   case consultString input of
     Left err -> reject . text . pack $ show err
@@ -417,13 +419,31 @@ useFoundDefs ds specs = updateSpec <$> specs
 
 parseConfig
   :: String
-  -> Either ParseError (TimeoutDuration, [Spec], (String, String))
+  -> Either ParseError (TimeoutDuration, TreeStyle, [Spec], (String, String))
 parseConfig = parse configuration "(config)"
 
 type TimeoutDuration = Int
 
-configuration :: Parsec String () (TimeoutDuration, [Spec], (String, String))
-configuration = (\(d,xs) s -> (d,xs,s)) <$> specification <*> sourceText
+data TreeStyle = QueryStyle | ResolutionStyle
+
+grapFormatting :: TreeStyle -> GraphFormatting
+grapFormatting QueryStyle = queryStyle
+grapFormatting ResolutionStyle = resolutionStyle
+
+data SpecLine
+  = TimeoutSpec TimeoutDuration
+  | TreeStyleSpec TreeStyle
+  | TestSpec Spec
+
+partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, [Spec])
+partitionSpecLine = (\(ts,ss,xs) -> (listToMaybe ts, listToMaybe ss,xs)) . mconcat . map sortLine
+  where
+    sortLine (TimeoutSpec t) = ([t],[],[])
+    sortLine (TreeStyleSpec s) = ([],[s],[])
+    sortLine (TestSpec x) = ([],[],[x])
+
+configuration :: Parsec String () (TimeoutDuration, TreeStyle, [Spec], (String, String))
+configuration = (\(d,st,xs) s -> (d,st,xs,s)) <$> specification <*> sourceText
 
 data Spec = Spec Visibility Visualize Expection Timeout Requirement
   deriving Show
@@ -473,9 +493,25 @@ negative (Spec v t _ to r) = Spec v t NegativeResult to r
 localTimeout :: Int -> Spec -> Spec
 localTimeout d (Spec v t e _ r) = Spec v t e (LocalTimeout d) r
 
-specification :: Parsec String () (TimeoutDuration,[Spec])
+specification :: Parsec String () (TimeoutDuration,TreeStyle,[Spec])
 specification = do
-  let specLine = ((\f g h i -> f . g . h . i)
+  lines' <- commentBlock
+  timeoutStyleAndSpecs <- zip [1 :: Integer ..] lines' `forM` \t ->
+    case parseSpecLine t of
+      Right spec -> return spec
+      Left err   -> fail (show err)
+  let (mTimeout,mStyle,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
+  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, specs)
+  where
+    parseSpecLine :: (Integer, String) -> Either ParseError (Maybe SpecLine)
+    parseSpecLine (i, s) = parse
+        ((Nothing <$ commentLine)
+         <|> (Just <$> ((TimeoutSpec <$> try globalTimeout)
+                        <|> TreeStyleSpec <$> try treeStyle
+                        <|> TestSpec <$> (try newPredDeclParser <|> specLine))))
+        ("Specification line " ++ show i) s
+
+    specLine = ((\f g h i -> f . g . h . i)
                   <$> localTimeoutAnn
                   <*> negativeFlag
                   <*> withTreeFlag
@@ -485,7 +521,8 @@ specification = do
         (do char ':' >> optional (char ' ')
             queryWithAnswers q . map (:[]) <$> terms)
          <|> pure (statementToCheck q)
-      newPredDeclParser = do
+
+    newPredDeclParser = do
         void $ string "new"
         spaces
         t <- term
@@ -494,32 +531,27 @@ specification = do
         spaces
         desc <- many1 anyChar
         pure $ newPredDecl t desc
-      globalTimeout = do
-        void $ string "Global timeout:"
-        spaces
-        read <$> many1 digit
-  lines' <- commentBlock
-  let parseSpecLine (i, s) = parse
-        ((Nothing <$ commentLine)
-         <|> (Just <$> ((Left <$> try globalTimeout)
-                        <|> Right <$> (try newPredDeclParser
-                                       <|> specLine))))
-        ("Specification line " ++ show i) s
-  timeoutAndSpecs <- zip [1 :: Integer ..] lines' `forM` \t ->
-   case parseSpecLine t of
-      Right spec -> return spec
-      Left err   -> fail (show err)
-  let (timeouts,specs) = partitionEithers $ catMaybes timeoutAndSpecs
-      timeout' = if null timeouts then 10000 else head timeouts
-  pure (timeout', specs)
-  where
+
+    globalTimeout = do
+      void $ string "Global timeout:"
+      spaces
+      read <$> many1 digit
+
+    treeStyle = do
+      void $ string "Tree style:"
+      spaces
+      QueryStyle <$ string "query" <|> ResolutionStyle <$ string "resolution"
+
     localTimeoutAnn = option id $
       localTimeout . read
       <$> between (char '[') (char ']') (many1 digit) <* spaces
+
     negativeFlag = option id $ negative <$ char '-'
+
     hiddenFlag   = option id $
       char '!' >> hidden
       <$> option "" (try (between (char '(') (char ')') (many $ noneOf ")")))
+
     withTreeFlag = option id $ (char '@' >> return withTree)
                            <|> (char '#' >> return withTreeNegative)
 

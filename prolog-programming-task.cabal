@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -41,7 +41,7 @@ library
     , mtl
     , parsec
     , prolog
-    , prolog-graph-lib
+    , prolog-graph-lib >=0.3.1
     , random-shuffle
     , raw-strings-qq
     , text
@@ -63,7 +63,7 @@ executable test-task-prolog
     , mtl
     , parsec
     , prolog
-    , prolog-graph-lib
+    , prolog-graph-lib >=0.3.1
     , prolog-programming-task
     , random-shuffle
     , raw-strings-qq
@@ -89,7 +89,7 @@ test-suite prolog-programming-task-test
     , mtl
     , parsec
     , prolog
-    , prolog-graph-lib
+    , prolog-graph-lib >=0.3.1
     , prolog-programming-task
     , random-shuffle
     , raw-strings-qq
