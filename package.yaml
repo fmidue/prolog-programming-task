@@ -22,7 +22,7 @@ dependencies:
 - mtl
 - parsec
 - prolog
-- prolog-graph-lib >= 0.3.1
+- prolog-graph-lib >= 0.3.2
 - random-shuffle
 - raw-strings-qq
 - text
