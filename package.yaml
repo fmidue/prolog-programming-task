@@ -33,8 +33,8 @@ library:
   ghc-options:
   - -Wall
   - -Werror
-  - -Wwarn=incomplete-patterns
-  - -Wwarn=incomplete-uni-patterns
+  - -Wincomplete-patterns
+  - -Wincomplete-uni-patterns
 
 executables:
   test-task-prolog:

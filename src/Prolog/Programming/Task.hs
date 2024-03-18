@@ -21,7 +21,7 @@ import Control.Monad.Trans              (MonadIO (liftIO))
 import Control.Exception                (evaluate)
 import Data.ByteString                  (ByteString)
 import Data.List                        ((\\), intercalate, isPrefixOf, nub)
-import Data.Maybe                       (catMaybes, fromMaybe, isNothing, listToMaybe)
+import Data.Maybe                       (catMaybes, fromMaybe, isNothing, listToMaybe, mapMaybe)
 import Data.Text.Lazy                   (pack)
 import Language.Prolog                  (
   Atom, Clause (..), Goal, Program, Term (..), Unifier, VariableName (..),
@@ -36,6 +36,7 @@ import Text.PrettyPrint.Leijen.Text (
 import System.Random.Shuffle            (shuffleM)
 import System.Timeout                   (timeout)
 import Data.List.NonEmpty (NonEmpty(..))
+import Data.Either (fromRight)
 
 exampleConfig :: Config
 exampleConfig = Config
@@ -95,14 +96,20 @@ describeTask (Config cfg) = text . pack $ either
 initialTask :: Config -> Code
 initialTask (Config cfg) = Code $
   if null newDecls then "" else
-    foldr (\(Spec _ _ _ _ (NewPredDecl _ desc)) s ->
+    foldr (\desc s ->
              "% Define predicate for '" ++ desc
              ++ "' below this line\n \n\n" ++ s)
       "% Any additional definitions can go below this line"
       newDecls
   where
-    Right (_,_,specs,_) = parseConfig cfg
-    newDecls = filter isNewPredDecl specs
+    (_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
+    newDecls = mapMaybe (\(Spec _ _ _ _ r) -> newPredDesc r) specs
+    newPredDesc (NewPredDecl _ desc) = Just desc
+    newPredDesc StatementToCheck{} = Nothing
+    newPredDesc QueryWithAnswers{} = Nothing
+
+orError :: Either a b -> String -> b
+orError x str = fromRight (error str) x
 
 checkTask
   :: (MonadIO m, MonadRandom m)
@@ -113,9 +120,10 @@ checkTask
   -> Code
   -> m ()
 checkTask reject inform drawPicture (Config cfg) (Code input) = do
-  let Right (globalTO,treeStyle,specs,(visible_facts,hidden_facts)) = parseConfig cfg
+  let (globalTO,treeStyle,specs,(visible_facts,hidden_facts))
+        = parseConfig cfg `orError` "config should have been validated earlier"
       facts = visible_facts ++ "\n" ++ hidden_facts
-  let drawTree tree = do
+      drawTree tree = do
         svg <- liftIO $ asInlineSvgWith (grapFormatting treeStyle) tree
         drawPicture svg
 
@@ -260,6 +268,7 @@ describeSpec (Spec Visible _ e _ (StatementToCheck query)) =
     describeExp NegativeResult = text "false"
 describeSpec (Spec Visible _ _ _ (QueryWithAnswers query _)) = text . pack $
   "The result of the query " ++ showQuery query ++ " is incorrect."
+describeSpec (Spec Visible _ _ _ (NewPredDecl _ _)) = error "NewPredDecl should not be passed to describeSpec"
 
 showQuery :: Show a => [a] -> String
 showQuery query = "?- " ++ intercalate ", " (map show query) ++ "."
@@ -375,11 +384,15 @@ findNewPredicateDefs specs cls
   = Left "Not all required predicates defined"
   | otherwise
   = Right $
-    zipWith (\(Spec _ _ _ _ (NewPredDecl tl desc)) tr -> (tl,tr,desc))
+    zipWith (\(tl,desc) tr -> (tl,tr,desc))
       newDecls
       clauseHeads
   where
-    newDecls = filter isNewPredDecl specs
+    newDecls = mapMaybe extractNewDeclArgs specs
+    extractNewDeclArgs (Spec _ _ _ _ (NewPredDecl tl desc)) = Just (tl,desc)
+    extractNewDeclArgs (Spec _ _ _ _ QueryWithAnswers{}) = Nothing
+    extractNewDeclArgs (Spec _ _ _ _ StatementToCheck{}) = Nothing
+
     clauseHeads = nub $ termHead . lhs <$> cls
 
 termHead :: Term -> Atom
