@@ -187,7 +187,7 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
                 , text (pack $ show passed ++ " tests were run")
                 ]
             (Finished (SomeTimeouts (t :| ts)),(passed,_)) -> do
-              inform $ vcat
+              reject $ vcat
                 [ text "No."
                 , text (pack $ show passed ++ " tests were run")
                 ] <> nested
