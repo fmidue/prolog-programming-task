@@ -8,6 +8,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 module Prolog.Programming.Task where
 
 import qualified Text.RawString.QQ                as RS (r)
@@ -45,6 +46,8 @@ exampleConfig = Config
  * Global timeout: 10000
  * % style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
  * Tree style: query
+ * % With this option set to True, hidden clauses for predicates pred/k are filtered out if the input program also contains clauses for pred/k. (defaults to False)
+ * Filter hidden facts: False
  * % prefixing a test with [<time out in ms>] sets a local timeout for that test
  * a_predicate(Foo,Bar): a_predicate(expected_foo1,expected_bar1), a_predicate(expected_foo2,expected_bar2)
  * a_statement_that_has_to_be_true
@@ -90,7 +93,7 @@ verifyConfig (Config cfg) =
 describeTask :: Config -> Doc
 describeTask (Config cfg) = text . pack $ either
   (const "Error in task configuration!")
-  (\(_,_,_,(visible_facts,_)) -> visible_facts)
+  (\(_,_,_,_,(visible_facts,_)) -> visible_facts)
   (parseConfig cfg)
 
 initialTask :: Config -> Code
@@ -102,7 +105,7 @@ initialTask (Config cfg) = Code $
       "% Any additional definitions can go below this line"
       newDecls
   where
-    (_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
+    (_,_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
     newDecls = mapMaybe (\(Spec _ _ _ _ r) -> newPredDesc r) specs
     newPredDesc (NewPredDecl _ desc) = Just desc
     newPredDesc StatementToCheck{} = Nothing
@@ -120,9 +123,9 @@ checkTask
   -> Code
   -> m ()
 checkTask reject inform drawPicture (Config cfg) (Code input) = do
-  let (globalTO,treeStyle,specs,(visible_facts,hidden_facts))
+  let (globalTO,treeStyle,filterFacts,specs,(visible_facts,hidden_facts))
         = parseConfig cfg `orError` "config should have been validated earlier"
-      facts = visible_facts ++ "\n" ++ hidden_facts
+      -- facts = visible_facts ++ "\n" ++ hidden_facts
       drawTree tree = do
         svg <- liftIO $ asInlineSvgWith (grapFormatting treeStyle) tree
         drawPicture svg
@@ -135,12 +138,16 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
         Right newDefs -> pure newDefs
       let newFacts = connectNewDefsAndTests newDefs
           newSpecs = useFoundDefs newDefs specs
+          consultHow =
+            if filterFacts
+              then consultStringsAndFilter visible_facts hidden_facts inProg
+              else consultString (visible_facts ++ "\n" ++ hidden_facts)
       when (requiresNewPredicates specs) $
         inform $ vcat $
           text "Using the following definitions for required predicates:" :
           [ text . pack $ desc ++ ": " ++ tr | (_,tr,desc) <- newDefs]
 
-      case consultString facts of
+      case consultHow of
         Left err -> reject . text . pack $ show err
         Right factProg -> do
           let p = factProg ++ inProg ++ newFacts
@@ -210,6 +217,23 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
                 ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
                    then ", tests not run: " ++ show notRun
                    else "")
+
+consultStringsAndFilter :: String -> String -> Program -> Either ParseError [Clause]
+consultStringsAndFilter visibleFacts hiddenFacts prog = do
+  vs <- consultString visibleFacts
+  hs <- consultString hiddenFacts
+  pure $ vs ++ filter notDefinedByInput hs
+  where
+    notDefinedByInput :: Clause -> Bool
+    notDefinedByInput x = case extractPredicate $ lhs x of
+      Just (p,k) -> (p,k) `notElem` inputDefs
+      Nothing -> error "impossible"
+    inputDefs :: [(Atom,Int)]
+    inputDefs = mapMaybe (extractPredicate . lhs) prog
+    extractPredicate :: Term -> Maybe (Atom,Int)
+    extractPredicate (Struct p (length -> k)) = Just (p,k)
+    extractPredicate (Var _) = Nothing
+    extractPredicate (Cut _) = Nothing
 
 plural :: (Eq a, Num a) => a -> b -> b -> b
 plural 1 x _ = x
@@ -432,12 +456,14 @@ useFoundDefs ds specs = updateSpec <$> specs
 
 parseConfig
   :: String
-  -> Either ParseError (TimeoutDuration, TreeStyle, [Spec], (String, String))
+  -> Either ParseError (TimeoutDuration, TreeStyle, FilterFacts, [Spec], (String, String))
 parseConfig = parse configuration "(config)"
 
 type TimeoutDuration = Int
 
 data TreeStyle = QueryStyle | ResolutionStyle
+
+type FilterFacts = Bool
 
 grapFormatting :: TreeStyle -> GraphFormatting
 grapFormatting QueryStyle = queryStyle
@@ -446,17 +472,19 @@ grapFormatting ResolutionStyle = resolutionStyle
 data SpecLine
   = TimeoutSpec TimeoutDuration
   | TreeStyleSpec TreeStyle
+  | FilterFactsSpec Bool
   | TestSpec Spec
 
-partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, [Spec])
-partitionSpecLine = (\(ts,ss,xs) -> (listToMaybe ts, listToMaybe ss,xs)) . mconcat . map sortLine
+partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, Maybe FilterFacts, [Spec])
+partitionSpecLine = (\(ts,ss,fs,xs) -> (listToMaybe ts, listToMaybe ss, listToMaybe fs,xs)) . mconcat . map sortLine
   where
-    sortLine (TimeoutSpec t) = ([t],[],[])
-    sortLine (TreeStyleSpec s) = ([],[s],[])
-    sortLine (TestSpec x) = ([],[],[x])
+    sortLine (TimeoutSpec t) = ([t],[],[],[])
+    sortLine (TreeStyleSpec s) = ([],[s],[],[])
+    sortLine (FilterFactsSpec f) = ([],[],[f],[])
+    sortLine (TestSpec x) = ([],[],[],[x])
 
-configuration :: Parsec String () (TimeoutDuration, TreeStyle, [Spec], (String, String))
-configuration = (\(d,st,xs) s -> (d,st,xs,s)) <$> specification <*> sourceText
+configuration :: Parsec String () (TimeoutDuration, TreeStyle, FilterFacts, [Spec], (String, String))
+configuration = (\(d,st,f,xs) s -> (d,st,f,xs,s)) <$> specification <*> sourceText
 
 data Spec = Spec Visibility Visualize Expection Timeout Requirement
   deriving Show
@@ -506,21 +534,22 @@ negative (Spec v t _ to r) = Spec v t NegativeResult to r
 localTimeout :: Int -> Spec -> Spec
 localTimeout d (Spec v t e _ r) = Spec v t e (LocalTimeout d) r
 
-specification :: Parsec String () (TimeoutDuration,TreeStyle,[Spec])
+specification :: Parsec String () (TimeoutDuration,TreeStyle,FilterFacts,[Spec])
 specification = do
   lines' <- commentBlock
   timeoutStyleAndSpecs <- zip [1 :: Integer ..] lines' `forM` \t ->
     case parseSpecLine t of
       Right spec -> return spec
       Left err   -> fail (show err)
-  let (mTimeout,mStyle,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
-  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, specs)
+  let (mTimeout,mStyle,mFilter,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
+  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe False mFilter, specs)
   where
     parseSpecLine :: (Integer, String) -> Either ParseError (Maybe SpecLine)
     parseSpecLine (i, s) = parse
         ((Nothing <$ commentLine)
          <|> (Just <$> ((TimeoutSpec <$> try globalTimeout)
                         <|> TreeStyleSpec <$> try treeStyle
+                        <|> FilterFactsSpec <$> try filterFacts
                         <|> TestSpec <$> (try newPredDeclParser <|> specLine))))
         ("Specification line " ++ show i) s
 
@@ -544,6 +573,11 @@ specification = do
         spaces
         desc <- many1 anyChar
         pure $ newPredDecl t desc
+
+    filterFacts = do
+      void $ string "Filter hidden facts:"
+      spaces
+      True <$ string "True" <|> False <$ string "False"
 
     globalTimeout = do
       void $ string "Global timeout:"
