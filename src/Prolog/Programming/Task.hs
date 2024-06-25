@@ -125,7 +125,6 @@ checkTask
 checkTask reject inform drawPicture (Config cfg) (Code input) = do
   let (globalTO,treeStyle,filterFacts,specs,(visible_facts,hidden_facts))
         = parseConfig cfg `orError` "config should have been validated earlier"
-      -- facts = visible_facts ++ "\n" ++ hidden_facts
       drawTree tree = do
         svg <- liftIO $ asInlineSvgWith (grapFormatting treeStyle) tree
         drawPicture svg
