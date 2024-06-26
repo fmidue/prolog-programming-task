@@ -190,13 +190,13 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
             (Finished AllOk,(passed,_)) ->
               inform $ vcat
                 [ text "Ok"
-                , text (pack $ unwords [show passed, plural passed "test" "tests", "were run"])
+                , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
                 ]
             (Finished (SomeTimeouts (t :| ts)),(passed,_)) -> do
               let testsRun = passed + 1 + length ts
               reject $ vcat
                 [ text "No."
-                , text (pack $ unwords [show testsRun, plural testsRun "test" "tests", "were run"])
+                , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
                 ] <> nested
                   (line <> describeSpec t
                     <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
@@ -208,7 +208,7 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
               let (reasonDoc,mTree) = explainReason reason
               inform $ vcat
                 [ text "No."
-                , text (pack $ unwords [show (passed+1), plural (passed+1) "test" "tests", "were run"])
+                , text (pack $ unwords [show (passed+1), plural (passed+1) "test was" "tests were", "run"])
                 , text "The following test case failed:"
                 ] <> reasonDoc
               maybe (pure ()) drawTree mTree
