@@ -38,6 +38,7 @@ import System.Random.Shuffle            (shuffleM)
 import System.Timeout                   (timeout)
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Either (fromRight)
+import Data.Void (Void, absurd)
 
 exampleConfig :: Config
 exampleConfig = Config
@@ -46,8 +47,15 @@ exampleConfig = Config
  * Global timeout: 10000
  * % style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
  * Tree style: query
- * % With this option set to True, hidden clauses for predicates pred/k are filtered out if the input program also contains clauses for pred/k. (defaults to False)
- * Filter hidden facts: False
+ * % The two include options control if and how the hidden definitions and definitions from the task description should be included into the submission.
+ * % 'yes': include as is,
+ * % 'filtered':
+ * %    - For hidden definitions all clauses for predicate pred/k are filtered out if the input program also contains clauses for pred/k,
+ * %    - For task definitions clauses that occur identically in the input program are filtered out
+ * % 'no': do not include.
+ * % Both default to yes
+ * Include hidden definitions: [ yes | filtered ]
+ * Include task definitions: [ yes | filtered | no ]
  * % prefixing a test with [<time out in ms>] sets a local timeout for that test
  * a_predicate(Foo,Bar): a_predicate(expected_foo1,expected_bar1), a_predicate(expected_foo2,expected_bar2)
  * a_statement_that_has_to_be_true
@@ -76,13 +84,15 @@ a_dcg_rule --> a_dcg_rule, [terminal1, terminal2], { prolog_term }.
 a_test_with_resolution_tree(left_branch) :- fail. % See test line 5
 a_test_with_resolution_tree(right_branch) :- fail. % See test line 5
 /*
- * The program text will be concatenated with whatever the student submits.
+ * The program text will be concatenated with whatever the student submits (subject to include settings).
  */
 ------------------------------
 /*
  * This is also part of the program, but is not presented to the student.
  *
  * Be careful to avoid naming clashes to not confuse the student with error messages about code they can't see.
+ * Clashes can be avoided by the 'filtered' include setting, but giving priority to the student's version of some
+ * predicate can weaken the test suite.
  */
   |]
 
@@ -93,7 +103,7 @@ verifyConfig (Config cfg) =
 describeTask :: Config -> Doc
 describeTask (Config cfg) = text . pack $ either
   (const "Error in task configuration!")
-  (\(_,_,_,_,(visible_facts,_)) -> visible_facts)
+  (\(_,_,_,_,_,(visible_facts,_)) -> visible_facts)
   (parseConfig cfg)
 
 initialTask :: Config -> Code
@@ -105,7 +115,7 @@ initialTask (Config cfg) = Code $
       "% Any additional definitions can go below this line"
       newDecls
   where
-    (_,_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
+    (_,_,_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
     newDecls = mapMaybe (\(Spec _ _ _ _ r) -> newPredDesc r) specs
     newPredDesc (NewPredDecl _ desc) = Just desc
     newPredDesc StatementToCheck{} = Nothing
@@ -123,7 +133,7 @@ checkTask
   -> Code
   -> m ()
 checkTask reject inform drawPicture (Config cfg) (Code input) = do
-  let (globalTO,treeStyle,filterFacts,specs,(visible_facts,hidden_facts))
+  let (globalTO,treeStyle,includeTask,includeHidden,specs,(visible_facts,hidden_facts))
         = parseConfig cfg `orError` "config should have been validated earlier"
       drawTree tree = do
         svg <- liftIO $ asInlineSvgWith (grapFormatting treeStyle) tree
@@ -137,16 +147,12 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
         Right newDefs -> pure newDefs
       let newFacts = connectNewDefsAndTests newDefs
           newSpecs = useFoundDefs newDefs specs
-          consultHow =
-            if filterFacts
-              then consultStringsAndFilter visible_facts hidden_facts inProg
-              else consultString (visible_facts ++ "\n" ++ hidden_facts)
       when (requiresNewPredicates specs) $
         inform $ vcat $
           text "Using the following definitions for required predicates:" :
           [ text . pack $ desc ++ ": " ++ tr | (_,tr,desc) <- newDefs]
 
-      case consultHow of
+      case consultStringsAndFilter visible_facts (taskFilter includeTask inProg) hidden_facts (hiddenFilter includeHidden inProg) of
         Left err -> reject . text . pack $ show err
         Right factProg -> do
           let p = factProg ++ inProg ++ newFacts
@@ -218,14 +224,28 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
                    then ", tests not run: " ++ show notRun
                    else "")
 
-consultStringsAndFilter :: String -> String -> Program -> Either ParseError [Clause]
-consultStringsAndFilter visibleFacts hiddenFacts prog = do
-  vs <- consultString visibleFacts
-  hs <- consultString hiddenFacts
-  pure $ vs ++ filter notDefinedByInput hs
+consultStringsAndFilter :: String -> (Clause -> Bool) -> String -> (Clause -> Bool) -> Either ParseError [Clause]
+consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do
+  vs <- consultString visibleDefs
+  hs <- consultString hiddenDefs
+  pure $ filter keepVisible vs ++ filter keepHidden hs
+
+taskFilter :: IncludeTask -> Program -> Clause -> Bool
+taskFilter Yes _ = const True
+taskFilter No{} _ = const False
+taskFilter Filtered prog = \clause -> not $ any ((Just True ==) . compareClause clause) prog
   where
-    notDefinedByInput :: Clause -> Bool
-    notDefinedByInput x = case extractPredicate $ lhs x of
+    compareClause :: Clause -> Clause -> Maybe Bool
+    compareClause (Clause p xs) (Clause q ys) = Just $ p == q && xs == ys
+    compareClause _ _ = Nothing
+
+hiddenFilter :: IncludeHidden -> Program -> Clause -> Bool
+hiddenFilter Yes _ = const True
+hiddenFilter (No x) _ = absurd x
+hiddenFilter Filtered prog = notDefinedByProg
+  where
+    notDefinedByProg :: Clause -> Bool
+    notDefinedByProg x = case extractPredicate $ lhs x of
       Just (p,k) -> (p,k) `notElem` inputDefs
       Nothing -> error "impossible"
     inputDefs :: [(Atom,Int)]
@@ -456,14 +476,16 @@ useFoundDefs ds specs = updateSpec <$> specs
 
 parseConfig
   :: String
-  -> Either ParseError (TimeoutDuration, TreeStyle, FilterFacts, [Spec], (String, String))
+  -> Either ParseError (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, [Spec], (String, String))
 parseConfig = parse configuration "(config)"
 
 type TimeoutDuration = Int
 
 data TreeStyle = QueryStyle | ResolutionStyle
 
-type FilterFacts = Bool
+type IncludeTask = Include ()
+type IncludeHidden = Include Void
+data Include a = Yes | Filtered | No a
 
 grapFormatting :: TreeStyle -> GraphFormatting
 grapFormatting QueryStyle = queryStyle
@@ -472,19 +494,21 @@ grapFormatting ResolutionStyle = resolutionStyle
 data SpecLine
   = TimeoutSpec TimeoutDuration
   | TreeStyleSpec TreeStyle
-  | FilterFactsSpec Bool
+  | IncludeTaskSpec IncludeTask
+  | IncludeHiddenSpec IncludeHidden
   | TestSpec Spec
 
-partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, Maybe FilterFacts, [Spec])
-partitionSpecLine = (\(ts,ss,fs,xs) -> (listToMaybe ts, listToMaybe ss, listToMaybe fs,xs)) . mconcat . map sortLine
+partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, Maybe IncludeTask, Maybe IncludeHidden, [Spec])
+partitionSpecLine = (\(ts,ss,ihs,its,xs) -> (listToMaybe ts, listToMaybe ss, listToMaybe ihs, listToMaybe its,xs)) . mconcat . map sortLine
   where
-    sortLine (TimeoutSpec t) = ([t],[],[],[])
-    sortLine (TreeStyleSpec s) = ([],[s],[],[])
-    sortLine (FilterFactsSpec f) = ([],[],[f],[])
-    sortLine (TestSpec x) = ([],[],[],[x])
+    sortLine (TimeoutSpec t)       = ([t],[],[],[],[])
+    sortLine (TreeStyleSpec s)     = ([],[s],[],[],[])
+    sortLine (IncludeTaskSpec i)   = ([],[],[i],[],[])
+    sortLine (IncludeHiddenSpec i) = ([],[],[],[i],[])
+    sortLine (TestSpec x)          = ([],[],[],[],[x])
 
-configuration :: Parsec String () (TimeoutDuration, TreeStyle, FilterFacts, [Spec], (String, String))
-configuration = (\(d,st,f,xs) s -> (d,st,f,xs,s)) <$> specification <*> sourceText
+configuration :: Parsec String () (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, [Spec], (String, String))
+configuration = (\(d,st,it,ih,xs) s -> (d,st,it,ih,xs,s)) <$> specification <*> sourceText
 
 data Spec = Spec Visibility Visualize Expection Timeout Requirement
   deriving Show
@@ -534,22 +558,23 @@ negative (Spec v t _ to r) = Spec v t NegativeResult to r
 localTimeout :: Int -> Spec -> Spec
 localTimeout d (Spec v t e _ r) = Spec v t e (LocalTimeout d) r
 
-specification :: Parsec String () (TimeoutDuration,TreeStyle,FilterFacts,[Spec])
+specification :: Parsec String () (TimeoutDuration,TreeStyle,IncludeTask,IncludeHidden,[Spec])
 specification = do
   lines' <- commentBlock
   timeoutStyleAndSpecs <- zip [1 :: Integer ..] lines' `forM` \t ->
     case parseSpecLine t of
       Right spec -> return spec
       Left err   -> fail (show err)
-  let (mTimeout,mStyle,mFilter,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
-  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe False mFilter, specs)
+  let (mTimeout,mStyle,mIncTask,mIncHidden,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
+  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe Yes mIncTask, fromMaybe Yes mIncHidden, specs)
   where
     parseSpecLine :: (Integer, String) -> Either ParseError (Maybe SpecLine)
     parseSpecLine (i, s) = parse
         ((Nothing <$ commentLine)
          <|> (Just <$> ((TimeoutSpec <$> try globalTimeout)
                         <|> TreeStyleSpec <$> try treeStyle
-                        <|> FilterFactsSpec <$> try filterFacts
+                        <|> IncludeHiddenSpec <$> try includeHidden
+                        <|> IncludeTaskSpec <$> try includeTask
                         <|> TestSpec <$> (try newPredDeclParser <|> specLine))))
         ("Specification line " ++ show i) s
 
@@ -574,10 +599,15 @@ specification = do
         desc <- many1 anyChar
         pure $ newPredDecl t desc
 
-    filterFacts = do
-      void $ string "Filter hidden facts:"
+    includeHidden = do
+      void $ string "Include hidden definitions:"
       spaces
-      True <$ string "True" <|> False <$ string "False"
+      Yes <$ string "yes" <|> Filtered <$ string "filtered"
+
+    includeTask = do
+      void $ string "Include task definitions:"
+      spaces
+      Yes <$ string "yes" <|> Filtered <$ string "filtered" <|> No () <$ string "no"
 
     globalTimeout = do
       void $ string "Global timeout:"
