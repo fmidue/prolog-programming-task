@@ -37,6 +37,7 @@ import Text.PrettyPrint.Leijen.Text (
 import System.Random.Shuffle            (shuffleM)
 import System.Timeout                   (timeout)
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty (reverse)
 import Data.Either (fromRight)
 import Data.Void (Void, absurd)
 
@@ -353,7 +354,7 @@ runTests
 runTests = runTests' 0 []
   where
     runTests' n [] [] _ = pure (Finished AllOk, (n,0))
-    runTests' n (t:ts) [] _ = pure (Finished $ SomeTimeouts (t :| ts), (n,0))
+    runTests' n (t:ts) [] _ = pure (Finished $ SomeTimeouts (NonEmpty.reverse (t :| ts)), (n,0))
     runTests' n ts (x:xs) check = do
       res <- check x
       case res of
