@@ -16,7 +16,7 @@ import qualified Text.RawString.QQ                as RS (r)
 import Prolog.Programming.Data
 
 import Control.Arrow                    ((>>>), (&&&), second)
-import Control.Monad                    (forM, void, when)
+import Control.Monad                    (forM, void, when, zipWithM)
 import Control.Monad.Random.Class       (MonadRandom)
 import Control.Monad.Trans              (MonadIO (liftIO))
 import Control.Exception                (evaluate)
@@ -429,8 +429,7 @@ findNewPredicateDefs specs cls
   | length newDecls > length clauseHeads
   = Left "Not all required predicates defined"
   | otherwise
-  = Right $
-    zipWith (\(tl,desc) tr -> (tl,tr,desc))
+  = zipWithM match
       newDecls
       clauseHeads
   where
@@ -441,8 +440,19 @@ findNewPredicateDefs specs cls
 
     clauseHeads = nub $ termHead . lhs <$> cls
 
-termHead :: Term -> Atom
-termHead (Struct h _) = h
+    match :: (Term,String) -> (Atom,Int) -> Either String (Term,Atom,String)
+    match (tl@(Struct _ args) ,desc) (tr,ar)
+      | expectedAr /= ar = Left $ unlines $ map unwords
+        [ ["Definition for",desc,"does not have the correct arity."]
+        , ["Expected a predicate with",show expectedAr, plural expectedAr "argument" "arguments" ,"but",show tr, "has", show ar++"."]
+        ]
+      | otherwise = Right (tl,tr,desc)
+      where expectedAr = length args
+    match _ _ = error "can't match definitions: term is not a predicate"
+
+type Arity = Int
+termHead :: Term -> (Atom,Arity)
+termHead (Struct hd args) = (hd, length args)
 termHead _ = error "can't extract clause head"
 
 connectNewDefsAndTests :: [(Term,Atom,String)] -> [Clause]
@@ -479,7 +489,7 @@ useFoundDefsInSpecs ds specs = updateSpec <$> specs
 replaceHeads :: [(Term, Atom, c)] -> Term -> Term
 replaceHeads ds = replaceHead
   where
-    substitutions = map (\(tl,tr,_) -> (termHead tl,tr)) ds
+    substitutions = map (\(tl,tr,_) -> (fst $ termHead tl,tr)) ds
     replaceHead :: Term -> Term
     replaceHead (Struct h ts) =
       case lookup h substitutions of
