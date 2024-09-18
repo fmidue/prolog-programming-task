@@ -146,8 +146,7 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
       newDefs <- case findNewPredicateDefs specs inProg of
         Left err -> [] <$ (reject . text $ pack err)
         Right newDefs -> pure newDefs
-      let newFacts = connectNewDefsAndTests newDefs
-          newSpecs = useFoundDefs newDefs specs
+      let newSpecs = useFoundDefsInSpecs newDefs specs
       when (requiresNewPredicates specs) $
         inform $ vcat $
           text "Using the following definitions for required predicates:" :
@@ -156,7 +155,9 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
       case consultStringsAndFilter visible_facts (taskFilter includeTask inProg) hidden_facts (hiddenFilter includeHidden inProg) of
         Left err -> reject . text . pack $ show err
         Right factProg -> do
-          let p = factProg ++ inProg ++ newFacts
+          let
+            newProg = useFoundDefsInProgram newDefs factProg
+            p = newProg ++ inProg
           let expect PositiveResult = id
               expect NegativeResult = not
               treeValue DontShowTree _ = Nothing
@@ -415,7 +416,7 @@ reorderTests = shuffleConcat . classify
     classify' s@(Spec Visible ShowTree PositiveResult _ _)
       = (([s],[],[],[],[]),[])
 
-{-| Working with predicates whos name is unknow at configuration time -}
+{-| Working with predicates who's name is unknown at configuration time -}
 isNewPredDecl :: Spec -> Bool
 isNewPredDecl (Spec _ _ _ _ NewPredDecl{}) = True
 isNewPredDecl _ = False
@@ -453,19 +454,32 @@ connectNewDefsAndTests =
     vars (Var Wildcard{}) = []
     vars (Cut _) = []
 
-useFoundDefs :: [(Term,Atom,String)] -> [Spec] -> [Spec]
-useFoundDefs ds specs = updateSpec <$> specs
+useFoundDefsInProgram :: [(Term,Atom,String)] -> [Clause] -> [Clause]
+useFoundDefsInProgram ds clauses = updateClause <$> clauses
   where
-    substitutions = map (\(tl,tr,_) -> (termHead tl,tr)) ds
+    replace = replaceHeads ds
+    updateClause :: Clause -> Clause
+    updateClause (Clause hd gs) = Clause (replace hd) (map replace gs)
+    updateClause (ClauseFn hd f) = ClauseFn (replace hd) (map replace . f)
+
+useFoundDefsInSpecs :: [(Term,Atom,String)] -> [Spec] -> [Spec]
+useFoundDefsInSpecs ds specs = updateSpec <$> specs
+  where
+    replace = replaceHeads ds
     updateSpec :: Spec -> Spec
     updateSpec (Spec v t e to r) = Spec v t e to (updateReq r)
     updateReq :: Requirement -> Requirement
     updateReq (NewPredDecl t d) =
       NewPredDecl t d
     updateReq (QueryWithAnswers ts tss) =
-      QueryWithAnswers (replaceHead <$> ts) (fmap (fmap replaceHead) tss)
+      QueryWithAnswers (replace <$> ts) (map (map replace) tss)
     updateReq (StatementToCheck ts) =
-      StatementToCheck $ replaceHead <$> ts
+      StatementToCheck $ replace <$> ts
+
+replaceHeads :: [(Term, Atom, c)] -> Term -> Term
+replaceHeads ds = replaceHead
+  where
+    substitutions = map (\(tl,tr,_) -> (termHead tl,tr)) ds
     replaceHead :: Term -> Term
     replaceHead (Struct h ts) =
       case lookup h substitutions of
