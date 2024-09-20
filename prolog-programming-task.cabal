@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -29,6 +29,11 @@ library
       Prolog.Programming.Data
       Prolog.Programming.Task
   other-modules:
+      Prolog.Programming.ExampleConfig
+      Prolog.Programming.Helper
+      Prolog.Programming.Parser
+      Prolog.Programming.TestRunner
+      Prolog.Programming.TestSpec
       Paths_prolog_programming_task
   hs-source-dirs:
       src

@@ -35,6 +35,9 @@ library:
   - -Werror
   - -Wincomplete-patterns
   - -Wincomplete-uni-patterns
+  exposed-modules:
+    - Prolog.Programming.Data
+    - Prolog.Programming.Task
 
 executables:
   test-task-prolog:
