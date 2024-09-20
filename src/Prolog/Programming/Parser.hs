@@ -16,21 +16,21 @@ import Text.Parsec
 
 parseConfig
   :: String
-  -> Either ParseError (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, [Spec], (String, String))
+  -> Either ParseError (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, AllowListMatching, [Spec], (String, String))
 parseConfig = parse configuration "(config)"
 
-configuration :: Parsec String () (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, [Spec], (String, String))
-configuration = (\(d,st,it,ih,xs) s -> (d,st,it,ih,xs,s)) <$> specification <*> sourceText
+configuration :: Parsec String () (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, AllowListMatching, [Spec], (String, String))
+configuration = (\(d,st,it,ih,lm,xs) s -> (d,st,it,ih,lm,xs,s)) <$> specification <*> sourceText
 
-specification :: Parsec String () (TimeoutDuration,TreeStyle,IncludeTask,IncludeHidden,[Spec])
+specification :: Parsec String () (TimeoutDuration,TreeStyle,IncludeTask,IncludeHidden,AllowListMatching,[Spec])
 specification = do
   lines' <- commentBlock
   timeoutStyleAndSpecs <- zip [1 :: Integer ..] lines' `forM` \t ->
     case parseSpecLine t of
       Right spec -> return spec
       Left err   -> fail (show err)
-  let (mTimeout,mStyle,mIncTask,mIncHidden,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
-  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe Yes mIncTask, fromMaybe Yes mIncHidden, specs)
+  let (mTimeout,mStyle,mIncTask,mIncHidden,mListMatch,specs) = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
+  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe Yes mIncTask, fromMaybe Yes mIncHidden, fromMaybe True mListMatch, specs)
   where
     parseSpecLine :: (Integer, String) -> Either ParseError (Maybe SpecLine)
     parseSpecLine (i, s) = parse
@@ -39,6 +39,7 @@ specification = do
                         <|> TreeStyleSpec <$> try treeStyle
                         <|> IncludeHiddenSpec <$> try includeHidden
                         <|> IncludeTaskSpec <$> try includeTask
+                        <|> ListMatchSpec <$> try allowListMatching
                         <|> TestSpec <$> (try newPredDeclParser <|> specLine))))
         ("Specification line " ++ show i) s
 
@@ -82,6 +83,11 @@ specification = do
       void $ string "Tree style:"
       spaces
       QueryStyle <$ string "query" <|> ResolutionStyle <$ string "resolution"
+
+    allowListMatching = do
+      void $ string "Allow list pattern matching:"
+      spaces
+      True <$ string "yes" <|> False <$ string "no"
 
     localTimeoutAnn = option id $
       localTimeout . read

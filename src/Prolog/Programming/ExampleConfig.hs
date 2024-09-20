@@ -21,6 +21,8 @@ exampleConfig = Config
  * % Both default to yes
  * Include hidden definitions: [ yes | filtered ]
  * Include task definitions: [ yes | filtered | no ]
+ * % allow/disallow the use of [H|T] matching on list values, defaults to 'yes' (experimental: might not recognize all instances of the pattern)
+ * Allow list pattern matching: [ yes | no ]
  * % prefixing a test with [<time out in ms>] sets a local timeout for that test
  * a_predicate(Foo,Bar): a_predicate(expected_foo1,expected_bar1), a_predicate(expected_foo2,expected_bar2)
  * a_statement_that_has_to_be_true

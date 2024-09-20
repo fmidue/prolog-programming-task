@@ -46,7 +46,7 @@ verifyConfig (Config cfg) =
 describeTask :: Config -> Doc
 describeTask (Config cfg) = text . pack $ either
   (const "Error in task configuration!")
-  (\(_,_,_,_,_,(visible_facts,_)) -> visible_facts)
+  (\(_,_,_,_,_,_,(visible_facts,_)) -> visible_facts)
   (parseConfig cfg)
 
 initialTask :: Config -> Code
@@ -58,7 +58,7 @@ initialTask (Config cfg) = Code $
       "% Any additional definitions can go below this line"
       newDecls
   where
-    (_,_,_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
+    (_,_,_,_,_,specs,_) = parseConfig cfg `orError` "config should have been validated earlier"
     newDecls = mapMaybe (\(Spec _ _ _ _ r) -> newPredDesc r) specs
     newPredDesc (NewPredDecl _ desc) = Just desc
     newPredDesc StatementToCheck{} = Nothing
@@ -76,7 +76,7 @@ checkTask
   -> Code
   -> m ()
 checkTask reject inform drawPicture (Config cfg) (Code input) = do
-  let (globalTO,treeStyle,includeTask,includeHidden,specs,(visible_facts,hidden_facts))
+  let (globalTO,treeStyle,includeTask,includeHidden,allowListMatching,specs,(visible_facts,hidden_facts))
         = parseConfig cfg `orError` "config should have been validated earlier"
       drawTree tree = do
         svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
@@ -85,6 +85,12 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
   case consultString input of
     Left err -> reject . text . pack $ show err
     Right inProg -> do
+
+      when (not allowListMatching) $
+        case containsHeadTailPattern inProg of
+          Nothing -> pure ()
+          Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ show t
+
       newDefs <- case findNewPredicateDefs specs inProg of
         Left err -> [] <$ (reject . text $ pack err)
         Right newDefs -> pure newDefs
@@ -260,3 +266,26 @@ findNewPredicateDefs specs cls
 grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle
 grabFormatting ResolutionStyle = resolutionStyle
+
+containsHeadTailPattern :: Program -> Maybe Clause
+containsHeadTailPattern [] = Nothing
+containsHeadTailPattern (clause@(Clause hd gs) : cls) =
+  case hasHeadTailPattern hd <> mconcat (map hasHeadTailPattern gs) of
+    PatternFound -> Just clause
+    DontKnow -> containsHeadTailPattern cls
+containsHeadTailPattern (ClauseFn{} : cls) = containsHeadTailPattern cls
+
+hasHeadTailPattern :: Term -> HasHeadTailPattern
+hasHeadTailPattern (Struct "." [_,Var _]) = PatternFound
+hasHeadTailPattern (Struct _ xs) = mconcat $ map hasHeadTailPattern xs
+hasHeadTailPattern Var{} = DontKnow
+hasHeadTailPattern Cut{} = DontKnow
+
+data HasHeadTailPattern = PatternFound | DontKnow
+
+instance Semigroup HasHeadTailPattern where
+  PatternFound <> _ = PatternFound
+  DontKnow <> x = x
+
+instance Monoid HasHeadTailPattern where
+  mempty = DontKnow

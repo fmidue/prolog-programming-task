@@ -13,21 +13,26 @@ type IncludeTask = Include ()
 type IncludeHidden = Include Void
 data Include a = Yes | Filtered | No a
 
+type AllowListMatching = Bool
+
 data SpecLine
   = TimeoutSpec TimeoutDuration
   | TreeStyleSpec TreeStyle
   | IncludeTaskSpec IncludeTask
   | IncludeHiddenSpec IncludeHidden
+  | ListMatchSpec AllowListMatching
   | TestSpec Spec
 
-partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, Maybe IncludeTask, Maybe IncludeHidden, [Spec])
-partitionSpecLine = (\(ts,ss,ihs,its,xs) -> (listToMaybe ts, listToMaybe ss, listToMaybe ihs, listToMaybe its,xs)) . mconcat . map sortLine
+partitionSpecLine :: [SpecLine] -> (Maybe TimeoutDuration, Maybe TreeStyle, Maybe IncludeTask, Maybe IncludeHidden, Maybe AllowListMatching, [Spec])
+partitionSpecLine = (\((ts,ss,ihs,its,lms),xs) -> (listToMaybe ts, listToMaybe ss, listToMaybe ihs, listToMaybe its, listToMaybe lms,xs)) . mconcat . map sortLine
   where
-    sortLine (TimeoutSpec t)       = ([t],[],[],[],[])
-    sortLine (TreeStyleSpec s)     = ([],[s],[],[],[])
-    sortLine (IncludeTaskSpec i)   = ([],[],[i],[],[])
-    sortLine (IncludeHiddenSpec i) = ([],[],[],[i],[])
-    sortLine (TestSpec x)          = ([],[],[],[],[x])
+    -- nesting tuples because there is no Monoid instance for 6-tuples
+    sortLine (TimeoutSpec t)       = (([t],[],[],[],[]),[])
+    sortLine (TreeStyleSpec s)     = (([],[s],[],[],[]),[])
+    sortLine (IncludeTaskSpec i)   = (([],[],[i],[],[]),[])
+    sortLine (IncludeHiddenSpec i) = (([],[],[],[i],[]),[])
+    sortLine (ListMatchSpec b)     = (([],[],[],[],[b]),[])
+    sortLine (TestSpec x)          = (([],[],[],[],[]),[x])
 
 data Spec = Spec Visibility Visualize Expection Timeout Requirement
   deriving Show
