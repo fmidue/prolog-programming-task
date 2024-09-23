@@ -171,7 +171,7 @@ plural :: (Eq a, Num a) => a -> b -> b -> b
 plural 1 x _ = x
 plural _ _ y = y
 
-explainReason :: AbortReason Spec [Unifier] -> (Doc, Maybe Graph)
+explainReason :: AbortReason Spec (Maybe [Unifier]) -> (Doc, Maybe Graph)
 explainReason = explainResult
   where
     explainResult (OnErrorMsg x msg)
@@ -182,21 +182,23 @@ explainReason = explainResult
         , Nothing)
     explainResult (OnWrong x@(Spec (Hidden _) _ _ _ _) _ _)
       = (nested $ line <> describeSpec x, Nothing)
-    explainResult (OnWrong x Nothing actual)
+    explainResult (OnWrong x mTree mActual)
       = (nested $
           line <> describeSpec x
-          <$$> text "Your" <> align
-            (text " submission gives:"
-            <$$> if null actual then text "false" else (vcat . map (text . pack . printUnifier)) actual)
-        , Nothing)
-    explainResult (OnWrong x (Just tree) actual)
-      = (nested $
-          line <> describeSpec x
-          <$$> text "Your" <> align
-            (text " submission gives:"
-            <$$> if null actual then text "false" else (vcat . map (text . pack . printUnifier)) actual)
-          <> line <> text "Derivation tree:"
-        , Just tree)
+          <$$> resultMsg mActual
+            <> treeMsg mTree
+        , mTree)
+
+treeMsg :: Maybe Graph -> Doc
+treeMsg = maybe empty (const (line <> text "Derivation tree:"))
+
+resultMsg :: Maybe [Unifier] -> Doc
+resultMsg Nothing =
+  text "Your submission is not general enough."
+resultMsg (Just actual) =
+  text "Your" <> align
+    (text " submission gives:"
+    <$$> if null actual then text "false" else (vcat . map (text . pack . printUnifier)) actual)
 
 nested :: Doc -> Doc
 nested = nest 4
