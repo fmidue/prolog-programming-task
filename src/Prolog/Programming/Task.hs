@@ -1,3 +1,6 @@
+{-# HLINT ignore "Use unless" #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ViewPatterns #-}
