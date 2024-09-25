@@ -177,7 +177,7 @@ compareSolutions actual expected
     diff2 = nub actual \\ nub expected
 
 unifierWithoutHidden :: [Unifier] -> [Unifier]
-unifierWithoutHidden = filter (any (containsHiddenData . snd))
+unifierWithoutHidden = filter (not . any (containsHiddenData . snd))
 
 containsHiddenData :: Term -> Bool
 containsHiddenData (Struct hd xs)
