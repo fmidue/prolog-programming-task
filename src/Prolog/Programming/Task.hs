@@ -198,7 +198,7 @@ treeMsg = maybe empty (const (line <> text "Derivation tree:"))
 resultMsg :: Maybe [Unifier] -> Doc
 resultMsg Nothing =
   text "Your submission is not general enough."
-  <$$> text "(Your program do not work on arbitrary data)"
+  <$$> text "(Your program does not work on arbitrary data)"
 resultMsg (Just actual) =
   text "Your" <> align
     (text " submission gives:"
@@ -235,7 +235,7 @@ describeSpec (Spec Visible _ _ _ (NewPredDecl _ _)) = error "NewPredDecl should 
 showQuery :: Show a => [a] -> String
 showQuery query = "?- " ++ intercalate ", " (map show query) ++ "."
 
-{-| Working with predicates who's name is unknown at configuration time -}
+{-| Working with predicates whose name is unknown at configuration time -}
 isNewPredDecl :: Spec -> Bool
 isNewPredDecl (Spec _ _ _ _ NewPredDecl{}) = True
 isNewPredDecl _ = False
