@@ -60,5 +60,12 @@ a_test_with_resolution_tree(right_branch) :- fail. % See test line 5
  * Be careful to avoid naming clashes to not confuse the student with error messages about code they can't see.
  * Clashes can be avoided by the 'filtered' include setting, but giving priority to the student's version of some
  * predicate can weaken the test suite.
+ *
+ * If a data constructor or constant begins with hidden__ then it will not be visible in feedback resulting from query tests.
+ * The results containing these construtors/constants still need to appear in the list of expected results.
+ * When the difference between the expected and actual query result contains only solutions with hidden data a special error message
+ * informs the student that their submission is not general enough (in the sense that its rules do not work for arbitrary data).
+ *
+ * Note that derivation trees are currently not subject to filtering of hidden data!
  */
   |]
