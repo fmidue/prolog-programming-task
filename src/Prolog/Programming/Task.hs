@@ -195,6 +195,7 @@ treeMsg = maybe empty (const (line <> text "Derivation tree:"))
 resultMsg :: Maybe [Unifier] -> Doc
 resultMsg Nothing =
   text "Your submission is not general enough."
+  <$$> text "(Your rules do not work on arbitrary data)"
 resultMsg (Just actual) =
   text "Your" <> align
     (text " submission gives:"
