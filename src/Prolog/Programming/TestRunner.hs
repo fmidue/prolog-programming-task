@@ -12,12 +12,12 @@ import Prolog.Programming.TestSpec
 import Control.Exception                (evaluate)
 import Control.Monad.Random.Class       (MonadRandom)
 
-import Data.List                        (nub, (\\))
+import Data.List                        (nub, (\\), isPrefixOf)
 import Data.List.NonEmpty               (NonEmpty(..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
 import Data.Maybe                       (isNothing, fromMaybe)
 
-import Language.Prolog                  (Unifier, Goal, Term (Struct), Program, apply, Atom, Clause(..))
+import Language.Prolog                  (Unifier, Goal, Term (..), Program, apply, Atom, Clause(..))
 import Language.Prolog.GraphViz         (Graph, resolveFirstTree, resolveTree)
 
 import System.Random.Shuffle            (shuffleM)
@@ -28,7 +28,7 @@ testRunner :: TimeoutDuration
   -> Program
   -> [Spec]
   -> [(Term, Atom, String)]
-  -> IO (TestSuiteResult Spec [Unifier], (Int, Int))
+  -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
 testRunner globalTO factProg inputProg specs newDefs = do
   let
     newProg = useFoundDefsInProgram newDefs factProg
@@ -121,21 +121,25 @@ runTests = runTests' 0 []
         ErrorMsg msg -> pure (Aborted $ OnErrorMsg x msg, (n,length xs))
         Timeout -> runTests' n (x:ts) xs check
 
-checkProgram :: Program -> Spec -> TestResult [Unifier]
+checkProgram :: Program -> Spec -> TestResult (Maybe [Unifier])
 checkProgram p (Spec _ t r _ (QueryWithAnswers query expected)) =
   case solutions p query of
-    Right (actual,_)
-      | expect r (applySolutions actual query =~= expected)
-      -> Ok
-    Right (actual, tree)
-      -> Wrong (treeValue t tree) actual
+    Right (actual,tree)
+      | expect r (noDifference diff)
+        -> Ok
+      | isHiddenDifference diff
+        -> Wrong (treeValue t tree) Nothing
+      | otherwise
+        -> Wrong (treeValue t tree) (Just $ unifierWithoutHidden actual)
+      where
+        diff = applySolutions actual query `compareSolutions` expected
     Left err
       -> ErrorMsg err
 checkProgram p (Spec _ t r _ (StatementToCheck query)) =
   case firstSolution p query of
     Right (actual,tree)
       | expect r (isNothing actual)
-      -> Wrong (treeValue t tree) (maybe [] pure actual)
+      -> Wrong (treeValue t tree) (Just $ maybe [] pure actual)
     Right _
       -> Ok
     Left err
@@ -150,12 +154,37 @@ treeValue :: Visualize -> a -> Maybe a
 treeValue DontShowTree _ = Nothing
 treeValue ShowTree t = Just t
 
-(=~=) :: [[Term]] -> [[Term]] -> Bool
-actual =~= expected =
-  nub actual `isSublistOf` nub expected
-  && nub expected `isSublistOf` nub actual
+data ResultDifference = NoDifference | HiddenDifference | VisibleDifference
+
+noDifference :: ResultDifference -> Bool
+noDifference NoDifference = True
+noDifference HiddenDifference = False
+noDifference VisibleDifference = False
+
+isHiddenDifference :: ResultDifference -> Bool
+isHiddenDifference NoDifference = False
+isHiddenDifference HiddenDifference = True
+isHiddenDifference VisibleDifference = False
+
+compareSolutions :: [[Term]] -> [[Term]] -> ResultDifference
+compareSolutions actual expected
+  | null diff1 && null diff2 = NoDifference
+  | not (null diff1) && all (any containsHiddenData) diff1 = HiddenDifference
+  | not (null diff2) && all (any containsHiddenData) diff2 = HiddenDifference
+  | otherwise = VisibleDifference
   where
-    isSublistOf xs ys = null (xs \\ ys)
+    diff1 = nub expected \\ nub actual
+    diff2 = nub actual \\ nub expected
+
+unifierWithoutHidden :: [Unifier] -> [Unifier]
+unifierWithoutHidden = filter (any (containsHiddenData . snd))
+
+containsHiddenData :: Term -> Bool
+containsHiddenData (Struct hd xs)
+  | "hidden__" `isPrefixOf` hd = True
+  | otherwise = any containsHiddenData xs
+containsHiddenData Var{} = False
+containsHiddenData Cut{} = False
 
 solutions :: Program -> [Goal] -> Either String ([Unifier], Graph)
 solutions = resolveTree
