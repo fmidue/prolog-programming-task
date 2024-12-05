@@ -263,7 +263,7 @@ findNewPredicateDefs specs cls
     match (tl@(Struct _ args) ,desc) (tr,ar)
       | expectedAr /= ar = Left $ unlines $ map unwords
         [ ["Definition for",desc,"does not have the correct arity."]
-        , ["Expected a predicate with",show expectedAr, plural expectedAr "argument" "arguments" ,"but",show tr, "has", show ar++"."]
+        , ["Expected a predicate with",show expectedAr, plural expectedAr "argument," "arguments," ,"but",show tr, "has", show ar++"."]
         ]
       | otherwise = Right (tl,tr,desc)
       where expectedAr = length args
