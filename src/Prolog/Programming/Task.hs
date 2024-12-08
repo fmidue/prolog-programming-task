@@ -229,7 +229,7 @@ describeSpec (Spec Visible _ e _ (StatementToCheck query)) =
     describeExp PositiveResult = text "a positive result"
     describeExp NegativeResult = text "false"
 describeSpec (Spec Visible _ _ _ (QueryWithAnswers query _)) = text . pack $
-  "The result of the query " ++ showQuery query ++ " is incorrect."
+  "The result of the query " ++ show (showQuery query) ++ " is incorrect."
 describeSpec (Spec Visible _ _ _ (NewPredDecl _ _)) = error "NewPredDecl should not be passed to describeSpec"
 
 showQuery :: Show a => [a] -> String
