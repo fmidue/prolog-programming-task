@@ -14,12 +14,12 @@ module Prolog.Programming.Task (
 
 import Prolog.Programming.Data
 import Prolog.Programming.ExampleConfig
-import Prolog.Programming.Helper        (termHead)
+import Prolog.Programming.Helper        (termHead, Arity)
 import Prolog.Programming.Parser
 import Prolog.Programming.TestRunner
 import Prolog.Programming.TestSpec
 
-import Control.Monad                    (when, zipWithM)
+import Control.Monad                    (when)
 import Control.Monad.Random.Class       (MonadRandom)
 import Control.Monad.Trans              (MonadIO (liftIO))
 
@@ -39,7 +39,7 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 
 import Text.Parsec (ParseError)
 import Text.PrettyPrint.Leijen.Text (
-  Doc, (<+>), nest, parens, text, vcat, empty, line, align, (<$$>),
+  Doc, (<+>), nest, parens, text, vcat, empty, line, align, (<$$>), indent,
   )
 
 verifyConfig :: MonadFail m => Config -> m ()
@@ -95,13 +95,19 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
           Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ show t
 
       newDefs <- case findNewPredicateDefs specs inProg of
-        Left err -> [] <$ (reject . text $ pack err)
-        Right newDefs -> pure newDefs
-
-      when (requiresNewPredicates specs) $
-        inform $ vcat $
-          text "Using the following definitions for required predicates:" :
-          [ text . pack $ desc ++ ": " ++ tr | (_,tr,desc) <- newDefs]
+        (matchReport, Nothing) -> do
+          let
+            errMsg =
+              text "Error while looking for required predicates."
+              <$$> text "Using the following definitions for required predicates:"
+              <$$> matchReport
+          [] <$ reject errMsg
+        (matchReport, Just newDefs) -> do
+          when (requiresNewPredicates specs) $
+            inform $
+              text "Using the following definitions for required predicates:"
+              <$$> matchReport
+          pure newDefs
 
       case consultStringsAndFilter visible_facts (taskFilter includeTask inProg) hidden_facts (hiddenFilter includeHidden inProg) of
         Left err -> reject . text . pack $ show err
@@ -243,14 +249,8 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [Clause] -> Either String [(Term,Atom,String)]
-findNewPredicateDefs specs cls
-  | length newDecls > length clauseHeads
-  = Left "Not all required predicates defined"
-  | otherwise
-  = zipWithM match
-      newDecls
-      clauseHeads
+findNewPredicateDefs :: [Spec] -> [Clause] -> (Doc, Maybe [(Term,Atom)])
+findNewPredicateDefs specs cls = (report,result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
     extractNewDeclArgs (Spec _ _ _ _ (NewPredDecl tl desc)) = Just (tl,desc)
@@ -259,15 +259,38 @@ findNewPredicateDefs specs cls
 
     clauseHeads = nub $ termHead . lhs <$> cls
 
-    match :: (Term,String) -> (Atom,Int) -> Either String (Term,Atom,String)
-    match (tl@(Struct _ args) ,desc) (tr,ar)
-      | expectedAr /= ar = Left $ unlines $ map unwords
-        [ ["Definition for",desc,"does not have the correct arity."]
-        , ["Expected a predicate with",show expectedAr, plural expectedAr "argument," "arguments," ,"but",show tr, "has", show ar++"."]
-        ]
-      | otherwise = Right (tl,tr,desc)
+    matching = zipWith match newDecls (map Just clauseHeads ++ repeat Nothing)
+    report = vcat $ map reportMatch matching
+    result = traverse fromSuccess matching
+
+    match :: (Term,String) -> Maybe (Atom,Int) -> MatchResult
+    match (tl@(Struct _ args) ,desc) (Just (tr,ar))
+      | expectedAr /= ar = WrongArity (desc,expectedAr) (tr,ar)
+      | otherwise = MatchSuccess tl tr desc
       where expectedAr = length args
+    match (Struct{} ,desc) Nothing = MissingPredicate desc
     match _ _ = error "can't match definitions: term is not a predicate"
+
+data MatchResult
+  = MatchSuccess Term Atom String
+  | WrongArity (String,Arity) (Atom,Arity)
+  | MissingPredicate String
+
+fromSuccess :: MatchResult -> Maybe (Term,Atom)
+fromSuccess (MatchSuccess tl tr _) = Just (tl,tr)
+fromSuccess _ = Nothing
+
+reportMatch :: MatchResult -> Doc
+reportMatch (MatchSuccess _ tr desc) = text $ pack $ "- " <> desc <> ": " <> tr
+reportMatch (WrongArity (desc,expectedAr) (tr,ar)) =
+    text (pack $ "- "<> desc<>":")
+    <$$> indent 4 (
+      text ("Trying to use your defintion "<> pack (show tr) <>" but the predicate does not have the correct arity.")
+      <$$>  text (pack $ unwords
+        ["Expected a predicate with",show expectedAr, plural expectedAr "argument," "arguments," ,"but",show tr, "has", show ar++"."]
+      )
+    )
+reportMatch (MissingPredicate desc) = text $ pack $ "- " <> desc <> ": no definition found"
 
 grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle

@@ -27,7 +27,7 @@ testRunner :: TimeoutDuration
   -> Program
   -> Program
   -> [Spec]
-  -> [(Term, Atom, String)]
+  -> [(Term, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
 testRunner globalTO factProg inputProg specs newDefs = do
   let
@@ -47,7 +47,7 @@ testRunner globalTO factProg inputProg specs newDefs = do
       pure $ fromMaybe Timeout res
     mili2microSec = (* 1000)
 
-useFoundDefsInProgram :: [(Term,Atom,String)] -> [Clause] -> [Clause]
+useFoundDefsInProgram :: [(Term,Atom)] -> [Clause] -> [Clause]
 useFoundDefsInProgram ds clauses = updateClause <$> clauses
   where
     replace = replaceHeads ds
@@ -55,7 +55,7 @@ useFoundDefsInProgram ds clauses = updateClause <$> clauses
     updateClause (Clause hd gs) = Clause (replace hd) (map replace gs)
     updateClause (ClauseFn hd f) = ClauseFn (replace hd) (map replace . f)
 
-useFoundDefsInSpecs :: [(Term,Atom,String)] -> [Spec] -> [Spec]
+useFoundDefsInSpecs :: [(Term,Atom)] -> [Spec] -> [Spec]
 useFoundDefsInSpecs ds specs = updateSpec <$> specs
   where
     replace = replaceHeads ds
@@ -69,10 +69,10 @@ useFoundDefsInSpecs ds specs = updateSpec <$> specs
     updateReq (StatementToCheck ts) =
       StatementToCheck $ replace <$> ts
 
-replaceHeads :: [(Term, Atom, c)] -> Term -> Term
+replaceHeads :: [(Term, Atom)] -> Term -> Term
 replaceHeads ds = replaceHead
   where
-    substitutions = map (\(tl,tr,_) -> (fst $ termHead tl,tr)) ds
+    substitutions = map (\(tl,tr) -> (fst $ termHead tl,tr)) ds
     replaceHead :: Term -> Term
     replaceHead (Struct h ts) =
       case lookup h substitutions of
