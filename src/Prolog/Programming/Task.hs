@@ -285,7 +285,7 @@ reportMatch (MatchSuccess _ tr desc) = text $ pack $ "- " <> desc <> ": " <> tr
 reportMatch (WrongArity (desc,expectedAr) (tr,ar)) =
     text (pack $ "- "<> desc<>":")
     <$$> indent 4 (
-      text ("Trying to use your defintion "<> pack (show tr) <>" but the predicate does not have the correct arity.")
+      text ("Trying to use your definition "<> pack (show tr) <>" but the predicate does not have the correct arity.")
       <$$>  text (pack $ unwords
         ["Expected a predicate with",show expectedAr, plural expectedAr "argument," "arguments," ,"but",show tr, "has", show ar++"."]
       )
