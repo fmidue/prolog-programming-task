@@ -33,14 +33,15 @@ specification = do
   pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe Yes mIncTask, fromMaybe Yes mIncHidden, fromMaybe True mListMatch, specs)
   where
     parseSpecLine :: (Integer, String) -> Either ParseError (Maybe SpecLine)
-    parseSpecLine (i, s) = parse
+    parseSpecLine (i, s) = parse (
         ((Nothing <$ commentLine)
          <|> (Just <$> ((TimeoutSpec <$> try globalTimeout)
                         <|> TreeStyleSpec <$> try treeStyle
                         <|> IncludeHiddenSpec <$> try includeHidden
                         <|> IncludeTaskSpec <$> try includeTask
                         <|> ListMatchSpec <$> try allowListMatching
-                        <|> TestSpec <$> (try newPredDeclParser <|> specLine))))
+                        <|> TestSpec <$> (try newPredDeclParser <|> specLine)))
+        ) <* eof)
         ("Specification line " ++ show i) s
 
     specLine = ((\f g h i -> f . g . h . i)
