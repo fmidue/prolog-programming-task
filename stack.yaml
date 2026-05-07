@@ -3,8 +3,8 @@ packages:
 - .
 extra-deps:
 - git: https://github.com/fmidue/prolog
-  commit: feb3b1e3e806e30ce9346046f8e9239c199888df
+  commit: 0bac2c937602c13ba3a7f061795350c320f41254
 - git: https://github.com/fmidue/prolog-graph-lib
-  commit: 3efd2dac607e96dd7ad790ac2083b2a4f2243fe8
+  commit: 4b4060e2592d145b3744222cbfd68e2775c0348f
 
 - fgl-5.8.1.1
