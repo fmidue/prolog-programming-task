@@ -21,6 +21,7 @@ ignore$
 \.docx?$
 \.drawio$
 \.DS_Store$
+\.editorconfig$
 \.eot$
 \.exe$
 \.gif$

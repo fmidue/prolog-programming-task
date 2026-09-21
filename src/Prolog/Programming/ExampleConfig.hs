@@ -34,7 +34,7 @@ exampleConfig = Config
  * -a_statement_that_has_to_be_false % also works for all other test statements given above
  * % when combining multiple flags the order has to be <timeout><negative><tree><hidden><space>*<test>
  * new a_predicate_to_define(X): predicate description
- *    % require the definition of a predicate with a user choosen name. Use a_predicate_to_define to refer this predicate in other tests.
+ *    % require the definition of a predicate with a user chosen name. Use a_predicate_to_define to refer this predicate in other tests.
  *    % New predicates will be mapped to required predicates in the order they are defined.
  *    % (The initial solution automatically provides comments helping the user with the correct ordering.)
  */
@@ -63,7 +63,7 @@ a_test_with_resolution_tree(right_branch) :- fail. % See test line 5
  * predicate can weaken the test suite.
  *
  * If a data constructor or constant begins with hidden__ then it will not be visible in feedback resulting from query tests.
- * The results containing these construtors/constants still need to appear in the list of expected results.
+ * The results containing these constructors/constants still need to appear in the list of expected results.
  * When the difference between the expected and actual query result contains only solutions with hidden data a special error message
  * informs the student that their submission is not general enough (in the sense that its rules do not work for arbitrary data).
  *

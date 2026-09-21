@@ -41,11 +41,11 @@ testRunner globalTO factProg inputProg specs newDefs = do
     checkWithTimeout p s@(Spec _ _ _ to _) = do
       res <- case to of
         GlobalTimeout -> do
-          timeout (mili2microSec globalTO) $ evaluate (checkProgram p s)
+          timeout (millisecond2microSec globalTO) $ evaluate (checkProgram p s)
         LocalTimeout d -> do
-          timeout (mili2microSec d) $ evaluate (checkProgram p s)
+          timeout (millisecond2microSec d) $ evaluate (checkProgram p s)
       pure $ fromMaybe Timeout res
-    mili2microSec = (* 1000)
+    millisecond2microSec = (* 1000)
 
 useFoundDefsInProgram :: [(Term,Atom)] -> [Clause] -> [Clause]
 useFoundDefsInProgram ds clauses = updateClause <$> clauses
@@ -144,7 +144,7 @@ checkProgram p (Spec _ t r _ (StatementToCheck query)) =
       -> Ok
     Left err
       -> ErrorMsg err
-checkProgram _ (Spec _ _ _ _ NewPredDecl{}) = Ok -- test are already insterted elsewhere
+checkProgram _ (Spec _ _ _ _ NewPredDecl{}) = Ok -- test are already inserted elsewhere
 
 expect :: Expection -> Bool -> Bool
 expect PositiveResult = id
@@ -213,7 +213,7 @@ reorderTests = shuffleConcat . classify
     -- there is no Monoid instance for 6-tuples for some reason,
     -- so we use nested tuples instead
     -- results in a tuple (non-hidden, hidden)
-    -- with non-hiden =
+    -- with non-hidden =
     -- (positiveWithTree,negativeWithTree,positiveNoTree,negativeNoTree,queries)
     classify :: [Spec] -> (([Spec],[Spec],[Spec],[Spec],[Spec]),[Spec])
     classify = mconcat . map classify'

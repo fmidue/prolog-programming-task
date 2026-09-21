@@ -1,0 +1,13 @@
+arity
+Autotool
+Concat
+dcg
+foldl
+foldr
+fst
+GHC
+mconcat
+mempty
+snd
+unlines
+unwords
