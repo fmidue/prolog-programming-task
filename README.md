@@ -12,4 +12,4 @@ written in Haskell.
 If you required further explanations on the task type or having issues with
 the task type please file an issue.
 
-Improvements and bug fixes should be shared by filing a pull request.
+Improvements and bugfixes should be shared by filing a pull request.
