@@ -1,10 +1,11 @@
+---
 resolver: lts-21.25
 packages:
-- .
+  - .
 extra-deps:
-- git: https://github.com/fmidue/prolog
-  commit: 0bac2c937602c13ba3a7f061795350c320f41254
-- git: https://github.com/fmidue/prolog-graph-lib
-  commit: 4b4060e2592d145b3744222cbfd68e2775c0348f
+  - git: https://github.com/fmidue/prolog
+    commit: 0bac2c937602c13ba3a7f061795350c320f41254
+  - git: https://github.com/fmidue/prolog-graph-lib
+    commit: 4b4060e2592d145b3744222cbfd68e2775c0348f
 
-- fgl-5.8.1.1
+  - fgl-5.8.1.1
