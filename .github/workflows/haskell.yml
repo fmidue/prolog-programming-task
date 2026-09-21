@@ -38,6 +38,12 @@ jobs:
           enable-stack: true
           stack-no-global: true
 
+      - name: install/restore apt packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: graphviz texlive-base texlive-latex-base
+          version: 1.0
+
       - name: Install dependencies
         run: |
           set -ex
