@@ -15,15 +15,48 @@ import Language.Prolog                  (terms, term)
 
 import Text.Parsec
 
-parseConfig
-  :: String
-  -> Either ParseError (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, AllowListMatching, ShowSWISHButton, [Spec], (String, String))
+parseConfig ::
+  String ->
+  Either
+    ParseError
+    ( TimeoutDuration,
+      TreeStyle,
+      IncludeTask,
+      IncludeHidden,
+      AllowListMatching,
+      ShowSWISHButton,
+      [Spec],
+      (String, String)
+    )
 parseConfig = parse configuration "(config)"
 
-configuration :: Parsec String () (TimeoutDuration, TreeStyle, IncludeTask, IncludeHidden, AllowListMatching, ShowSWISHButton, [Spec], (String, String))
+configuration ::
+  Parsec
+    String
+    ()
+    ( TimeoutDuration,
+      TreeStyle,
+      IncludeTask,
+      IncludeHidden,
+      AllowListMatching,
+      ShowSWISHButton,
+      [Spec],
+      (String, String)
+    )
 configuration = (\(d,st,it,ih,lm,sb,xs) s -> (d,st,it,ih,lm,sb,xs,s)) <$> specification <*> sourceText
 
-specification :: Parsec String () (TimeoutDuration,TreeStyle,IncludeTask,IncludeHidden,AllowListMatching,ShowSWISHButton,[Spec])
+specification ::
+  Parsec
+    String
+    ()
+    ( TimeoutDuration,
+      TreeStyle,
+      IncludeTask,
+      IncludeHidden,
+      AllowListMatching,
+      ShowSWISHButton,
+      [Spec]
+    )
 specification = do
   lines' <- commentBlock
   timeoutStyleAndSpecs <- zip [1 :: Integer ..] lines' `forM` \t ->
@@ -31,7 +64,15 @@ specification = do
       Right spec -> return spec
       Left err   -> fail (show err)
   let TaskConfig {..} = partitionSpecLine $ catMaybes timeoutStyleAndSpecs
-  pure (fromMaybe 10000 mTimeout, fromMaybe QueryStyle mStyle, fromMaybe Yes mIncTask, fromMaybe Yes mIncHidden, fromMaybe True mListMatch, fromMaybe False mSWISHButton, specifications)
+  pure
+    ( fromMaybe 10000 mTimeout,
+      fromMaybe QueryStyle mStyle,
+      fromMaybe Yes mIncTask,
+      fromMaybe Yes mIncHidden,
+      fromMaybe True mListMatch,
+      fromMaybe False mSWISHButton,
+      specifications
+    )
   where
     parseSpecLine :: (Integer, String) -> Either ParseError (Maybe SpecLine)
     parseSpecLine (i, s) = parse (

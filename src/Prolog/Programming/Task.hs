@@ -139,7 +139,12 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
               <$$> matchReport
           pure newDefs
 
-      case consultStringsAndFilter visible_facts (taskFilter includeTask inProg) hidden_facts (hiddenFilter includeHidden inProg) of
+      case consultStringsAndFilter
+        visible_facts
+        (taskFilter includeTask inProg)
+        hidden_facts
+        (hiddenFilter includeHidden inProg)
+       of
         Left err -> reject . text . pack $ show err
         Right factProg -> do
           testResult <- liftIO $ testRunner globalTO factProg inProg specs newDefs
@@ -158,7 +163,9 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
                   (line <> describeSpec t
                     <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
                     <> line <> if not (null ts)
-                      then text (pack $ show (length ts) ++ " additional test "++ plural (length ts) "case" "cases"++" also timed out")
+                      then text (pack $
+                        show (length ts) ++ " additional test "
+                          ++ plural (length ts) "case" "cases"++" also timed out")
                       else empty
                   )
             (Aborted reason,(passed,notRun)) -> do
@@ -317,7 +324,14 @@ reportMatch (WrongArity (desc,expectedAr) (tr,ar)) =
     <$$> indent 4 (
       text ("Trying to use your definition "<> pack (show tr) <>" but the predicate does not have the correct arity.")
       <$$>  text (pack $ unwords
-        ["Expected a predicate with",show expectedAr, plural expectedAr "argument," "arguments," ,"but",show tr, "has", show ar++"."]
+        [ "Expected a predicate with"
+        , show expectedAr
+        , plural expectedAr "argument," "arguments,"
+        , "but"
+        , show tr
+        , "has"
+        , show ar++"."
+        ]
       )
     )
 reportMatch (MissingPredicate desc) = text $ pack $ "- " <> desc <> ": no definition found"
