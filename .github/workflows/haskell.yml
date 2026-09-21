@@ -42,8 +42,6 @@ jobs:
         run: |
           set -ex
           stack --no-terminal --install-ghc build --test --bench --only-dependencies
-          cd raw/embedded
-          stack build --no-terminal --install-ghc build --test --bench --only-dependencies
           set +ex
         env:
           BUILD: ${{ matrix.plan.build }}
