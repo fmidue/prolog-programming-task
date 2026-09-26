@@ -32,12 +32,10 @@ instance FieldNames U1 where
   fieldNames = []
 
 instance
-  (FieldNames f, KnownSymbol name)
-  => FieldNames (M1 S ('MetaSel ('Just name) su ss ds) f)
+  KnownSymbol name
+  => FieldNames (M1 S ('MetaSel ('Just name) su ss ds) (K1 i c))
   where
-  fieldNames =
-    symbolVal (Proxy @name)
-      : fieldNames @f
+  fieldNames = [symbolVal (Proxy @name)]
 
 instance (FieldNames l, FieldNames r) => FieldNames (l :*: r) where
   fieldNames = fieldNames @l ++ fieldNames @r
@@ -47,9 +45,6 @@ instance FieldNames f => FieldNames (M1 C c f) where
 
 instance FieldNames f => FieldNames (M1 D d f) where
   fieldNames = fieldNames @f
-
-instance FieldNames (K1 i c) where
-  fieldNames = []
 
 recordFieldNames
   :: forall a. (FieldNames (Rep a), Generic a) => [String]
