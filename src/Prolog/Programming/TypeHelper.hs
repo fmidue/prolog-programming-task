@@ -38,6 +38,7 @@ instance
   fieldNames =
     symbolVal (Proxy @name)
       : fieldNames @f
+
 instance (FieldNames l, FieldNames r) => FieldNames (l :*: r) where
   fieldNames = fieldNames @l ++ fieldNames @r
 
