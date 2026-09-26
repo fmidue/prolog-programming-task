@@ -86,23 +86,21 @@ parseStatus (String "warn") = pure $ Detect CA.Warn ()
 parseStatus (String "reject") = pure $ Detect CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
+parseRuleConfig :: Object -> Parser (CodeAnalysisRuleConfig ())
+parseRuleConfig obj = do
+  rejectUnknownFields ["status"] obj
+  mStatus <- obj .:? "status"
+  maybe (pure Ignore) parseStatus mStatus
+
 instance FromJSON SingletonVariablesConfig where
   parseJSON = withObject "SingletonVariablesConfig" $ \v -> do
-    rejectUnknownFields ["status"] v
-
-    mStatus <- v .:? "status"
-
-    status <- maybe (pure Ignore) parseStatus mStatus
-
-    pure $ SingletonVariablesConfig status
+    SingletonVariablesConfig <$> parseRuleConfig v
 
 instance FromJSON CutUsageConfig where
   parseJSON = withObject "CutUsageConfig" $ \v -> do
-    rejectUnknownFields ["status", "additionalMessage"] v
+    status <- parseRuleConfig v
 
-    mStatus <- v .:? "status"
-
-    status <- maybe (pure Ignore) parseStatus mStatus
+    rejectUnknownFields ["additionalMessage"] v
 
     msg <- v .:? "additionalMessage"
 
