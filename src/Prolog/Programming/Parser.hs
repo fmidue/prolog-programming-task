@@ -63,15 +63,12 @@ instance FromJSON TreeStyle where
   parseJSON _ = fail "Invalid value"
 
 instance FromJSON IncludeTask where
-  parseJSON (String "yes") = pure Yes
   parseJSON (String "filtered") = pure Filtered
-  parseJSON (String "no") = pure $ No ()
   parseJSON (Bool True) = pure Yes
   parseJSON (Bool False) = pure $ No ()
   parseJSON _ = fail "Invalid value"
 
 instance FromJSON IncludeHidden where
-  parseJSON (String "yes") = pure Yes
   parseJSON (String "filtered") = pure Filtered
   parseJSON (Bool True) = pure Yes
   parseJSON _ = fail "Invalid value"
