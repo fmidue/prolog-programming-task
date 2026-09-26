@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE KindSignatures #-}
@@ -10,17 +11,19 @@
 module Prolog.Programming.TypeHelper (recordFieldNames) where
 
 import Data.Kind (Type)
+import Data.Proxy (Proxy (..))
 import GHC.Generics (
   C,
   D,
   Generic (Rep),
   K1,
   M1,
+  Meta (..),
   S,
-  Selector (selName),
   U1,
   type (:*:),
  )
+import GHC.TypeLits (KnownSymbol, symbolVal)
 
 class FieldNames (f :: Type -> Type) where
   fieldNames :: [String]
@@ -28,11 +31,13 @@ class FieldNames (f :: Type -> Type) where
 instance FieldNames U1 where
   fieldNames = []
 
-instance (FieldNames f, Selector s) => FieldNames (M1 S s f) where
+instance
+  (FieldNames f, KnownSymbol name)
+  => FieldNames (M1 S ('MetaSel ('Just name) su ss ds) f)
+  where
   fieldNames =
-    selName (undefined :: M1 S s f p)
+    symbolVal (Proxy @name)
       : fieldNames @f
-
 instance (FieldNames l, FieldNames r) => FieldNames (l :*: r) where
   fieldNames = fieldNames @l ++ fieldNames @r
 
