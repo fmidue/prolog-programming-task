@@ -15,6 +15,7 @@ module Prolog.Programming.CodeAnalysis.Types (
 )
 where
 
+import Data.Data (Typeable)
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..))
 import Text.PrettyPrint.Leijen.Text (Doc)
@@ -34,7 +35,7 @@ type Rule = Clause -> [Problem]
 data CodeAnalysisRuleConfig a
   = Ignore
   | Detect {ruleSeverity :: Severity, extraConfig :: a}
-  deriving (Eq, Functor, Show)
+  deriving (Eq, Functor, Show, Typeable)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving Show

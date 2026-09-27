@@ -1,5 +1,7 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -15,24 +17,28 @@ import Data.List (intercalate, isPrefixOf)
 
 import Language.Prolog (Term, term, terms)
 
+import Data.Aeson (Result (..), fromJSON)
 import Data.Aeson.Key (toString)
 import qualified Data.Aeson.KeyMap as KM (keys)
 import Data.Bifunctor (Bifunctor (..))
 import qualified Data.ByteString.Char8 as BS (pack)
+import Data.Data (Typeable)
 import qualified Data.Text as T (unpack)
 import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
+import GHC.Generics (Generic, Rep)
 import Prolog.Programming.CodeAnalysis.Config (
   defaultCodeAnalysisConfig,
  )
 import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
   SingletonVariablesConfig (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
-import Prolog.Programming.TypeHelper (recordFieldNames)
+import Prolog.Programming.TypeHelper (FieldNames, recordFieldNames, typeName)
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -46,7 +52,7 @@ import Prolog.Programming.Types (
   Visibility (..),
   Visualize (..),
  )
-import Text.Parsec
+import Text.Parsec hiding (Error)
 
 rejectUnknownFields :: [String] -> Object -> Parser ()
 rejectUnknownFields known obj =
@@ -85,44 +91,36 @@ parseStatus (String "warn") = pure $ Detect CA.Warn ()
 parseStatus (String "reject") = pure $ Detect CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
-withRuleParser :: String -> (CodeAnalysisRuleConfig () -> b) -> Value -> Parser b
-withRuleParser name cons = withRuleParser' name [] cons () (const $ pure ())
-
-withRuleParser'
-  :: String
-  -> [String]
-  -> (CodeAnalysisRuleConfig a -> b)
-  -> a
-  -> (Object -> Parser a)
+withRuleParser
+  :: forall a b
+   . (FieldNames (Rep a), FromJSON a, Generic a, Monoid a, Typeable b)
+  => (CodeAnalysisRuleConfig a -> b)
   -> Value
   -> Parser b
-withRuleParser' name known cons extraDefault extraParser = withObject name $ \v -> do
+withRuleParser cons = withObject (typeName @b) $ \v -> do
   mStatus <- v .:? "status"
   status <- maybe (pure Ignore) parseStatus mStatus
 
   case status of
     Ignore -> do
       rejectUnknownFields ["status"] v
-      pure $ cons (extraDefault <$ status)
-    base -> do
-      extra <- extraParser v
-      rejectUnknownFields ("status" : known) v
-      pure $ cons (extra <$ base)
+      pure $ cons (mempty <$ status)
+    base -> case fromJSON (Object v) of
+      Error err -> fail $ show err
+      Success extra -> do
+        rejectUnknownFields ("status" : recordFieldNames @a) v
+        pure $ cons (extra <$ base)
 
 instance FromJSON SingletonVariablesConfig where
-  parseJSON =
-    withRuleParser
-      "SingletonVariablesConfig"
-      SingletonVariablesConfig
+  parseJSON = withRuleParser SingletonVariablesConfig
+
+instance FromJSON AdditionalMessage where
+  parseJSON = withObject "sfs" $ \v ->
+    AdditionalMessage
+      <$> v .:? "additionalMessage"
 
 instance FromJSON CutUsageConfig where
-  parseJSON =
-    withRuleParser'
-      "CutUsageConfig"
-      ["additionalMessage"]
-      CutUsageConfig
-      Nothing
-      (.:? "additionalMessage")
+  parseJSON = withRuleParser CutUsageConfig
 
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
@@ -169,12 +167,11 @@ parseSpec :: Parsec String () Spec
 parseSpec = try newPredDeclParser <|> specLine
   where
     specLine =
-      ( (\f g h i -> f . g . h . i)
-          <$> localTimeoutAnn
-          <*> negativeFlag
-          <*> withTreeFlag
-          <*> hiddenFlag
-      )
+      (\f g h i -> f . g . h . i)
+        <$> localTimeoutAnn
+        <*> negativeFlag
+        <*> withTreeFlag
+        <*> hiddenFlag
         <*> do
           spaces
           q <- terms
@@ -225,7 +222,7 @@ defaultOptions :: Requirement -> Spec
 defaultOptions = Spec Visible DontShowTree PositiveResult GlobalTimeout
 
 breakWhen :: (a -> Bool) -> [a] -> ([a], [a])
-breakWhen p = (takeWhile (not . p) &&& dropWhile (not . p)) >>> second (drop 1)
+breakWhen p = takeWhile (not . p) &&& dropWhile (not . p) >>> second (drop 1)
 
 queryWithAnswers :: [Term] -> [[Term]] -> Spec
 queryWithAnswers q as = defaultOptions $ QueryWithAnswers q as
