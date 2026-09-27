@@ -221,8 +221,10 @@ parseSpec = try newPredDeclParser <|> specLine
 defaultOptions :: Requirement -> Spec
 defaultOptions = Spec Visible DontShowTree PositiveResult GlobalTimeout
 
+{- FOURMOLU_DISABLE -}
 breakWhen :: (a -> Bool) -> [a] -> ([a], [a])
-breakWhen p = takeWhile (not . p) &&& dropWhile (not . p) >>> second (drop 1)
+breakWhen p = (takeWhile (not . p) &&& dropWhile (not . p)) >>> second (drop 1)
+{- FOURMOLU_ENABLE -}
 
 queryWithAnswers :: [Term] -> [[Term]] -> Spec
 queryWithAnswers q as = defaultOptions $ QueryWithAnswers q as
