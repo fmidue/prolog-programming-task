@@ -115,7 +115,7 @@ instance FromJSON SingletonVariablesConfig where
   parseJSON = withRuleParser SingletonVariablesConfig
 
 instance FromJSON AdditionalMessage where
-  parseJSON = withObject "sfs" $ \v ->
+  parseJSON = withObject "AdditionalMessage" $ \v ->
     AdditionalMessage
       <$> v .:? "additionalMessage"
 
