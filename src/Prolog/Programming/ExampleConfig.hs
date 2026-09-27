@@ -56,16 +56,16 @@ specifications:
 # 'warn': detections are reported with severity warn
 # 'reject': programs with detections are rejected
 # The default value for these fields is 'ignore' (in which case the aspect's mention can be omitted as well).
-# codeAnalysis:
-#   singletonVariables:
-#     # what to do concerning detection of singleton variables
-#     status: ignore
-#   cutUsage:
-#     # what to do concerning detection of cut usage
-#     status: ignore
-#     # additional message to display next to default feedback
-#     # additionalMessage: "We didn't introduce this operator yet."
-#     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+codeAnalysis:
+  singletonVariables:
+    # what to do concerning detection of singleton variables
+    status: ignore
+  cutUsage:
+    # what to do concerning detection of cut usage
+    status: ignore
+    # additional message to display next to default feedback
+    # additionalMessage: "We didn't introduce this operator yet."
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
 ------------------------------
 /* Everything from here on (up to an optional hidden section separated by a line of 3 or more dashes)
  * will be part of the visible exercise description.
