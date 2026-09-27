@@ -3,6 +3,7 @@ module CodeAnalysis.Rules.MixedSpec where
 import CodeAnalysis.Helper (shouldDetectProblemsStrict)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (Detect),
   CutUsageConfig (..),
@@ -17,7 +18,7 @@ caConfig =
     singletonVariables =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
-        CutUsageConfig $ Detect Error mempty
+        CutUsageConfig $ Detect Error $ AdditionalMessage Nothing
     }
 
 detectsProblems :: String -> Expectation
