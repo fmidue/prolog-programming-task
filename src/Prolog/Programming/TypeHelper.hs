@@ -8,8 +8,13 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Prolog.Programming.TypeHelper (recordFieldNames) where
+module Prolog.Programming.TypeHelper (
+  FieldNames,
+  recordFieldNames,
+  typeName,
+) where
 
+import Data.Data (Typeable)
 import Data.Kind (Type)
 import Data.Proxy (Proxy (..))
 import GHC.Generics (
@@ -24,6 +29,7 @@ import GHC.Generics (
   type (:*:),
  )
 import GHC.TypeLits (KnownSymbol, symbolVal)
+import Type.Reflection (tyConName, typeRep, typeRepTyCon)
 
 class FieldNames (f :: Type -> Type) where
   fieldNames :: [String]
@@ -49,3 +55,6 @@ instance FieldNames f => FieldNames (M1 D d f) where
 recordFieldNames
   :: forall a. (FieldNames (Rep a), Generic a) => [String]
 recordFieldNames = fieldNames @(Rep a)
+
+typeName :: forall a. Typeable a => String
+typeName = tyConName . typeRepTyCon $ typeRep @a
