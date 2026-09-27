@@ -93,7 +93,7 @@ parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'rejec
 
 withRuleParser
   :: forall a b
-   . (FieldNames (Rep a), FromJSON a, Generic a, Monoid a, Typeable b)
+   . (FieldNames (Rep a), FromJSON a, Generic a, Typeable b)
   => (CodeAnalysisRuleConfig a -> b)
   -> Value
   -> Parser b
@@ -104,7 +104,7 @@ withRuleParser cons = withObject (typeName @b) $ \v -> do
   case status of
     Ignore -> do
       rejectUnknownFields ["status"] v
-      pure $ cons (mempty <$ status)
+      pure $ cons Ignore
     base -> case fromJSON (Object v) of
       Error err -> fail $ show err
       Success extra -> do
