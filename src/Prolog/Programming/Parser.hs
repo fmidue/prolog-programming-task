@@ -9,7 +9,7 @@ module Prolog.Programming.Parser (
 ) where
 
 import Control.Arrow ((&&&), (>>>))
-import Control.Monad (unless, void, when)
+import Control.Monad (unless, void)
 
 import Data.List (intercalate, isPrefixOf)
 
@@ -19,7 +19,6 @@ import Data.Aeson.Key (toString)
 import qualified Data.Aeson.KeyMap as KM (keys)
 import Data.Bifunctor (Bifunctor (..))
 import qualified Data.ByteString.Char8 as BS (pack)
-import Data.Maybe (isJust)
 import qualified Data.Text as T (unpack)
 import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
@@ -53,7 +52,7 @@ rejectUnknownFields :: [String] -> Object -> Parser ()
 rejectUnknownFields known obj =
   unless (null unknown)
     $ fail
-    $ "Unknown fields: " ++ intercalate ", " unknown
+    $ "Unknown or forbidden fields: " ++ intercalate ", " unknown
   where
     unknown = filter (`notElem` known) $ map toString $ KM.keys obj
 
@@ -86,28 +85,44 @@ parseStatus (String "warn") = pure $ Detect CA.Warn ()
 parseStatus (String "reject") = pure $ Detect CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
-parseRuleConfig :: Object -> Parser (CodeAnalysisRuleConfig ())
-parseRuleConfig obj = do
-  rejectUnknownFields ["status"] obj
-  mStatus <- obj .:? "status"
-  maybe (pure Ignore) parseStatus mStatus
+withRuleParser :: String -> (CodeAnalysisRuleConfig () -> b) -> Value -> Parser b
+withRuleParser name cons = withRuleParser' name [] cons () (const $ pure ())
+
+withRuleParser'
+  :: String
+  -> [String]
+  -> (CodeAnalysisRuleConfig a -> b)
+  -> a
+  -> (Object -> Parser a)
+  -> Value
+  -> Parser b
+withRuleParser' name known cons extraDefault extraParser = withObject name $ \v -> do
+  mStatus <- v .:? "status"
+  status <- maybe (pure Ignore) parseStatus mStatus
+
+  case status of
+    Ignore -> do
+      rejectUnknownFields ["status"] v
+      pure $ cons (extraDefault <$ status)
+    base -> do
+      extra <- extraParser v
+      rejectUnknownFields ("status" : known) v
+      pure $ cons (extra <$ base)
 
 instance FromJSON SingletonVariablesConfig where
-  parseJSON = withObject "SingletonVariablesConfig" $ \v -> do
-    SingletonVariablesConfig <$> parseRuleConfig v
+  parseJSON =
+    withRuleParser
+      "SingletonVariablesConfig"
+      SingletonVariablesConfig
 
 instance FromJSON CutUsageConfig where
-  parseJSON = withObject "CutUsageConfig" $ \v -> do
-    status <- parseRuleConfig v
-
-    rejectUnknownFields ["additionalMessage"] v
-
-    msg <- v .:? "additionalMessage"
-
-    when (status == Ignore && isJust msg) $
-      fail "additionalMessage is only allowed to exist when status is not 'ignore'"
-
-    pure $ CutUsageConfig (msg <$ status)
+  parseJSON =
+    withRuleParser'
+      "CutUsageConfig"
+      ["additionalMessage"]
+      CutUsageConfig
+      Nothing
+      (.:? "additionalMessage")
 
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
