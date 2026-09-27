@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
@@ -7,6 +8,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   SingletonVariablesConfig (..),
+  AdditionalMessage (..),
   CutUsageConfig (..),
   Severity (..),
   WithSeverity (..),
@@ -37,7 +39,8 @@ data CodeAnalysisRuleConfig a
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving Show
 
-type AdditionalMessage = Maybe String
+newtype AdditionalMessage = AdditionalMessage { additionalMessage :: Maybe String }
+  deriving (Generic, Monoid, Semigroup, Show)
 
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show

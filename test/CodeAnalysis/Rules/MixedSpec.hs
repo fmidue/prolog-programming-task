@@ -17,7 +17,7 @@ caConfig =
     singletonVariables =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
-        CutUsageConfig $ Detect Error Nothing
+        CutUsageConfig $ Detect Error mempty
     }
 
 detectsProblems :: String -> Expectation
