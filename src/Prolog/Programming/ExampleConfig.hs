@@ -59,10 +59,10 @@ specifications:
 codeAnalysis:
   singletonVariables:
     # what to do concerning detection of singleton variables
-    status: ignore
+    status: hint
   cutUsage:
     # what to do concerning detection of cut usage
-    status: ignore
+    status: warn
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
