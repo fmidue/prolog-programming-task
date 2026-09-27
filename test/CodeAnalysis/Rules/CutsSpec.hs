@@ -4,6 +4,7 @@ import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (AdditionalMessage),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
@@ -18,7 +19,7 @@ caConfig cMsg =
     singletonVariables =
       SingletonVariablesConfig Ignore
     , cutUsage =
-        CutUsageConfig $ Detect Error cMsg
+        CutUsageConfig $ Detect Error $ AdditionalMessage cMsg
     }
 
 hasCut :: [String]

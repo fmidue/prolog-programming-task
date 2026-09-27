@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
@@ -6,12 +7,15 @@ module Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   SingletonVariablesConfig (..),
+  AdditionalMessage (..),
   CutUsageConfig (..),
   Severity (..),
   WithSeverity (..),
 )
 where
 
+import Data.Data (Typeable)
+import GHC.Generics (Generic)
 import Language.Prolog (Clause (..))
 import Text.PrettyPrint.Leijen.Text (Doc)
 
@@ -30,12 +34,13 @@ type Rule = Clause -> [Problem]
 data CodeAnalysisRuleConfig a
   = Ignore
   | Detect {ruleSeverity :: Severity, extraConfig :: a}
-  deriving (Eq, Functor, Show)
+  deriving (Eq, Functor, Show, Typeable)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving Show
 
-type AdditionalMessage = Maybe String
+newtype AdditionalMessage = AdditionalMessage { additionalMessage :: Maybe String }
+  deriving (Generic, Show)
 
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
@@ -47,7 +52,7 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for cutUsage rule
   , cutUsage :: CutUsageConfig
   }
-  deriving Show
+  deriving (Generic, Show)
 
 {- | Classification for seriousness of violation
 
