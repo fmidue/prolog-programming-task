@@ -20,11 +20,9 @@ import Language.Prolog (Clause (..))
 import Text.PrettyPrint.Leijen.Text (Doc)
 
 -- | Violation found in code
-data Problem = Problem {
-  -- | Clause the violation appears in
-  problemClause :: Clause
+newtype Problem = Problem {
   -- | User-facing explanation of the violation
-  , problemDisplay :: Doc
+  problemDisplay :: Doc
   }
   deriving Show
 
@@ -33,7 +31,7 @@ type Rule = Clause -> [Problem]
 
 data CodeAnalysisRuleConfig a
   = Ignore
-  | Detect {ruleSeverity :: Severity, extraConfig :: a}
+  | Detect Severity a
   deriving (Eq, Functor, Show, Typeable)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())

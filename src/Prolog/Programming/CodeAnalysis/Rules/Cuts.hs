@@ -27,12 +27,11 @@ containsCut = everything (||) $ mkQ False $ \case
 toProblem :: Maybe String -> Clause -> Problem
 toProblem cMsg clause =
   Problem {
-    problemClause = clause
-    , problemDisplay =
-        vsep
-          [ string "Your clause"
-          , indent 2 $ string $ pack $ show clause
-          , string "makes use of the cut (!) operator." <> linebreak
-          , maybe empty (string . pack) cMsg
-          ]
+    problemDisplay =
+      vsep
+        [ string "Your clause"
+        , indent 2 $ string $ pack $ show clause
+        , string "makes use of the cut (!) operator." <> linebreak
+        , maybe empty (string . pack) cMsg
+        ]
     }
