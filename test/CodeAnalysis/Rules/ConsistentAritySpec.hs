@@ -31,8 +31,6 @@ hasMultiple =
   , ("p(X) :- q(Y), w(Y,[V|Vs]), p(V,Vs), q(X,V).", ["p", "q"])
   , ("p(X) :- q(Y), (p(X,Y), w(X,Y)).", ["p"])
   , ("p(X) :- q(Y), (p(X,Y); w(X,Y)).", ["p"])
-  , ("p(node(L,R)) :- q(L), q(R). u(node(_,V,_)) :- w(V).", ["node"])
-  , ("p(X) :- X = node(L,R), q(L), q(R). u(node(_,V,_)) :- w(V).", ["node"])
   ]
 
 errorFree :: [String]
@@ -43,6 +41,8 @@ errorFree =
   , "p(_) :- q(Y), p(Y)."
   , "p(X,Y) :- q(X), p(Y,X)."
   , "p(node(L,R)) :- q(L), q(R). u(node(L,_)) :- w(L)."
+  , "p(node(L,R)) :- q(L), q(R). u(node(_,V,_)) :- w(V)."
+  , "p(X) :- X = node(L,R), q(L), q(R). u(node(_,V,_)) :- w(V)."
   ]
 
 spec :: Spec
@@ -52,7 +52,7 @@ spec = describe "ConsistentArity" $ do
       it programCode $
         shouldDetectProblemsStrict
           (caConfig [])
-          (map (isInfixOf . ("Your program contains the predicate/functor " ++)) predicates)
+          (map (isInfixOf . ("Your program contains the predicate " ++)) predicates)
           programCode
   describe "Should not detect any problems" $
     forM_ errorFree $ \programCode ->
