@@ -10,17 +10,19 @@ import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (IgnoredPredicates (..), Problem (..), Rule (..))
-import Text.PrettyPrint.Leijen.Text (string)
+import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 consistentArityRule :: IgnoredPredicates -> Rule
 consistentArityRule (IgnoredPredicates ignore) = ProgramRule $ \clauses otherDefinitions ->
   case forcedIdentities otherDefinitions of
     Nothing ->
-      [ Problem
-          $ string
-          $ pack
-            "The task and/or hidden definitions violate consistent arities of predicates. "
-            <> "This is not your fault!"
+      [ Problem $
+          vcat
+            [ "An unexpected error occurred."
+            , "This is usually not caused by a fault within your submission."
+            , "Please contact your lecturers, providing the following error message:"
+            , "Task instance does not satisfy arity constraint."
+            ]
       ]
     Just forced ->
       mapMaybe
