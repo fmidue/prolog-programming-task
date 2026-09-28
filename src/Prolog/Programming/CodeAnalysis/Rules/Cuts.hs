@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsRule) where
+module Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker) where
 
 import Data.Data (Data)
 import Data.Generics (everything, mkQ)
@@ -10,8 +10,8 @@ import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), Problem (..), Rule (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
-cutsRule :: AdditionalMessage -> Rule
-cutsRule (AdditionalMessage cMsg) = ClauseRule $ \clause ->
+cutsChecker :: AdditionalMessage -> Rule
+cutsChecker (AdditionalMessage cMsg) = ClauseRule $ \clause ->
   [toProblem cMsg clause | cutExistsInClause clause]
 
 cutExistsInClause :: Clause -> Bool

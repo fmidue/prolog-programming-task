@@ -5,9 +5,9 @@ module Prolog.Programming.CodeAnalysis.Config (
 where
 
 import Data.Maybe (catMaybes)
-import Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityRule)
-import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsRule)
-import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesRule)
+import Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChecker)
+import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
@@ -28,9 +28,9 @@ configuredRules
     }
   context =
     catMaybes
-      [ toConfigured singletonVarsCfg (const singletonVariablesRule)
-      , toConfigured cutsCfg cutsRule
-      , toConfigured consistentArityCfg (consistentArityRule context)
+      [ toConfigured singletonVarsCfg (const singletonVariablesChecker)
+      , toConfigured cutsCfg cutsChecker
+      , toConfigured consistentArityCfg (consistentArityChecker context)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> Rule) -> Maybe (WithSeverity Rule)

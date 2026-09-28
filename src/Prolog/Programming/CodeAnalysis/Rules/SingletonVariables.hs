@@ -1,4 +1,4 @@
-module Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesRule) where
+module Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker) where
 
 import Data.Generics (Data, everything, mkQ)
 import Data.Map (Map)
@@ -8,8 +8,8 @@ import Language.Prolog (Clause (..), Term (..), VariableName (..))
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule (ClauseRule))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
-singletonVariablesRule :: Rule
-singletonVariablesRule = ClauseRule $ \clause ->
+singletonVariablesChecker :: Rule
+singletonVariablesChecker = ClauseRule $ \clause ->
   let singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
   in map (toProblem clause) singletonVariables
 
