@@ -1,6 +1,6 @@
 module CodeAnalysis.Rules.ConsistentAritySpec where
 
-import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
+import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldDetectProblemsStrict', shouldNotHaveProblems)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Types (
@@ -64,3 +64,9 @@ spec = describe "ConsistentArity" $ do
     shouldNotHaveProblems
       (caConfig ["p"])
       "p(X) :- q(Y), p(X,Y)."
+  it "should detect violation of forced arity" $
+    shouldDetectProblemsStrict'
+      (caConfig [])
+      [isInfixOf "check which is used/defined with wrong arity. It should be check/2."]
+      "p(X) :- check(X)."
+      "check(_,_)."
