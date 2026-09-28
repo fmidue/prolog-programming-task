@@ -2,20 +2,57 @@
 
 module Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityRule) where
 
+import Data.Bifunctor (second)
 import Data.List.Extra (groupSort, nubOrd)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
-import Prolog.Programming.CodeAnalysis.Types (IgnoredPredicates (IgnoredPredicates), Problem (..), Rule (ProgramRule))
+import Prolog.Programming.CodeAnalysis.Types (IgnoredPredicates (..), Problem (..), Rule (..))
 import Text.PrettyPrint.Leijen.Text (string)
 
 consistentArityRule :: IgnoredPredicates -> Rule
-consistentArityRule (IgnoredPredicates ignore) = ProgramRule $ \clauses _ ->
-  let
-    identities = concatMap identitiesInClause clauses
-    groupedByName = groupSort identities
-    predicatesWithMultipleArities = filter ((> 1) . length . nubOrd . snd) groupedByName
-  in
-    [toProblem name | (name, _) <- predicatesWithMultipleArities, name `notElem` ignore]
+consistentArityRule (IgnoredPredicates ignore) = ProgramRule $ \clauses otherDefinitions ->
+  case forcedIdentities otherDefinitions of
+    Nothing ->
+      [ Problem
+          $ string
+          $ pack
+            "The task and/or hidden definitions violate consistent arities of predicates. "
+            <> "This is not your fault!"
+      ]
+    Just forced ->
+      mapMaybe
+        (fmap toProblem . compareWithForced forced)
+        $ filter (\(n, _) -> n `notElem` ignore)
+        $ groupSort
+        $ nubOrd
+        $ concatMap identitiesInClause clauses
+
+data Result = MultipleArities String | InconsistentWithForced String Int
+
+compareWithForced :: Map String Int -> (String, [Int]) -> Maybe Result
+compareWithForced forced (name, arities) =
+  case arities of
+    [] -> Nothing
+    [_] ->
+      case Map.lookup name forced of
+        Just expected
+          | expected /= head arities ->
+              Just $ InconsistentWithForced name expected
+        _ -> Nothing
+    _ -> Just $ MultipleArities name
+
+forcedIdentities :: [Clause] -> Maybe (Map String Int)
+forcedIdentities clauses
+  | any inconsistent identities = Nothing
+  | otherwise = Just $ Map.fromList $ map (second head) identities
+  where
+    identities = groupSort $ concatMap identitiesInClause clauses
+
+    inconsistent (_, arities) =
+      length (nubOrd arities) > 1
 
 identitiesInClause :: Clause -> [(String, Int)]
 identitiesInClause (Clause ls rs) = concatMap grabIdentity $ ls : rs
@@ -28,11 +65,21 @@ grabIdentity (Struct name args) = case name of
   _ -> [(name, length args)]
 grabIdentity _ = []
 
-toProblem :: String -> Problem
-toProblem name =
+toProblem :: Result -> Problem
+toProblem res =
   Problem {
     problemDisplay =
-      string
-        $ pack
-        $ "Your program contains the predicate " ++ name ++ " which is used/defined with different arities."
+      string $
+        pack $
+          case res of
+            MultipleArities name ->
+              "Your program contains the predicate " ++ name ++ " which is used/defined with different arities."
+            InconsistentWithForced name correctArity ->
+              "Your program contains the predicate "
+                ++ name
+                ++ " which is used/defined with wrong arity. It should be "
+                ++ name
+                ++ "/"
+                ++ show correctArity
+                ++ "."
     }

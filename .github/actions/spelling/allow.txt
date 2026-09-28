@@ -21,6 +21,7 @@ mempty
 pbs
 rhs
 snd
+uncurry
 unlines
 unwords
 vsep
