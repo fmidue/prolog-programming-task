@@ -26,11 +26,11 @@ configuredRules
     , cutUsage = CutUsageConfig cutsCfg
     , consistentArity = ConsistentArityConfig consistentArityCfg
     }
-  context =
+  taskAndHiddenDefinitions =
     catMaybes
       [ toConfigured singletonVarsCfg (const singletonVariablesChecker)
       , toConfigured cutsCfg cutsChecker
-      , toConfigured consistentArityCfg (consistentArityChecker context)
+      , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> Rule) -> Maybe (WithSeverity Rule)
