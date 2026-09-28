@@ -9,6 +9,8 @@ module Prolog.Programming.CodeAnalysis.Types (
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
+  IgnoredPredicates (..),
+  ConsistentArityConfig (..),
   Severity (..),
   WithSeverity (..),
 )
@@ -47,12 +49,20 @@ newtype AdditionalMessage = AdditionalMessage { additionalMessage :: Maybe Strin
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
+newtype IgnoredPredicates = IgnoredPredicates { ignorePredicates :: [String] }
+  deriving (Generic, Show)
+
+newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig IgnoredPredicates)
+  deriving (Generic, Show)
+
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for singletonVariables rule
   singletonVariables :: SingletonVariablesConfig
   -- | Configuration for cutUsage rule
   , cutUsage :: CutUsageConfig
+  -- | Configuration for consistentArity rule
+  , consistentArity :: ConsistentArityConfig
   }
   deriving (Generic, Show)
 

@@ -1,4 +1,5 @@
 Aeson
+arities
 arity
 Autotool
 Bifunctor

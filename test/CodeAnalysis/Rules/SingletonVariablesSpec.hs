@@ -6,6 +6,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
+  ConsistentArityConfig (..),
   CutUsageConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
@@ -19,6 +20,7 @@ caConfig =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
         CutUsageConfig Ignore
+    , consistentArity = ConsistentArityConfig Ignore
     }
 
 unmarkedSingletons :: [(String, [String])]

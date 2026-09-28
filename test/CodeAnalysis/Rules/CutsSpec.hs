@@ -7,6 +7,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
+  ConsistentArityConfig (ConsistentArityConfig),
   CutUsageConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
@@ -20,6 +21,7 @@ caConfig cMsg =
       SingletonVariablesConfig Ignore
     , cutUsage =
         CutUsageConfig $ Detect Error $ AdditionalMessage cMsg
+    , consistentArity = ConsistentArityConfig Ignore
     }
 
 hasCut :: [String]
