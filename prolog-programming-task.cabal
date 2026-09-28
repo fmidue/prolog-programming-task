@@ -38,6 +38,7 @@ library
       Prolog.Programming.Examples
       Prolog.Programming.Helper
       Prolog.Programming.TestRunner
+      Prolog.Programming.TypeHelper
       Prolog.Programming.Types
       Paths_prolog_programming_task
   hs-source-dirs:
@@ -45,6 +46,7 @@ library
   ghc-options: -Wall -Werror -Wincomplete-patterns -Wincomplete-uni-patterns
   build-depends:
       MonadRandom
+    , aeson
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -69,6 +71,7 @@ executable test-task-prolog
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       MonadRandom
+    , aeson
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -101,6 +104,7 @@ test-suite prolog-programming-task-test
   build-depends:
       HUnit
     , MonadRandom
+    , aeson
     , base >=4.7 && <5
     , bytestring
     , containers

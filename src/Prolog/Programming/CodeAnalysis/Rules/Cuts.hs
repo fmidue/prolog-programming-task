@@ -7,11 +7,11 @@ import Data.Data (Data)
 import Data.Generics (everything, mkQ)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule)
+import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), Problem (..), Rule)
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
-cutsRule :: Maybe String -> Rule
-cutsRule cMsg clause
+cutsRule :: AdditionalMessage -> Rule
+cutsRule (AdditionalMessage cMsg) clause
   | cutExistsInClause clause = [toProblem cMsg clause]
   | otherwise = []
 

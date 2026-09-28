@@ -1,6 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Prolog.Programming.Parser (
@@ -8,27 +11,33 @@ module Prolog.Programming.Parser (
   parseSpec,
 ) where
 
-import Control.Monad (void, when)
+import Control.Monad (unless, void, when)
 
-import Data.List (isPrefixOf)
+import Data.List (intercalate, isPrefixOf)
 
 import Language.Prolog (Term, term, terms)
 
+import Data.Aeson (Result (..), fromJSON)
+import Data.Aeson.Key (toString)
+import qualified Data.Aeson.KeyMap as KM (keys)
 import qualified Data.ByteString.Char8 as BS (pack)
-import Data.Maybe (isJust)
+import Data.Data (Typeable)
 import qualified Data.Text as T (unpack)
-import Data.Yaml (FromJSON (..), Value (..), decodeEither', withObject, (.!=), (.:?))
+import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
+import GHC.Generics (Generic, Rep)
 import Prolog.Programming.CodeAnalysis.Config (
   defaultCodeAnalysisConfig,
  )
 import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
   SingletonVariablesConfig (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
+import Prolog.Programming.TypeHelper (FieldNames, recordFieldNames, typeName)
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -43,7 +52,15 @@ import Prolog.Programming.Types (
   Visibility (..),
   Visualize (..),
  )
-import Text.Parsec
+import Text.Parsec hiding (Error)
+
+rejectUnknownFields :: [String] -> Object -> Parser ()
+rejectUnknownFields known obj =
+  unless (null unknown)
+    $ fail
+    $ "Unknown or forbidden fields: " ++ intercalate ", " unknown
+  where
+    unknown = filter (`notElem` known) $ map toString $ KM.keys obj
 
 instance FromJSON TreeStyle where
   parseJSON (String "query") = pure QueryStyle
@@ -51,13 +68,13 @@ instance FromJSON TreeStyle where
   parseJSON _ = fail "Invalid value"
 
 instance FromJSON IncludeTask where
-  parseJSON (String "yes") = pure Yes
+  parseJSON (Bool True) = pure Yes
   parseJSON (String "filtered") = pure Filtered
-  parseJSON (String "no") = pure $ No ()
+  parseJSON (Bool False) = pure $ No ()
   parseJSON _ = fail "Invalid value"
 
 instance FromJSON IncludeHidden where
-  parseJSON (String "yes") = pure Yes
+  parseJSON (Bool True) = pure Yes
   parseJSON (String "filtered") = pure Filtered
   parseJSON _ = fail "Invalid value"
 
@@ -74,35 +91,49 @@ parseStatus (String "warn") = pure $ Detect CA.Warn ()
 parseStatus (String "reject") = pure $ Detect CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
+withRuleParser
+  :: forall a b
+   . (FieldNames (Rep a), FromJSON a, Generic a, Typeable b)
+  => (CodeAnalysisRuleConfig a -> b)
+  -> Value
+  -> Parser b
+withRuleParser cons = withObject (typeName @b) $ \v -> do
+  mStatus <- v .:? "status"
+  status <- maybe (pure Ignore) parseStatus mStatus
+
+  case status of
+    Ignore -> do
+      rejectUnknownFields ["status"] v
+      pure $ cons Ignore
+    base -> case fromJSON (Object v) of
+      Error err -> fail $ show err
+      Success extra -> do
+        rejectUnknownFields ("status" : recordFieldNames @a) v
+        pure $ cons (extra <$ base)
+
 instance FromJSON SingletonVariablesConfig where
-  parseJSON = withObject "SingletonVariablesConfig" $ \v -> do
-    mStatus <- v .:? "status"
+  parseJSON = withRuleParser SingletonVariablesConfig
 
-    status <- maybe (pure Ignore) parseStatus mStatus
-
-    pure $ SingletonVariablesConfig status
+instance FromJSON AdditionalMessage where
+  parseJSON = withObject "AdditionalMessage" $ \v ->
+    AdditionalMessage
+      <$> v .:? "additionalMessage"
 
 instance FromJSON CutUsageConfig where
-  parseJSON = withObject "CutUsageConfig" $ \v -> do
-    mStatus <- v .:? "status"
-
-    status <- maybe (pure Ignore) parseStatus mStatus
-
-    msg <- v .:? "additionalMessage"
-
-    when (status == Ignore && isJust msg) $
-      fail "additionalMessage is only allowed to exist when status is not 'ignore'"
-
-    pure $ CutUsageConfig (msg <$ status)
+  parseJSON = withRuleParser CutUsageConfig
 
 instance FromJSON CodeAnalysisConfig where
-  parseJSON = withObject "CodeAnalysisConfig" $ \v ->
+  parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
+    rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
+
     CodeAnalysisConfig
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
 
 instance FromJSON TaskConfig where
-  parseJSON = withObject "TaskConfig" $ \v ->
+  parseJSON = withObject "TaskConfig" $ \v -> do
+    rejectUnknownFields (recordFieldNames @TaskConfig) v
+
     TaskConfig
       <$> v .:? "globalTimeout" .!= 10000
       <*> v .:? "treeStyle" .!= QueryStyle
@@ -145,12 +176,11 @@ parseSpec :: Parsec String () Spec
 parseSpec = try newPredDeclParser <|> specLine
   where
     specLine =
-      ( (\f g h i -> f . g . h . i)
-          <$> localTimeoutAnn
-          <*> negativeFlag
-          <*> withTreeFlag
-          <*> hiddenFlag
-      )
+      (\f g h i -> f . g . h . i)
+        <$> localTimeoutAnn
+        <*> negativeFlag
+        <*> withTreeFlag
+        <*> hiddenFlag
         <*> do
           spaces
           q <- terms

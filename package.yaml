@@ -30,6 +30,7 @@ dependencies:
   - wl-pprint-text
   - syb >= 0.3
   - yaml
+  - aeson
 
 library:
   source-dirs: src

@@ -15,7 +15,7 @@ module Prolog.Programming.Task (
   taskDefinitions,
   taskDefinitionsIncluded,
   initialTask,
-  showSWISHButton,
+  displaySWISHButton,
 ) where
 
 import Prolog.Programming.Data
@@ -80,7 +80,7 @@ verifyInstance :: (MonadFail m, MonadIO m, MonadRandom m) => TaskInstance -> m (
 verifyInstance inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} =
   let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
   in do
-       when (includeHidden == Yes && displaySWISHButton) $
+       when (includeHiddenDefinitions == Yes && showSWISHButton) $
          fail
            "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
@@ -120,13 +120,13 @@ taskDefinitions :: TaskInstance -> Either ParseError [Clause]
 taskDefinitions TaskInstance {visiblePredicates} = consultString visiblePredicates
 
 taskDefinitionsIncluded :: TaskInstance -> Bool
-taskDefinitionsIncluded TaskInstance {taskConfig = TaskConfig {includeTask}} = case includeTask of
+taskDefinitionsIncluded TaskInstance {taskConfig = TaskConfig {..}} = case includeTaskDefinitions of
   Yes -> True
   Filtered -> True
   No () -> False
 
-showSWISHButton :: TaskInstance -> Bool
-showSWISHButton TaskInstance {taskConfig = TaskConfig {displaySWISHButton}} = displaySWISHButton
+displaySWISHButton :: TaskInstance -> Bool
+displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 
 {- | Runs the following checks in this order:
 
@@ -154,7 +154,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
   case consultString input of
     Left err -> reject . text . pack $ show err
     Right inProg -> do
-      when (not allowListMatching) $
+      when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
           Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ show t
@@ -175,9 +175,9 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
 
       case consultStringsAndFilter
         visiblePredicates
-        (taskFilter includeTask inProg)
+        (taskFilter includeTaskDefinitions inProg)
         hiddenPredicates
-        (hiddenFilter includeHidden inProg) of
+        (hiddenFilter includeHiddenDefinitions inProg) of
         Left err -> reject . text . pack $ show err
         Right factProg -> do
           testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
@@ -230,7 +230,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                         else ""
                 )
 
-      case checkForProblems codeAnalysisConfig inProg of
+      case checkForProblems codeAnalysis inProg of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 

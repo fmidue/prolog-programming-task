@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Prolog.Programming.Types where
 
 import Data.Data (Data)
 import Data.Void (Void)
+import GHC.Generics (Generic)
 import Language.Prolog (Term)
 import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
 
@@ -26,14 +28,14 @@ type ShowSWISHButton = Bool
 data TaskConfig = TaskConfig {
   globalTimeout :: TimeoutDuration
   , treeStyle :: TreeStyle
-  , includeTask :: IncludeTask
-  , includeHidden :: IncludeHidden
-  , allowListMatching :: AllowListMatching
-  , displaySWISHButton :: ShowSWISHButton
-  , codeAnalysisConfig :: CodeAnalysisConfig
+  , includeTaskDefinitions :: IncludeTask
+  , includeHiddenDefinitions :: IncludeHidden
+  , allowListPatternMatching :: AllowListMatching
+  , showSWISHButton :: ShowSWISHButton
+  , codeAnalysis :: CodeAnalysisConfig
   , specifications :: [Spec]
   }
-  deriving Data
+  deriving (Data, Generic)
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
@@ -41,6 +43,7 @@ data TaskInstance = TaskInstance {
   , visiblePredicates :: String
   , hiddenPredicates :: String
   }
+  deriving Generic
 
 data Spec = Spec {
   specVisibility :: Visibility

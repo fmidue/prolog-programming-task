@@ -17,3 +17,5 @@ spec :: Spec
 spec = describe "Examples" $ do
   it "example instance should be valid" $ do
     doesNotThrow exampleInstance `shouldReturn` True
+
+-- TODO: add checks for new config including rejection of unknown fields
