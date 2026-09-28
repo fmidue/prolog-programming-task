@@ -22,8 +22,8 @@ import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
 checkForProblems :: CodeAnalysisConfig -> Program -> [WithSeverity Problem]
 checkForProblems cfg prog =
-  concatMap (\c -> concatMap (traverse (($ c) . clauseRule)) clauseRules) prog
-    ++ concatMap (traverse (($ prog) . programRule)) programRules
+  concatMap (\c -> concatMap (traverse (`clauseRule` c)) clauseRules) prog
+    ++ concatMap (traverse (`programRule` prog)) programRules
   where
     (clauseRules, programRules) =
       partition
