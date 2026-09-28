@@ -20,8 +20,8 @@ import Prolog.Programming.CodeAnalysis.Types (
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
 checkForProblems :: CodeAnalysisConfig -> Program -> Context -> [WithSeverity Problem]
-checkForProblems cfg userProgram taskAndHiddenDefinitions =
-  concatMap (runRule userProgram) $ configuredRules cfg taskAndHiddenDefinitions
+checkForProblems cfg userProgram =
+  concatMap (runRule userProgram) . configuredRules cfg
 
 runRule :: Program -> WithSeverity Rule -> [WithSeverity Problem]
 runRule userProgram WithSeverity {..} = case value of
