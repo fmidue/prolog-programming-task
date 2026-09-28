@@ -15,8 +15,7 @@ module Prolog.Programming.CodeAnalysis.Types (
 )
 where
 
-import Data.Data (Data)
-import Data.Data (Typeable)
+import Data.Data (Data, Typeable)
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..))
 import Text.PrettyPrint.Leijen.Text (Doc)
