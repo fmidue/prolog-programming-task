@@ -37,6 +37,7 @@ library
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.Examples
       Prolog.Programming.Helper
+      Prolog.Programming.Print
       Prolog.Programming.TestRunner
       Prolog.Programming.TypeHelper
       Prolog.Programming.Types
