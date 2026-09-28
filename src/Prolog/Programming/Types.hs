@@ -12,14 +12,14 @@ import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
 type TimeoutDuration = Int
 
 data TreeStyle = QueryStyle | ResolutionStyle
-  deriving Data
+  deriving (Data, Show)
 
 type IncludeTask = Include ()
 
 type IncludeHidden = Include Void
 
 data Include a = Yes | Filtered | No a
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 type AllowListMatching = Bool
 
@@ -35,7 +35,7 @@ data TaskConfig = TaskConfig {
   , codeAnalysis :: CodeAnalysisConfig
   , specifications :: [Spec]
   }
-  deriving (Data, Generic)
+  deriving (Data, Generic, Show)
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
@@ -43,7 +43,7 @@ data TaskInstance = TaskInstance {
   , visiblePredicates :: String
   , hiddenPredicates :: String
   }
-  deriving Generic
+  deriving (Generic, Show)
 
 data Spec = Spec {
   specVisibility :: Visibility

@@ -97,6 +97,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
       ExamplesSpec
+      ParseSpec
       Paths_prolog_programming_task
   hs-source-dirs:
       test
