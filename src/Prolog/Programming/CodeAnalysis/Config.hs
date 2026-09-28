@@ -12,23 +12,25 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   ConsistentArityConfig (ConsistentArityConfig),
+  Context,
   CutUsageConfig (..),
   Rule,
   SingletonVariablesConfig (..),
   WithSeverity (..),
  )
 
-configuredRules :: CodeAnalysisConfig -> [WithSeverity Rule]
+configuredRules :: CodeAnalysisConfig -> Context -> [WithSeverity Rule]
 configuredRules
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
     , consistentArity = ConsistentArityConfig consistentArityCfg
-    } =
+    }
+  context =
     catMaybes
       [ toConfigured singletonVarsCfg (const singletonVariablesRule)
       , toConfigured cutsCfg cutsRule
-      , toConfigured consistentArityCfg consistentArityRule
+      , toConfigured consistentArityCfg (consistentArityRule context)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> Rule) -> Maybe (WithSeverity Rule)

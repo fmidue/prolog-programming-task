@@ -11,7 +11,7 @@ import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), Problem (.
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
 cutsRule :: AdditionalMessage -> Rule
-cutsRule (AdditionalMessage cMsg) = ClauseRule $ \clause _ ->
+cutsRule (AdditionalMessage cMsg) = ClauseRule $ \clause ->
   [toProblem cMsg clause | cutExistsInClause clause]
 
 cutExistsInClause :: Clause -> Bool
