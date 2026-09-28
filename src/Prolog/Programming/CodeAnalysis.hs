@@ -18,13 +18,14 @@ import Prolog.Programming.CodeAnalysis.Types (
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
-checkForProblems :: CodeAnalysisConfig -> Program -> [WithSeverity Problem]
-checkForProblems cfg prog = concatMap (runRule prog) $ configuredRules cfg
+checkForProblems :: CodeAnalysisConfig -> Program -> Program -> [WithSeverity Problem]
+checkForProblems cfg userProgram taskAndHiddenDefinitions =
+  concatMap (runRule userProgram taskAndHiddenDefinitions) $ configuredRules cfg
 
-runRule :: Program -> WithSeverity Rule -> [WithSeverity Problem]
-runRule prog WithSeverity {..} = case value of
-  ClauseRule r -> concatMap (map withSeverity . r) prog
-  ProgramRule r -> map withSeverity $ r prog
+runRule :: Program -> Program -> WithSeverity Rule -> [WithSeverity Problem]
+runRule userProgram taskAndHiddenDefinitions WithSeverity {..} = case value of
+  ClauseRule r -> concatMap (map withSeverity . (`r` taskAndHiddenDefinitions)) userProgram
+  ProgramRule r -> map withSeverity $ r userProgram taskAndHiddenDefinitions
   where
     withSeverity = WithSeverity severity
 

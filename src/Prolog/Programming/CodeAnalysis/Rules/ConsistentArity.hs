@@ -9,7 +9,7 @@ import Prolog.Programming.CodeAnalysis.Types (IgnoredPredicates (IgnoredPredicat
 import Text.PrettyPrint.Leijen.Text (string)
 
 consistentArityRule :: IgnoredPredicates -> Rule
-consistentArityRule (IgnoredPredicates ignore) = ProgramRule $ \clauses ->
+consistentArityRule (IgnoredPredicates ignore) = ProgramRule $ \clauses _ ->
   let
     identities = concatMap identitiesInClause clauses
     groupedByName = groupSort identities

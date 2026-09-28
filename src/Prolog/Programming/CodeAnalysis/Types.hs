@@ -31,9 +31,9 @@ newtype Problem = Problem {
 -- | Definition for a code analysis checker that looks for violations in a given clause
 data Rule
   = -- | Rule that works on a single clause
-    ClauseRule {clauseRule :: Clause -> [Problem]}
+    ClauseRule {clauseRule :: Clause -> Program -> [Problem]}
   | -- | Rule that works on the whole program
-    ProgramRule {programRule :: Program -> [Problem]}
+    ProgramRule {programRule :: Program -> Program -> [Problem]}
 
 data CodeAnalysisRuleConfig a
   = Ignore

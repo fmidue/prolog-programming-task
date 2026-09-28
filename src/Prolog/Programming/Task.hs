@@ -242,9 +242,9 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
                         else ""
                 )
 
-      case checkForProblems codeAnalysis inProg of
-        [] -> pure ()
-        pbs -> either reject inform $ displayProblems pbs
+          case checkForProblems codeAnalysis inProg factProg of
+            [] -> pure ()
+            pbs -> either reject inform $ displayProblems pbs
 
 consultStringsAndFilter :: String -> (Clause -> Bool) -> String -> (Clause -> Bool) -> Either ParseError [Clause]
 consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do

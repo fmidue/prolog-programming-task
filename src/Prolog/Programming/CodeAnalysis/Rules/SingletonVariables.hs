@@ -9,7 +9,7 @@ import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule (ClauseRule))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
 singletonVariablesRule :: Rule
-singletonVariablesRule = ClauseRule $ \clause ->
+singletonVariablesRule = ClauseRule $ \clause _ ->
   let singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
   in map (toProblem clause) singletonVariables
 

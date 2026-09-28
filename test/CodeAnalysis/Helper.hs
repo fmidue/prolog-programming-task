@@ -13,7 +13,7 @@ import Test.Hspec (Expectation)
 shouldDetectProblemsStrict :: CodeAnalysisConfig -> [String -> Bool] -> String -> Expectation
 shouldDetectProblemsStrict cfg pts code = case consultString code of
   Left err -> assertFailure $ "Failed to parse prolog program:\n" ++ show err
-  Right prog -> case checkForProblems cfg prog of
+  Right prog -> case checkForProblems cfg prog [] of
     [] -> assertFailure "No problems found"
     pbs
       | length pbs /= length pts ->
@@ -24,6 +24,6 @@ shouldDetectProblemsStrict cfg pts code = case consultString code of
 shouldNotHaveProblems :: CodeAnalysisConfig -> String -> Expectation
 shouldNotHaveProblems cfg code = case consultString code of
   Left err -> assertFailure $ "Failed to parse prolog program:\n" ++ show err
-  Right prog -> case checkForProblems cfg prog of
+  Right prog -> case checkForProblems cfg prog [] of
     [] -> pure ()
     _ -> assertFailure "Detected problem(s) even though they should not exist."
