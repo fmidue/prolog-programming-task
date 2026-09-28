@@ -3,7 +3,7 @@
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
-  Rule,
+  Rule (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   SingletonVariablesConfig (..),
@@ -16,7 +16,7 @@ where
 
 import Data.Data (Typeable)
 import GHC.Generics (Generic)
-import Language.Prolog (Clause (..))
+import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
 
 -- | Violation found in code
@@ -27,7 +27,11 @@ newtype Problem = Problem {
   deriving Show
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
-type Rule = Clause -> [Problem]
+data Rule
+  = -- | Rule that works on a single clause
+    ClauseRule {clauseRule :: Clause -> [Problem]}
+  | -- | Rule that works on the whole program
+    ProgramRule {programRule :: Program -> [Problem]}
 
 data CodeAnalysisRuleConfig a
   = Ignore

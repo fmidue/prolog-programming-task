@@ -5,13 +5,13 @@ import Data.Map (Map)
 import qualified Data.Map as Map (empty, filter, keys, singleton, unionWith)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..), VariableName (..))
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule)
+import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule (ClauseRule))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
 singletonVariablesRule :: Rule
-singletonVariablesRule clause = map (toProblem clause) singletonVariables
-  where
-    singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
+singletonVariablesRule = ClauseRule $ \clause ->
+  let singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
+  in map (toProblem clause) singletonVariables
 
 countVariables :: Data a => a -> Map String Int
 countVariables = everything (Map.unionWith (+)) $ mkQ Map.empty count

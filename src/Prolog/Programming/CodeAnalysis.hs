@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Prolog.Programming.CodeAnalysis (
@@ -6,19 +7,28 @@ module Prolog.Programming.CodeAnalysis (
 )
 where
 
+import Data.List.Extra (partition)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Program)
 import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   Problem (..),
+  Rule (..),
   Severity (Error),
   WithSeverity (..),
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
 checkForProblems :: CodeAnalysisConfig -> Program -> [WithSeverity Problem]
-checkForProblems cfg = concatMap (\c -> concatMap (traverse ($ c)) $ configuredRules cfg)
+checkForProblems cfg prog =
+  concatMap (\c -> concatMap (traverse (($ c) . clauseRule)) clauseRules) prog
+    ++ concatMap (traverse (($ prog) . programRule)) programRules
+  where
+    (clauseRules, programRules) =
+      partition
+        (\case (WithSeverity _ (ClauseRule _)) -> True; _ -> False)
+        $ configuredRules cfg
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =

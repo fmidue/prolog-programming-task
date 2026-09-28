@@ -7,13 +7,12 @@ import Data.Data (Data)
 import Data.Generics (everything, mkQ)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
-import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), Problem (..), Rule)
+import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), Problem (..), Rule (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
 cutsRule :: AdditionalMessage -> Rule
-cutsRule (AdditionalMessage cMsg) clause
-  | cutExistsInClause clause = [toProblem cMsg clause]
-  | otherwise = []
+cutsRule (AdditionalMessage cMsg) = ClauseRule $ \clause ->
+  [toProblem cMsg clause | cutExistsInClause clause]
 
 cutExistsInClause :: Clause -> Bool
 cutExistsInClause (Clause _ rhs) = any containsCut rhs
