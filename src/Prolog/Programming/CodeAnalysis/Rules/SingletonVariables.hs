@@ -9,9 +9,9 @@ import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
 singletonVariablesChecker :: ClauseRule
-singletonVariablesChecker clause =
-  let singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
-  in map (toProblem clause) singletonVariables
+singletonVariablesChecker clause = map (toProblem clause) singletonVariables
+  where
+    singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
 
 countVariables :: Data a => a -> Map String Int
 countVariables = everything (Map.unionWith (+)) $ mkQ Map.empty count
