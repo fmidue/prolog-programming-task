@@ -13,14 +13,19 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   Context,
   Problem (..),
+  ProgramRule,
   Severity (Error),
   WithSeverity (..),
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
 checkForProblems :: CodeAnalysisConfig -> Program -> Context -> [WithSeverity Problem]
-checkForProblems cfg userProgram =
-  concatMap (\(WithSeverity severity rule) -> map (WithSeverity severity) (rule userProgram)) . configuredRules cfg
+checkForProblems cfg program context =
+  configuredRules cfg context >>= runRule program
+
+runRule :: Program -> WithSeverity ProgramRule -> [WithSeverity Problem]
+runRule program (WithSeverity severity rule) =
+  map (WithSeverity severity) $ rule program
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =
