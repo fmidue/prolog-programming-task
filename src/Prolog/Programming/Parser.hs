@@ -28,7 +28,7 @@ import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, 
 import Data.Yaml.Aeson (Parser)
 import GHC.Generics (Generic, Rep)
 import Prolog.Programming.CodeAnalysis.Config (
-  defaultCodeAnalysisConfig,
+  emptyCodeAnalysisConfig,
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
@@ -152,7 +152,7 @@ instance FromJSON TaskConfig where
       <*> v .:? "includeHiddenDefinitions" .!= Yes
       <*> v .:? "allowListPatternMatching" .!= True
       <*> v .:? "showSWISHButton" .!= False
-      <*> v .:? "codeAnalysis" .!= defaultCodeAnalysisConfig
+      <*> v .:? "codeAnalysis" .!= emptyCodeAnalysisConfig
       <*> v .:? "specifications" .!= []
 
 parseConfig :: String -> Either ParseError (TaskConfig, (String, String))

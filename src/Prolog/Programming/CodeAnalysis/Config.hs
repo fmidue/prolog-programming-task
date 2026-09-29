@@ -1,6 +1,6 @@
 module Prolog.Programming.CodeAnalysis.Config (
   configuredRules,
-  defaultCodeAnalysisConfig,
+  emptyCodeAnalysisConfig,
 )
 where
 
@@ -37,8 +37,8 @@ configuredRules
       toConfigured Ignore _ = Nothing
       toConfigured (Detect severity' extra) build = Just (WithSeverity severity' (build extra))
 
-defaultCodeAnalysisConfig :: CodeAnalysisConfig
-defaultCodeAnalysisConfig =
+emptyCodeAnalysisConfig :: CodeAnalysisConfig
+emptyCodeAnalysisConfig =
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
