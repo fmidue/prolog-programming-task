@@ -34,6 +34,7 @@ library
   other-modules:
       Prolog.Programming.CodeAnalysis.Rules.ConsistentArity
       Prolog.Programming.CodeAnalysis.Rules.Cuts
+      Prolog.Programming.CodeAnalysis.Rules.GroupedDefinitions
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
@@ -98,6 +99,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Helper
       CodeAnalysis.Rules.ConsistentAritySpec
       CodeAnalysis.Rules.CutsSpec
+      CodeAnalysis.Rules.GroupedDefinitionsSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
       ConfigSpec

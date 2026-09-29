@@ -74,6 +74,9 @@ codeAnalysis:
     # ignorePredicates:
     #  - append # append/2 and append/3 are both provided by SWI-Prolog
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  groupedDefinitions:
+    # what to do concerning detection of grouped predicate definitions
+    status: hint
 
 ------------------------------
 /* Everything from here on (up to an optional hidden section separated by a line of 3 or more dashes)

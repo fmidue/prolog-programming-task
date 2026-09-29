@@ -36,6 +36,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisRuleConfig (..),
   ConsistentArityConfig (..),
   CutUsageConfig (..),
+  GroupedDefinitionsConfig (..),
   IgnoredPredicates (..),
   SingletonVariablesConfig (..),
  )
@@ -132,6 +133,9 @@ instance FromJSON IgnoredPredicates where
 instance FromJSON ConsistentArityConfig where
   parseJSON = withRuleParser ConsistentArityConfig
 
+instance FromJSON GroupedDefinitionsConfig where
+  parseJSON = withRuleParser GroupedDefinitionsConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -140,6 +144,7 @@ instance FromJSON CodeAnalysisConfig where
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
       <*> v .:? "consistentArity" .!= ConsistentArityConfig Ignore
+      <*> v .:? "groupedDefinitions" .!= GroupedDefinitionsConfig Ignore
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
