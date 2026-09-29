@@ -14,7 +14,7 @@ import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 consistentArityChecker :: Context -> IgnoredPredicates -> Rule
 consistentArityChecker otherDefinitions (IgnoredPredicates ignore) = ProgramRule $ \clauses ->
-  case forcedIdentities otherDefinitions of
+  case forcedIdentities ignore otherDefinitions of
     Nothing ->
       [ Problem $
           vcat
@@ -46,15 +46,15 @@ compareWithForced forced (name, arities) =
         _ -> Nothing
     _ -> Just $ MultipleArities name
 
-forcedIdentities :: [Clause] -> Maybe (Map String Int)
-forcedIdentities clauses
+forcedIdentities :: [String] -> [Clause] -> Maybe (Map String Int)
+forcedIdentities ignore clauses
   | any inconsistent identities = Nothing
   | otherwise = Just $ Map.fromList $ map (second head) identities
   where
     identities = groupSort $ concatMap identitiesInClause clauses
 
-    inconsistent (_, arities) =
-      length (nubOrd arities) > 1
+    inconsistent (name, arities) =
+      length (nubOrd arities) > 1 && name `notElem` ignore
 
 identitiesInClause :: Clause -> [(String, Int)]
 identitiesInClause (Clause ls rs) = concatMap grabIdentity $ ls : rs
