@@ -45,6 +45,12 @@ errorFree =
   , "p(X) :- X = node(L,R), q(L), q(R). u(node(_,V,_)) :- w(V)."
   ]
 
+ignores :: [(String, [String])]
+ignores =
+  [ ("p(X) :- q(Y), p(X,Y).", ["p"])
+  , ("'predicate with spaces' :- q(X), 'predicate with spaces'(X).", ["predicate with spaces"])
+  ]
+
 spec :: Spec
 spec = describe "ConsistentArity" $ do
   describe "Should detect multiple arities" $
@@ -60,10 +66,12 @@ spec = describe "ConsistentArity" $ do
         shouldNotHaveProblems
           (caConfig [])
           programCode
-  it "should ignore predicate when configured" $
-    shouldNotHaveProblems
-      (caConfig ["p"])
-      "p(X) :- q(Y), p(X,Y)."
+  describe "should ignore predicates when configured" $
+    forM_ ignores $ \(programCode, predicates) ->
+      it programCode $
+        shouldNotHaveProblems
+          (caConfig predicates)
+          programCode
   it "should ignore predicates in task/hidden definitions when configured" $
     shouldNotHaveProblems'
       (caConfig ["p"])
