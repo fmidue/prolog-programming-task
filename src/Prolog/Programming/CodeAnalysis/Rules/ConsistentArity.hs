@@ -61,10 +61,10 @@ identitiesInClause (Clause ls rs) = concatMap grabIdentity $ ls : rs
 identitiesInClause (ClauseFn ls _) = grabIdentity ls
 
 grabIdentity :: Term -> [(String, Int)]
-grabIdentity (Struct name args) = case name of
-  "," -> concatMap grabIdentity args
-  ";" -> concatMap grabIdentity args
-  _ -> [(name, length args)]
+grabIdentity (Struct name args)
+  | name `elem` [",", ";", "\\+", "not"] =
+      (name, length args) : concatMap grabIdentity args
+  | otherwise = [(name, length args)]
 grabIdentity _ = []
 
 toProblem :: Result -> Problem
