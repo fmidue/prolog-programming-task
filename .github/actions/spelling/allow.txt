@@ -21,6 +21,7 @@ mempty
 pbs
 rhs
 snd
+SWI
 uncurry
 unlines
 unwords
