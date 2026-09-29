@@ -1,6 +1,11 @@
 module CodeAnalysis.Rules.ConsistentAritySpec where
 
-import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldDetectProblemsStrict', shouldNotHaveProblems, shouldNotHaveProblems')
+import CodeAnalysis.Helper (
+  shouldDetectProblemsStrict,
+  shouldDetectProblemsStrict',
+  shouldNotHaveProblems,
+  shouldNotHaveProblems',
+ )
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
