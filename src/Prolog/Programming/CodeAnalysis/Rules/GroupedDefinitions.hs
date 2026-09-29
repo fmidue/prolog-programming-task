@@ -8,8 +8,6 @@ import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string)
 
--- TODO: Annahme ist, dass parser Reihenfolge nicht verändert -> sollte auf jeden Fall ein Test Case sein
-
 groupedDefinitionChecker :: ProgramRule
 groupedDefinitionChecker clauses = [problem | groupNames /= sort groupNames]
   where
