@@ -49,11 +49,11 @@ nonPositive(X) :- X < 0.
       shouldNotHaveProblems
         caConfig
         [RS.r|
-nonNegative(0).
-nonNegative(X) :- X > 0.
-
 nonPositive(0).
 nonPositive(X) :- X < 0.
+
+nonNegative(0).
+nonNegative(X) :- X > 0.
         |]
     it "Should detect grouped definitions without ascending arity of definitions" $
       shouldDetectProblemsStrict
