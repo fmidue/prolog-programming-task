@@ -24,11 +24,9 @@ checkForProblems cfg userProgram =
   concatMap (`runRule` userProgram) . configuredRules cfg
 
 runRule :: WithSeverity Rule -> Program -> [WithSeverity Problem]
-runRule WithSeverity {..} = case value of
-  ClauseRule r -> concatMap (map withSeverity . r)
-  ProgramRule r -> map withSeverity . r
-  where
-    withSeverity = WithSeverity severity
+runRule WithSeverity {..} = map (WithSeverity severity) . case value of
+  ClauseRule r -> concatMap r
+  ProgramRule r -> r
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =
