@@ -1,6 +1,6 @@
 module CodeAnalysis.Rules.ConsistentAritySpec where
 
-import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldDetectProblemsStrict', shouldNotHaveProblems)
+import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldDetectProblemsStrict', shouldNotHaveProblems, shouldNotHaveProblems')
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
@@ -58,6 +58,11 @@ spec = describe "ConsistentArity" $ do
   it "should ignore predicate when configured" $
     shouldNotHaveProblems
       (caConfig ["p"])
+      "p(X) :- q(Y), p(X,Y)."
+  it "should ignore predicates in task/hidden definitions when configured" $
+    shouldNotHaveProblems'
+      (caConfig ["p"])
+      "w."
       "p(X) :- q(Y), p(X,Y)."
   it "should detect violation of forced arity" $
     shouldDetectProblemsStrict'
