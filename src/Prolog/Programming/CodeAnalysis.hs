@@ -21,11 +21,7 @@ import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
 checkForProblems :: CodeAnalysisConfig -> Program -> Context -> [WithSeverity Problem]
 checkForProblems cfg userProgram =
-  concatMap (`runRule` userProgram) . configuredRules cfg
-
-runRule :: WithSeverity ProgramRule -> Program -> [WithSeverity Problem]
-runRule WithSeverity {..} =
-  map (WithSeverity severity) . value
+  concatMap (\(WithSeverity severity rule) -> map (WithSeverity severity) (rule userProgram)) . configuredRules cfg
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =
