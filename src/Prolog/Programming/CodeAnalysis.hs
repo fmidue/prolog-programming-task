@@ -13,7 +13,6 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   Context,
   Problem (..),
-  ProgramRule,
   Severity (Error),
   WithSeverity (..),
  )
