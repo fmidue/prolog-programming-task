@@ -4,7 +4,8 @@
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
   Context,
-  Rule (..),
+  ClauseRule,
+  ProgramRule,
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   SingletonVariablesConfig (..),
@@ -32,11 +33,10 @@ newtype Problem = Problem {
 type Context = Program
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
-data Rule
-  = -- | Rule that works on a single clause
-    ClauseRule {clauseRule :: Clause -> [Problem]}
-  | -- | Rule that works on the whole program
-    ProgramRule {programRule :: Program -> [Problem]}
+type ClauseRule = Clause -> [Problem]
+
+-- | Definition for a code analysis checker that looks for violations in a given program
+type ProgramRule = Program -> [Problem]
 
 data CodeAnalysisRuleConfig a
   = Ignore

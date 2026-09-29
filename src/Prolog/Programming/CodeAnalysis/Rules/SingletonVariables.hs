@@ -5,11 +5,11 @@ import Data.Map (Map)
 import qualified Data.Map as Map (empty, filter, keys, singleton, unionWith)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..), VariableName (..))
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule (ClauseRule))
+import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
-singletonVariablesChecker :: Rule
-singletonVariablesChecker = ClauseRule $ \clause ->
+singletonVariablesChecker :: ClauseRule
+singletonVariablesChecker clause =
   let singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
   in map (toProblem clause) singletonVariables
 

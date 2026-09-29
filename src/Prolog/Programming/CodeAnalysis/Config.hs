@@ -14,12 +14,12 @@ import Prolog.Programming.CodeAnalysis.Types (
   ConsistentArityConfig (ConsistentArityConfig),
   Context,
   CutUsageConfig (..),
-  Rule,
+  ProgramRule,
   SingletonVariablesConfig (..),
   WithSeverity (..),
  )
 
-configuredRules :: CodeAnalysisConfig -> Context -> [WithSeverity Rule]
+configuredRules :: CodeAnalysisConfig -> Context -> [WithSeverity ProgramRule]
 configuredRules
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
@@ -28,12 +28,12 @@ configuredRules
     }
   taskAndHiddenDefinitions =
     catMaybes
-      [ toConfigured singletonVarsCfg (const singletonVariablesChecker)
-      , toConfigured cutsCfg cutsChecker
+      [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
+      , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
       ]
     where
-      toConfigured :: CodeAnalysisRuleConfig a -> (a -> Rule) -> Maybe (WithSeverity Rule)
+      toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
       toConfigured Ignore _ = Nothing
       toConfigured (Detect severity' extra) build = Just (WithSeverity severity' (build extra))
 

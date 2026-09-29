@@ -9,11 +9,11 @@ import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
-import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), Rule (..))
+import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
-consistentArityChecker :: Context -> IgnoredPredicates -> Rule
-consistentArityChecker otherDefinitions (IgnoredPredicates ignore) = ProgramRule $ \clauses ->
+consistentArityChecker :: Context -> IgnoredPredicates -> ProgramRule
+consistentArityChecker otherDefinitions (IgnoredPredicates ignore) clauses =
   case forcedIdentities ignore otherDefinitions of
     Nothing ->
       [ Problem $
