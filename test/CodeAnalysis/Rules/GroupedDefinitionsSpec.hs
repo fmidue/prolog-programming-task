@@ -37,7 +37,7 @@ b(X, Y) :- X > Y.
     it "Should detect ungrouped definitions" $
       shouldDetectProblemsStrict
         caConfig
-        [(== "Your code does not group predicate definitions my predicate name.")]
+        [(== "Your code does not group predicate definitions by predicate name.")]
         [RS.r|
 nonNegative(0).
 nonPositive(0).
@@ -54,4 +54,14 @@ nonNegative(X) :- X > 0.
 
 nonPositive(0).
 nonPositive(X) :- X < 0.
+        |]
+    it "Should detect grouped definitions without ascending arity of definitions" $
+      shouldDetectProblemsStrict
+        caConfig
+        [(== "Your code does not sort the predicate definitions ascending by arity (per group).")]
+        [RS.r|
+a(0).
+a(1,2).
+a(3).
+b(4).
         |]
