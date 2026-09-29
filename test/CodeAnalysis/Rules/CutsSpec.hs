@@ -3,25 +3,21 @@ module CodeAnalysis.Rules.CutsSpec where
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
+import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  ConsistentArityConfig (ConsistentArityConfig),
   CutUsageConfig (..),
   Severity (..),
-  SingletonVariablesConfig (..),
  )
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: Maybe String -> CodeAnalysisConfig
 caConfig cMsg =
-  CodeAnalysisConfig {
-    singletonVariables =
-      SingletonVariablesConfig Ignore
-    , cutUsage =
-        CutUsageConfig $ Detect Error $ AdditionalMessage cMsg
-    , consistentArity = ConsistentArityConfig Ignore
+  emptyCodeAnalysisConfig {
+    cutUsage =
+      CutUsageConfig $ Detect Error $ AdditionalMessage cMsg
     }
 
 hasCut :: [String]

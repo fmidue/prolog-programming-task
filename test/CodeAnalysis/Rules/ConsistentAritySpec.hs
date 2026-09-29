@@ -3,26 +3,19 @@ module CodeAnalysis.Rules.ConsistentAritySpec where
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldDetectProblemsStrict', shouldNotHaveProblems)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
+import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   ConsistentArityConfig (ConsistentArityConfig),
-  CutUsageConfig (..),
   IgnoredPredicates (IgnoredPredicates),
   Severity (..),
-  SingletonVariablesConfig (..),
  )
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: [String] -> CodeAnalysisConfig
 caConfig predicates =
-  CodeAnalysisConfig {
-    singletonVariables =
-      SingletonVariablesConfig Ignore
-    , cutUsage =
-        CutUsageConfig Ignore
-    , consistentArity = ConsistentArityConfig $ Detect Hint $ IgnoredPredicates predicates
-    }
+  emptyCodeAnalysisConfig {consistentArity = ConsistentArityConfig $ Detect Hint $ IgnoredPredicates predicates}
 
 hasMultiple :: [(String, [String])]
 hasMultiple =
