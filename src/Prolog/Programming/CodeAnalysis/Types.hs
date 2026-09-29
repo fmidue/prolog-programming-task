@@ -3,12 +3,16 @@
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
-  Rule,
+  Context,
+  ClauseRule,
+  ProgramRule,
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
+  IgnoredPredicates (..),
+  ConsistentArityConfig (..),
   Severity (..),
   WithSeverity (..),
 )
@@ -16,24 +20,27 @@ where
 
 import Data.Data (Typeable)
 import GHC.Generics (Generic)
-import Language.Prolog (Clause (..))
+import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
 
 -- | Violation found in code
-data Problem = Problem {
-  -- | Clause the violation appears in
-  problemClause :: Clause
+newtype Problem = Problem {
   -- | User-facing explanation of the violation
-  , problemDisplay :: Doc
+  problemDisplay :: Doc
   }
   deriving Show
 
+type Context = Program
+
 -- | Definition for a code analysis checker that looks for violations in a given clause
-type Rule = Clause -> [Problem]
+type ClauseRule = Clause -> [Problem]
+
+-- | Definition for a code analysis checker that looks for violations in a given program
+type ProgramRule = Program -> [Problem]
 
 data CodeAnalysisRuleConfig a
   = Ignore
-  | Detect {ruleSeverity :: Severity, extraConfig :: a}
+  | Detect Severity a
   deriving (Eq, Functor, Show, Typeable)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
@@ -45,12 +52,20 @@ newtype AdditionalMessage = AdditionalMessage { additionalMessage :: Maybe Strin
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
+newtype IgnoredPredicates = IgnoredPredicates { ignorePredicates :: [String] }
+  deriving (Generic, Show)
+
+newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig IgnoredPredicates)
+  deriving (Generic, Show)
+
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for singletonVariables rule
   singletonVariables :: SingletonVariablesConfig
   -- | Configuration for cutUsage rule
   , cutUsage :: CutUsageConfig
+  -- | Configuration for consistentArity rule
+  , consistentArity :: ConsistentArityConfig
   }
   deriving (Generic, Show)
 

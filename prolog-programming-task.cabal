@@ -32,6 +32,7 @@ library
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
   other-modules:
+      Prolog.Programming.CodeAnalysis.Rules.ConsistentArity
       Prolog.Programming.CodeAnalysis.Rules.Cuts
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.ExampleConfig
@@ -50,6 +51,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , extra
     , mtl
     , parsec
     , prolog
@@ -75,6 +77,7 @@ executable test-task-prolog
     , base >=4.7 && <5
     , bytestring
     , containers
+    , extra
     , mtl
     , parsec
     , prolog
@@ -93,6 +96,7 @@ test-suite prolog-programming-task-test
   main-is: Spec.hs
   other-modules:
       CodeAnalysis.Helper
+      CodeAnalysis.Rules.ConsistentAritySpec
       CodeAnalysis.Rules.CutsSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
@@ -108,6 +112,7 @@ test-suite prolog-programming-task-test
     , base >=4.7 && <5
     , bytestring
     , containers
+    , extra
     , hspec
     , mtl
     , parsec

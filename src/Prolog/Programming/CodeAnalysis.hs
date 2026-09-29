@@ -11,14 +11,15 @@ import Language.Prolog (Program)
 import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
+  Context,
   Problem (..),
   Severity (Error),
   WithSeverity (..),
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
-checkForProblems :: CodeAnalysisConfig -> Program -> [WithSeverity Problem]
-checkForProblems cfg = concatMap (\c -> concatMap (traverse ($ c)) $ configuredRules cfg)
+checkForProblems :: CodeAnalysisConfig -> Program -> Context -> [WithSeverity Problem]
+checkForProblems cfg program = concatMap (traverse ($ program)) . configuredRules cfg
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =

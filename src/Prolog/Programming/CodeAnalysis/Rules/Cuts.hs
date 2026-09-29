@@ -1,17 +1,17 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsRule) where
+module Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker) where
 
 import Data.Data (Data)
 import Data.Generics (everything, mkQ)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
-import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), Problem (..), Rule)
+import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
-cutsRule :: AdditionalMessage -> Rule
-cutsRule (AdditionalMessage cMsg) clause
+cutsChecker :: AdditionalMessage -> ClauseRule
+cutsChecker (AdditionalMessage cMsg) clause
   | cutExistsInClause clause = [toProblem cMsg clause]
   | otherwise = []
 
@@ -27,12 +27,11 @@ containsCut = everything (||) $ mkQ False $ \case
 toProblem :: Maybe String -> Clause -> Problem
 toProblem cMsg clause =
   Problem {
-    problemClause = clause
-    , problemDisplay =
-        vsep
-          [ string "Your clause"
-          , indent 2 $ string $ pack $ show clause
-          , string "makes use of the cut (!) operator." <> linebreak
-          , maybe empty (string . pack) cMsg
-          ]
+    problemDisplay =
+      vsep
+        [ string "Your clause"
+        , indent 2 $ string $ pack $ show clause
+        , string "makes use of the cut (!) operator." <> linebreak
+        , maybe empty (string . pack) cMsg
+        ]
     }

@@ -66,6 +66,15 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  consistentArity:
+    # what to do concerning detection of consistent arity
+    status: warn
+    # predicates to ignore for detection
+    # useful when predicates provided by libraries can be used with different arities
+    # ignorePredicates:
+    #  - append # append/2 and append/3 are both provided by SWI-Prolog
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+
 ------------------------------
 /* Everything from here on (up to an optional hidden section separated by a line of 3 or more dashes)
  * will be part of the visible exercise description.
