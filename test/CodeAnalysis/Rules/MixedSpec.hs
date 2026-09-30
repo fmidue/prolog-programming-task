@@ -2,6 +2,7 @@ module CodeAnalysis.Rules.MixedSpec where
 
 import CodeAnalysis.Helper (shouldDetectProblemsStrict)
 import Data.List (isInfixOf)
+import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
@@ -15,7 +16,7 @@ import Test.Hspec (Expectation, Spec, describe, it)
 
 caConfig :: CodeAnalysisConfig
 caConfig =
-  CodeAnalysisConfig {
+  emptyCodeAnalysisConfig {
     singletonVariables =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
