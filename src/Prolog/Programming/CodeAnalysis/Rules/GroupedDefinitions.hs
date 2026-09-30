@@ -1,7 +1,7 @@
 module Prolog.Programming.CodeAnalysis.Rules.GroupedDefinitions (groupedDefinitionChecker) where
 
 import Data.List (sort)
-import Data.List.Extra (groupOn, groupSort)
+import Data.List.Extra (groupOn, nubOrd)
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
@@ -17,8 +17,7 @@ groupedDefinitionChecker clauses =
   where
     groupedByName = groupOn (fmap fst . termIdentity . lhs) clauses
     groupNames = mapMaybe (fmap fst . termIdentity . lhs . head) groupedByName
-    groupNamesIndexed = zip groupNames [1 :: Int ..]
-    duplicateExists = any ((> 1) . length . snd) $ groupSort groupNamesIndexed
+    duplicateExists = length groupNames /= length (nubOrd groupNames)
 
 termIdentity :: Term -> Maybe (String, Int)
 termIdentity (Struct name args) = Just (name, length args)
