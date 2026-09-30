@@ -1,4 +1,4 @@
-module Prolog.Programming.CodeAnalysis.Rules.GroupedDefinitions (groupedDefinitionChecker) where
+module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker) where
 
 import Data.List (sort)
 import Data.List.Extra (anySame, groupOn)
@@ -8,8 +8,8 @@ import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string)
 
-groupedDefinitionChecker :: ProgramRule
-groupedDefinitionChecker clauses =
+ungroupedDefinitionsChecker :: ProgramRule
+ungroupedDefinitionsChecker clauses =
   [toProblem "Your code does not group predicate definitions by predicate name." | duplicateExists]
     ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
        | any (\g -> g /= sort g) groupedByName

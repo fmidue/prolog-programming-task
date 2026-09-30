@@ -1,14 +1,14 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module CodeAnalysis.Rules.GroupedDefinitionsSpec where
+module CodeAnalysis.Rules.UngroupedDefinitionsSpec where
 
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  GroupedDefinitionsConfig (GroupedDefinitionsConfig),
   Severity (..),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
  )
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -18,7 +18,7 @@ import qualified Text.RawString.QQ as RS (r)
 caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
-    groupedDefinitions = GroupedDefinitionsConfig $ Detect Hint ()
+    ungroupedDefinitions = UngroupedDefinitionsConfig $ Detect Hint ()
     }
 
 spec :: Spec
@@ -33,7 +33,7 @@ a(X) :- b(X).
 b(X, Y) :- X > Y.
       |]
         `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
-  describe "GroupedDefinitions" $ do
+  describe "UngroupedDefinitions" $ do
     it "Should detect ungrouped definitions" $
       shouldDetectProblemsStrict
         caConfig

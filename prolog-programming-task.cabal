@@ -34,8 +34,8 @@ library
   other-modules:
       Prolog.Programming.CodeAnalysis.Rules.ConsistentArity
       Prolog.Programming.CodeAnalysis.Rules.Cuts
-      Prolog.Programming.CodeAnalysis.Rules.GroupedDefinitions
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
+      Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
       Prolog.Programming.Parser
@@ -99,9 +99,9 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Helper
       CodeAnalysis.Rules.ConsistentAritySpec
       CodeAnalysis.Rules.CutsSpec
-      CodeAnalysis.Rules.GroupedDefinitionsSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
+      CodeAnalysis.Rules.UngroupedDefinitionsSpec
       ConfigSpec
       Paths_prolog_programming_task
   hs-source-dirs:
