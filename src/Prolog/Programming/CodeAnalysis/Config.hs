@@ -34,7 +34,7 @@ configuredRules
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
-      , toConfigured recursionCfg (const recursionChecker)
+      , toConfigured recursionCfg recursionChecker
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)

@@ -6,11 +6,15 @@ import Data.List.Extra (groupSort, nubOrd)
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
-import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
+import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (..),
+  Problem (..),
+  ProgramRule,
+ )
+import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
 
-recursionChecker :: ProgramRule
-recursionChecker clauses = map toProblem foundCycles
+recursionChecker :: AdditionalMessage -> ProgramRule
+recursionChecker (AdditionalMessage cMsg) clauses = map (toProblem cMsg) foundCycles
   where
     foundCycles = cycles $ buildGraph clauses
 
@@ -37,14 +41,15 @@ grabIdentity _ = []
 cycles :: [(Predicate, Predicate, [Predicate])] -> [[Predicate]]
 cycles graph = [c | CyclicSCC c <- stronglyConnComp graph]
 
-toProblem :: [Predicate] -> Problem
-toProblem recursivePredicates =
+toProblem :: Maybe String -> [Predicate] -> Problem
+toProblem cMsg recursivePredicates =
   Problem {
     problemDisplay =
       vsep
         [ string $ pack "Your code contains code that potentially makes use of recursion."
         , string $ pack $ recursionDescription names
         , indent 2 $ string $ pack $ intercalate ", " names
+        , maybe empty (string . pack) cMsg
         ]
     }
   where

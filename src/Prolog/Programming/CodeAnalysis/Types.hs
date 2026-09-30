@@ -59,7 +59,7 @@ newtype IgnoredPredicates = IgnoredPredicates { ignorePredicates :: [String] }
 newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig IgnoredPredicates)
   deriving (Generic, Show)
 
-newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig ())
+newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
 -- | Configuration for code analysis checks

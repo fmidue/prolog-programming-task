@@ -5,6 +5,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (AdditionalMessage),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   RecursionConfig (..),
@@ -12,11 +13,11 @@ import Prolog.Programming.CodeAnalysis.Types (
  )
 import Test.Hspec (Spec, describe, it)
 
-caConfig :: CodeAnalysisConfig
-caConfig =
+caConfig :: Maybe String -> CodeAnalysisConfig
+caConfig cMsg =
   emptyCodeAnalysisConfig {
     recursion =
-      RecursionConfig $ Detect Hint ()
+      RecursionConfig $ Detect Hint $ AdditionalMessage cMsg
     }
 
 recursivePrograms :: [(String, String, String)]
@@ -40,7 +41,7 @@ spec = describe "Recursion" $ do
     forM_ recursivePrograms $ \(programCode, description, predicates) ->
       it programCode $
         shouldDetectProblemsStrict
-          caConfig
+          (caConfig Nothing)
           [ \problem ->
               isInfixOf "potentially makes use of recursion" problem
                 && isInfixOf (description ++ "\n  " ++ predicates) problem
@@ -49,4 +50,9 @@ spec = describe "Recursion" $ do
   describe "Should not detect any problems" $
     forM_ errorFree $ \programCode ->
       it programCode $
-        shouldNotHaveProblems caConfig programCode
+        shouldNotHaveProblems (caConfig Nothing) programCode
+  it "should provide additional message when configured" $
+    shouldDetectProblemsStrict
+      (caConfig $ Just "Recursion is not part of this exercise yet.")
+      [isInfixOf "Recursion is not part of this exercise yet."]
+      "p(X) :- p(X)."
