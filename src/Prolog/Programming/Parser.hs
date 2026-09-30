@@ -37,6 +37,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   ConsistentArityConfig (..),
   CutUsageConfig (..),
   IgnoredPredicates (..),
+  RecursionConfig (..),
   SingletonVariablesConfig (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
@@ -132,6 +133,9 @@ instance FromJSON IgnoredPredicates where
 instance FromJSON ConsistentArityConfig where
   parseJSON = withRuleParser ConsistentArityConfig
 
+instance FromJSON RecursionConfig where
+  parseJSON = withRuleParser RecursionConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -140,6 +144,7 @@ instance FromJSON CodeAnalysisConfig where
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
       <*> v .:? "consistentArity" .!= ConsistentArityConfig Ignore
+      <*> v .:? "recursion" .!= RecursionConfig Ignore
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

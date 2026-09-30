@@ -13,6 +13,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   CutUsageConfig (..),
   IgnoredPredicates (..),
   ConsistentArityConfig (..),
+  RecursionConfig (..),
   Severity (..),
   WithSeverity (..),
 )
@@ -58,6 +59,9 @@ newtype IgnoredPredicates = IgnoredPredicates { ignorePredicates :: [String] }
 newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig IgnoredPredicates)
   deriving (Generic, Show)
 
+newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig ())
+  deriving Show
+
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for singletonVariables rule
@@ -66,6 +70,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , cutUsage :: CutUsageConfig
   -- | Configuration for consistentArity rule
   , consistentArity :: ConsistentArityConfig
+  -- | Configuration for recursion rule
+  , recursion :: RecursionConfig
   }
   deriving (Generic, Show)
 

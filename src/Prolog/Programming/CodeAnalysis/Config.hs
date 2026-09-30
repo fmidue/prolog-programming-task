@@ -7,6 +7,7 @@ where
 import Data.Maybe (catMaybes)
 import Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
@@ -15,6 +16,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   Context,
   CutUsageConfig (..),
   ProgramRule,
+  RecursionConfig (..),
   SingletonVariablesConfig (..),
   WithSeverity (..),
  )
@@ -25,12 +27,14 @@ configuredRules
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
     , consistentArity = ConsistentArityConfig consistentArityCfg
+    , recursion = RecursionConfig recursionCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
+      , toConfigured recursionCfg (const recursionChecker)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -43,4 +47,5 @@ emptyCodeAnalysisConfig =
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
     , consistentArity = ConsistentArityConfig Ignore
+    , recursion = RecursionConfig Ignore
     }
