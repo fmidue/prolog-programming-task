@@ -10,20 +10,20 @@ import Text.PrettyPrint.Leijen.Text (string)
 
 groupedDefinitionChecker :: ProgramRule
 groupedDefinitionChecker clauses =
-  [problem "Your code does not group predicate definitions by predicate name." | groupNames /= sort groupNames]
-    ++ [ problem "Your code does not sort the predicate definitions ascending by arity (per group)."
-       | any (\g -> let x = mapMaybe (structName . lhs) g in x /= sort x) groupedByName
+  [toProblem "Your code does not group predicate definitions by predicate name." | groupNames /= sort groupNames]
+    ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
+       | any (\g -> let x = mapMaybe (termIdentity . lhs) g in x /= sort x) groupedByName
        ]
   where
-    groupedByName = groupOn (fmap fst . structName . lhs) clauses
-    groupNames = mapMaybe (fmap fst . structName . lhs . head) groupedByName
+    groupedByName = groupOn (fmap fst . termIdentity . lhs) clauses
+    groupNames = mapMaybe (fmap fst . termIdentity . lhs . head) groupedByName
 
-structName :: Term -> Maybe (String, Int)
-structName (Struct name args) = Just (name, length args)
-structName _ = Nothing
+termIdentity :: Term -> Maybe (String, Int)
+termIdentity (Struct name args) = Just (name, length args)
+termIdentity _ = Nothing
 
-problem :: String -> Problem
-problem msg =
+toProblem :: String -> Problem
+toProblem msg =
   Problem {
     problemDisplay = string $ pack msg
     }
