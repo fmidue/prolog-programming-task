@@ -1,7 +1,7 @@
 module Prolog.Programming.CodeAnalysis.Rules.GroupedDefinitions (groupedDefinitionChecker) where
 
 import Data.List (sort)
-import Data.List.Extra (groupOn)
+import Data.List.Extra (groupOn, groupSort)
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
@@ -10,13 +10,15 @@ import Text.PrettyPrint.Leijen.Text (string)
 
 groupedDefinitionChecker :: ProgramRule
 groupedDefinitionChecker clauses =
-  [toProblem "Your code does not group predicate definitions by predicate name." | groupNames /= sort groupNames]
+  [toProblem "Your code does not group predicate definitions by predicate name." | duplicateExists]
     ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
        | any (\g -> let x = mapMaybe (termIdentity . lhs) g in x /= sort x) groupedByName
        ]
   where
     groupedByName = groupOn (fmap fst . termIdentity . lhs) clauses
     groupNames = mapMaybe (fmap fst . termIdentity . lhs . head) groupedByName
+    groupNamesIndexed = zip groupNames [1 :: Int ..]
+    duplicateExists = any ((> 1) . length . snd) $ groupSort groupNamesIndexed
 
 termIdentity :: Term -> Maybe (String, Int)
 termIdentity (Struct name args) = Just (name, length args)
