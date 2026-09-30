@@ -32,7 +32,7 @@ a.
 a(X) :- b(X).
 b(X, Y) :- X > Y.
       |]
-        `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
+          `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
   describe "GroupedDefinitions" $ do
     it "Should detect ungrouped definitions" $
       shouldDetectProblemsStrict
@@ -63,5 +63,14 @@ nonNegative(X) :- X > 0.
 a(0).
 a(1,2).
 a(3).
+b(4).
+        |]
+    it "Should not detect any problems when definitions are sorted ascending in arity" $
+      shouldNotHaveProblems
+        caConfig
+        [RS.r|
+a(0).
+a(3).
+a(1,2).
 b(4).
         |]
