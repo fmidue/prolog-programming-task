@@ -45,6 +45,15 @@ nonPositive(0).
 nonNegative(X) :- X > 0.
 nonPositive(X) :- X < 0.
         |]
+    it "Should detect ungrouped definitions with different arities" $
+      shouldDetectProblemsStrict
+        caConfig
+        [(== "Your code does not group predicate definitions by predicate name.")]
+        [RS.r|
+a(0).
+b(0).
+a(1,2).
+        |]
     it "Should not detect any problems when definitions are grouped" $
       shouldNotHaveProblems
         caConfig
