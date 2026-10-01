@@ -34,7 +34,7 @@ newtype Problem = Problem {
 
 type Context = Program
 
-type Predicate = (String,Int)
+type Predicate = (String, Int)
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
 type ClauseRule = Clause -> [Problem]
