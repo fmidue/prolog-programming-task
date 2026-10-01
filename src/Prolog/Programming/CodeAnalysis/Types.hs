@@ -13,9 +13,11 @@ module Prolog.Programming.CodeAnalysis.Types (
   CutUsageConfig (..),
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
+  RecursionConfig (..),
   UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
+  Predicate,
 )
 where
 
@@ -34,6 +36,8 @@ newtype Problem = Problem {
 {- FOURMOLU_ENABLE -}
 
 type Context = Program
+
+type Predicate = (String, Int)
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
 type ClauseRule = Clause -> [Problem]
@@ -64,6 +68,9 @@ newtype InconsistentAritiesConfig = InconsistentAritiesConfig (CodeAnalysisRuleC
 newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
   deriving (Generic, Show)
 
+newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
+  deriving Show
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -75,6 +82,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , inconsistentArities :: InconsistentAritiesConfig
   -- | Configuration for ungroupedDefinitions rule
   , ungroupedDefinitions :: UngroupedDefinitionsConfig
+  -- | Configuration for recursion rule
+  , recursion :: RecursionConfig
   }
   deriving (Generic, Show)
 
