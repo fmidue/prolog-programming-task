@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChecker) where
+module Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker) where
 
 import Data.Bifunctor (second)
 import Data.List.Extra (groupSort)
@@ -13,8 +13,8 @@ import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
-consistentArityChecker :: Context -> IgnoredPredicates -> ProgramRule
-consistentArityChecker otherDefinitions (IgnoredPredicates ignore) clauses =
+inconsistentAritiesChecker :: Context -> IgnoredPredicates -> ProgramRule
+inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
   case forcedIdentities ignore (identities otherDefinitions) of
     Nothing ->
       [ Problem $

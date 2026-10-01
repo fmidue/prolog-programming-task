@@ -66,8 +66,8 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
-  consistentArity:
-    # what to do concerning detection of consistent arity
+  inconsistentArities:
+    # what to do concerning detection of inconsistent arities
     status: warn
     # predicates to ignore for detection
     # useful when predicates provided by libraries can be used with different arities

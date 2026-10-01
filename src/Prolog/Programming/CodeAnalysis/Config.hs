@@ -5,17 +5,17 @@ module Prolog.Programming.CodeAnalysis.Config (
 where
 
 import Data.Maybe (catMaybes)
-import Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  ConsistentArityConfig (ConsistentArityConfig),
   Context,
   CutUsageConfig (..),
+  InconsistentAritiesConfig (InconsistentAritiesConfig),
   ProgramRule,
   RecursionConfig (..),
   SingletonVariablesConfig (..),
@@ -28,7 +28,7 @@ configuredRules
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
-    , consistentArity = ConsistentArityConfig consistentArityCfg
+    , inconsistentArities = InconsistentAritiesConfig inconsistentAritiesCfg
     , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     , recursion = RecursionConfig recursionCfg
     }
@@ -36,7 +36,7 @@ configuredRules
     catMaybes
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
-      , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
+      , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
       ]
@@ -50,7 +50,7 @@ emptyCodeAnalysisConfig =
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
-    , consistentArity = ConsistentArityConfig Ignore
+    , inconsistentArities = InconsistentAritiesConfig Ignore
     , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
     , recursion = RecursionConfig Ignore
     }

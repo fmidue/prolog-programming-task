@@ -33,8 +33,8 @@ library
       Prolog.Programming.CodeAnalysis.Config
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
-      Prolog.Programming.CodeAnalysis.Rules.ConsistentArity
       Prolog.Programming.CodeAnalysis.Rules.Cuts
+      Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
       Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
@@ -101,8 +101,8 @@ test-suite prolog-programming-task-test
   main-is: Spec.hs
   other-modules:
       CodeAnalysis.Helper
-      CodeAnalysis.Rules.ConsistentAritySpec
       CodeAnalysis.Rules.CutsSpec
+      CodeAnalysis.Rules.InconsistentAritiesSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec

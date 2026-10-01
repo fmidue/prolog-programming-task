@@ -34,9 +34,9 @@ import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  ConsistentArityConfig (..),
   CutUsageConfig (..),
   IgnoredPredicates (..),
+  InconsistentAritiesConfig (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
@@ -131,8 +131,8 @@ instance FromJSON IgnoredPredicates where
     IgnoredPredicates
       <$> v .:? "ignorePredicates" .!= []
 
-instance FromJSON ConsistentArityConfig where
-  parseJSON = withRuleParser ConsistentArityConfig
+instance FromJSON InconsistentAritiesConfig where
+  parseJSON = withRuleParser InconsistentAritiesConfig
 
 instance FromJSON UngroupedDefinitionsConfig where
   parseJSON = withRuleParser UngroupedDefinitionsConfig
@@ -147,7 +147,7 @@ instance FromJSON CodeAnalysisConfig where
     CodeAnalysisConfig
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
-      <*> v .:? "consistentArity" .!= ConsistentArityConfig Ignore
+      <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Ignore
       <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
       <*> v .:? "recursion" .!= RecursionConfig Ignore
 
