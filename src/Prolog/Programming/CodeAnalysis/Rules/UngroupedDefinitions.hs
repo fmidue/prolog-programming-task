@@ -2,7 +2,6 @@ module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefi
 
 import Data.List.Extra (anySame, groupOn)
 import Data.List.Ordered (isSorted)
-import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
@@ -15,14 +14,14 @@ ungroupedDefinitionsChecker clauses =
        | not (all isSorted groupedByName)
        ]
   where
-    termIdentities = mapMaybe (termIdentity . lhs) clauses
+    termIdentities = map clauseIdentity clauses
     groupedByName = groupOn fst termIdentities
     groupNames = map (fst . head) groupedByName
     duplicateExists = anySame groupNames
 
-termIdentity :: Term -> Maybe (String, Int)
-termIdentity (Struct name args) = Just (name, length args)
-termIdentity _ = Nothing
+clauseIdentity :: Clause -> (String, Int)
+clauseIdentity (Clause (Struct name args) _) = (name, length args)
+clauseIdentity _ = error "This should never happen."
 
 toProblem :: String -> Problem
 toProblem msg =
