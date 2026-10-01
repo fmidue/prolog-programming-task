@@ -8,7 +8,8 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..))
+import Language.Prolog (Clause (..))
+import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
@@ -30,7 +31,7 @@ consistentArityChecker otherDefinitions (IgnoredPredicates ignore) clauses =
         $ filter (\(n, _) -> n `notElem` ignore)
         $ groupSort
         $ nubOrd
-        $ concatMap identitiesInClause clauses
+        $ concatMap (grabIdentitiesInClause True) clauses
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
@@ -51,21 +52,10 @@ forcedIdentities ignore clauses
   | any inconsistent identities = Nothing
   | otherwise = Just $ Map.fromList $ map (second head) identities
   where
-    identities = groupSort $ concatMap identitiesInClause clauses
+    identities = groupSort $ concatMap (grabIdentitiesInClause True) clauses
 
     inconsistent (name, arities) =
       length (nubOrd arities) > 1 && name `notElem` ignore
-
-identitiesInClause :: Clause -> [(String, Int)]
-identitiesInClause (Clause ls rs) = concatMap grabIdentity $ ls : rs
-identitiesInClause (ClauseFn ls _) = grabIdentity ls
-
-grabIdentity :: Term -> [(String, Int)]
-grabIdentity (Struct name args)
-  | name `elem` [",", ";", "\\+", "not"] =
-      (name, length args) : concatMap grabIdentity args
-  | otherwise = [(name, length args)]
-grabIdentity _ = []
 
 toProblem :: Result -> Problem
 toProblem res =

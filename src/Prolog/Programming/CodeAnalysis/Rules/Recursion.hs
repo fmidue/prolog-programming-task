@@ -4,11 +4,13 @@ import Data.Graph (SCC (..), stronglyConnComp)
 import Data.List (intercalate, sort)
 import qualified Data.Map as Map (fromListWith, toList)
 import Data.Set (Set)
-import qualified Data.Set as Set (empty, fromList, toList, union)
+import qualified Data.Set as Set (fromList, toList, union)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..))
+import Language.Prolog (Clause (..))
+import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause, grabPredicateIdentities)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
+  Predicate,
   Problem (..),
   ProgramRule,
  )
@@ -19,27 +21,17 @@ recursionChecker (AdditionalMessage cMsg) clauses = map (toProblem cMsg) foundCy
   where
     foundCycles = [c | CyclicSCC c <- stronglyConnComp $ buildGraph clauses]
 
-type Predicate = (String, Int)
-
 buildGraph :: [Clause] -> [(Predicate, Predicate, [Predicate])]
 buildGraph clauses =
   [ (predicate, predicate, Set.toList calls)
   | (predicate, calls) <-
       Map.toList
         $ Map.fromListWith Set.union
-        $ map (\c -> (head $ grabIdentity $ lhs c, clauseEdges c)) clauses
+        $ map (\c -> (head $ grabPredicateIdentities $ lhs c, clauseEdges c)) clauses
   ]
 
 clauseEdges :: Clause -> Set Predicate
-clauseEdges (Clause _ rhs) = Set.fromList $ concatMap grabIdentity rhs
-clauseEdges _ = Set.empty
-
-grabIdentity :: Term -> [Predicate]
-grabIdentity (Struct name args)
-  | name `elem` [",", ";", "\\+", "not"] =
-      concatMap grabIdentity args
-  | otherwise = [(name, length args)]
-grabIdentity _ = []
+clauseEdges = Set.fromList . grabIdentitiesInClause False
 
 toProblem :: Maybe String -> [Predicate] -> Problem
 toProblem cMsg recursivePredicates =
