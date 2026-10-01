@@ -8,6 +8,7 @@ import Data.Maybe (catMaybes)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
+import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
@@ -16,6 +17,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InconsistentAritiesConfig (InconsistentAritiesConfig),
   ProgramRule,
   SingletonVariablesConfig (..),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
 
@@ -25,12 +27,14 @@ configuredRules
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
     , inconsistentArities = InconsistentAritiesConfig inconsistentAritiesCfg
+    , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
+      , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -43,4 +47,5 @@ emptyCodeAnalysisConfig =
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
     , inconsistentArities = InconsistentAritiesConfig Ignore
+    , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
     }

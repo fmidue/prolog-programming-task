@@ -13,6 +13,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   CutUsageConfig (..),
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
+  UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
 )
@@ -60,6 +61,9 @@ newtype IgnoredPredicates = IgnoredPredicates {ignorePredicates :: [String]}
 newtype InconsistentAritiesConfig = InconsistentAritiesConfig (CodeAnalysisRuleConfig IgnoredPredicates)
   deriving (Generic, Show)
 
+newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
+  deriving (Generic, Show)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -69,6 +73,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , cutUsage :: CutUsageConfig
   -- | Configuration for inconsistentArities rule
   , inconsistentArities :: InconsistentAritiesConfig
+  -- | Configuration for ungroupedDefinitions rule
+  , ungroupedDefinitions :: UngroupedDefinitionsConfig
   }
   deriving (Generic, Show)
 

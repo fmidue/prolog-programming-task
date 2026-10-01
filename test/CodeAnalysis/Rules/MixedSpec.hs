@@ -2,12 +2,12 @@ module CodeAnalysis.Rules.MixedSpec where
 
 import CodeAnalysis.Helper (shouldDetectProblemsStrict)
 import Data.List (isInfixOf)
+import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
-  InconsistentAritiesConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
  )
@@ -15,12 +15,11 @@ import Test.Hspec (Expectation, Spec, describe, it)
 
 caConfig :: CodeAnalysisConfig
 caConfig =
-  CodeAnalysisConfig {
+  emptyCodeAnalysisConfig {
     singletonVariables =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
         CutUsageConfig $ Detect Error $ AdditionalMessage Nothing
-    , inconsistentArities = InconsistentAritiesConfig Ignore
     }
 
 detectsProblems :: String -> Expectation
