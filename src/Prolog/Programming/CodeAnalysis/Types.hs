@@ -13,9 +13,11 @@ module Prolog.Programming.CodeAnalysis.Types (
   CutUsageConfig (..),
   IgnoredPredicates (..),
   ConsistentArityConfig (..),
+  RecursionConfig (..),
   UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
+  Predicate,
 )
 where
 
@@ -32,6 +34,8 @@ newtype Problem = Problem {
   deriving Show
 
 type Context = Program
+
+type Predicate = (String, Int)
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
 type ClauseRule = Clause -> [Problem]
@@ -62,6 +66,9 @@ newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig Ig
 newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
   deriving (Generic, Show)
 
+newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
+  deriving Show
+
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for singletonVariables rule
@@ -72,6 +79,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , consistentArity :: ConsistentArityConfig
   -- | Configuration for ungroupedDefinitions rule
   , ungroupedDefinitions :: UngroupedDefinitionsConfig
+  -- | Configuration for recursion rule
+  , recursion :: RecursionConfig
   }
   deriving (Generic, Show)
 

@@ -7,6 +7,7 @@ where
 import Data.Maybe (catMaybes)
 import Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
@@ -16,6 +17,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   Context,
   CutUsageConfig (..),
   ProgramRule,
+  RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
@@ -28,6 +30,7 @@ configuredRules
     , cutUsage = CutUsageConfig cutsCfg
     , consistentArity = ConsistentArityConfig consistentArityCfg
     , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
+    , recursion = RecursionConfig recursionCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -35,6 +38,7 @@ configuredRules
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
+      , toConfigured recursionCfg recursionChecker
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -48,4 +52,5 @@ emptyCodeAnalysisConfig =
     , cutUsage = CutUsageConfig Ignore
     , consistentArity = ConsistentArityConfig Ignore
     , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
+    , recursion = RecursionConfig Ignore
     }

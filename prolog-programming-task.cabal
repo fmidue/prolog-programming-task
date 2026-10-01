@@ -32,8 +32,10 @@ library
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
   other-modules:
+      Prolog.Programming.CodeAnalysis.Helper
       Prolog.Programming.CodeAnalysis.Rules.ConsistentArity
       Prolog.Programming.CodeAnalysis.Rules.Cuts
+      Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
@@ -102,6 +104,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.ConsistentAritySpec
       CodeAnalysis.Rules.CutsSpec
       CodeAnalysis.Rules.MixedSpec
+      CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
       CodeAnalysis.Rules.UngroupedDefinitionsSpec
       ConfigSpec
