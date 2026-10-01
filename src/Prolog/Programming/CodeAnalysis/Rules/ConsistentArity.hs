@@ -7,6 +7,7 @@ import Data.List.Extra (groupSort, nubOrd)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
+import qualified Data.Set as Set (toList, unions)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..))
 import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause)
@@ -30,8 +31,9 @@ consistentArityChecker otherDefinitions (IgnoredPredicates ignore) clauses =
         (fmap toProblem . compareWithForced forced)
         $ filter (\(n, _) -> n `notElem` ignore)
         $ groupSort
-        $ nubOrd
-        $ concatMap (grabIdentitiesInClause True) clauses
+        $ Set.toList
+        $ Set.unions
+        $ map (grabIdentitiesInClause True) clauses
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
@@ -52,7 +54,7 @@ forcedIdentities ignore clauses
   | any inconsistent identities = Nothing
   | otherwise = Just $ Map.fromList $ map (second head) identities
   where
-    identities = groupSort $ concatMap (grabIdentitiesInClause True) clauses
+    identities = groupSort $ Set.toList $ Set.unions $ map (grabIdentitiesInClause True) clauses
 
     inconsistent (name, arities) =
       length (nubOrd arities) > 1 && name `notElem` ignore

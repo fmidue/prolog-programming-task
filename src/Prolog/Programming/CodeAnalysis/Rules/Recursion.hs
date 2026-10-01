@@ -3,11 +3,10 @@ module Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker) where
 import Data.Graph (SCC (..), stronglyConnComp)
 import Data.List (intercalate, sort)
 import qualified Data.Map as Map (fromListWith, toList)
-import Data.Set (Set)
-import qualified Data.Set as Set (fromList, toList, union)
+import qualified Data.Set as Set (toList, union)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..))
-import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause, grabPredicateIdentities)
+import Language.Prolog (Clause (..), Term (..))
+import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   Predicate,
@@ -27,11 +26,12 @@ buildGraph clauses =
   | (predicate, calls) <-
       Map.toList
         $ Map.fromListWith Set.union
-        $ map (\c -> (head $ grabPredicateIdentities $ lhs c, clauseEdges c)) clauses
+        $ map (\c -> (clauseIdentity c, grabIdentitiesInClause False c)) clauses
   ]
 
-clauseEdges :: Clause -> Set Predicate
-clauseEdges = Set.fromList . grabIdentitiesInClause False
+clauseIdentity :: Clause -> (String, Int)
+clauseIdentity (Clause (Struct name args) _) = (name, length args)
+clauseIdentity _ = error "This should never happen."
 
 toProblem :: Maybe String -> [Predicate] -> Problem
 toProblem cMsg recursivePredicates =
