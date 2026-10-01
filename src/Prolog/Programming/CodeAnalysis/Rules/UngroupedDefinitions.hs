@@ -1,7 +1,7 @@
 module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker) where
 
-import Data.List (sort)
 import Data.List.Extra (anySame, groupOn)
+import Data.List.Ordered (isSorted)
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
@@ -12,7 +12,7 @@ ungroupedDefinitionsChecker :: ProgramRule
 ungroupedDefinitionsChecker clauses =
   [toProblem "Your code does not group predicate definitions by predicate name." | duplicateExists]
     ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
-       | any (\g -> g /= sort g) groupedByName
+       | not (all isSorted groupedByName)
        ]
   where
     termIdentities = mapMaybe (termIdentity . lhs) clauses

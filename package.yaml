@@ -32,6 +32,7 @@ dependencies:
   - yaml
   - aeson
   - extra
+  - data-ordlist
 
 library:
   source-dirs: src
