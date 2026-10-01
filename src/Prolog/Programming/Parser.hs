@@ -34,9 +34,9 @@ import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  ConsistentArityConfig (..),
   CutUsageConfig (..),
   IgnoredPredicates (..),
+  InconsistentArityConfig (..),
   SingletonVariablesConfig (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
@@ -129,8 +129,8 @@ instance FromJSON IgnoredPredicates where
     IgnoredPredicates
       <$> v .:? "ignorePredicates" .!= []
 
-instance FromJSON ConsistentArityConfig where
-  parseJSON = withRuleParser ConsistentArityConfig
+instance FromJSON InconsistentArityConfig where
+  parseJSON = withRuleParser InconsistentArityConfig
 
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
@@ -139,7 +139,7 @@ instance FromJSON CodeAnalysisConfig where
     CodeAnalysisConfig
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
-      <*> v .:? "inconsistentArity" .!= ConsistentArityConfig Ignore
+      <*> v .:? "inconsistentArity" .!= InconsistentArityConfig Ignore
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
