@@ -9,6 +9,7 @@ import Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChe
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
+import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
@@ -18,6 +19,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   ProgramRule,
   RecursionConfig (..),
   SingletonVariablesConfig (..),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
 
@@ -27,6 +29,7 @@ configuredRules
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
     , consistentArity = ConsistentArityConfig consistentArityCfg
+    , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     , recursion = RecursionConfig recursionCfg
     }
   taskAndHiddenDefinitions =
@@ -34,6 +37,7 @@ configuredRules
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured consistentArityCfg (consistentArityChecker taskAndHiddenDefinitions)
+      , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
       ]
     where
@@ -47,5 +51,6 @@ emptyCodeAnalysisConfig =
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
     , consistentArity = ConsistentArityConfig Ignore
+    , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
     , recursion = RecursionConfig Ignore
     }

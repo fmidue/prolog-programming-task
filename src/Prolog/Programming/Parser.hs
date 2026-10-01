@@ -39,6 +39,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   IgnoredPredicates (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
+  UngroupedDefinitionsConfig (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
 import Prolog.Programming.TypeHelper (FieldNames, recordFieldNames, typeName)
@@ -133,6 +134,9 @@ instance FromJSON IgnoredPredicates where
 instance FromJSON ConsistentArityConfig where
   parseJSON = withRuleParser ConsistentArityConfig
 
+instance FromJSON UngroupedDefinitionsConfig where
+  parseJSON = withRuleParser UngroupedDefinitionsConfig
+
 instance FromJSON RecursionConfig where
   parseJSON = withRuleParser RecursionConfig
 
@@ -144,6 +148,7 @@ instance FromJSON CodeAnalysisConfig where
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
       <*> v .:? "consistentArity" .!= ConsistentArityConfig Ignore
+      <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
       <*> v .:? "recursion" .!= RecursionConfig Ignore
 
 instance FromJSON TaskConfig where

@@ -37,6 +37,7 @@ library
       Prolog.Programming.CodeAnalysis.Rules.Cuts
       Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
+      Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
       Prolog.Programming.Parser
@@ -53,6 +54,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-ordlist
     , extra
     , mtl
     , parsec
@@ -79,6 +81,7 @@ executable test-task-prolog
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-ordlist
     , extra
     , mtl
     , parsec
@@ -103,6 +106,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
+      CodeAnalysis.Rules.UngroupedDefinitionsSpec
       ConfigSpec
       Paths_prolog_programming_task
   hs-source-dirs:
@@ -115,6 +119,7 @@ test-suite prolog-programming-task-test
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-ordlist
     , extra
     , hspec
     , mtl

@@ -14,6 +14,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   IgnoredPredicates (..),
   ConsistentArityConfig (..),
   RecursionConfig (..),
+  UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
   Predicate,
@@ -62,6 +63,9 @@ newtype IgnoredPredicates = IgnoredPredicates { ignorePredicates :: [String] }
 newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig IgnoredPredicates)
   deriving (Generic, Show)
 
+newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
+  deriving (Generic, Show)
+
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
@@ -73,6 +77,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , cutUsage :: CutUsageConfig
   -- | Configuration for consistentArity rule
   , consistentArity :: ConsistentArityConfig
+  -- | Configuration for ungroupedDefinitions rule
+  , ungroupedDefinitions :: UngroupedDefinitionsConfig
   -- | Configuration for recursion rule
   , recursion :: RecursionConfig
   }

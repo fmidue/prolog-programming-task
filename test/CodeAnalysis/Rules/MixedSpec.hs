@@ -7,7 +7,6 @@ import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  ConsistentArityConfig (..),
   CutUsageConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
@@ -21,7 +20,6 @@ caConfig =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
         CutUsageConfig $ Detect Error $ AdditionalMessage Nothing
-    , consistentArity = ConsistentArityConfig Ignore
     }
 
 detectsProblems :: String -> Expectation
