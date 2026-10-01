@@ -3,20 +3,19 @@
 module Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChecker) where
 
 import Data.Bifunctor (second)
-import Data.List.Extra (groupSort, nubOrd)
+import Data.List.Extra (groupSort)
 import Data.Map (Map)
 import qualified Data.Map as Map (fromList, lookup)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (toList, unions)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..))
 import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 consistentArityChecker :: Context -> IgnoredPredicates -> ProgramRule
 consistentArityChecker otherDefinitions (IgnoredPredicates ignore) clauses =
-  case forcedIdentities ignore otherDefinitions of
+  case forcedIdentities ignore (identities otherDefinitions) of
     Nothing ->
       [ Problem $
           vcat
@@ -29,11 +28,11 @@ consistentArityChecker otherDefinitions (IgnoredPredicates ignore) clauses =
     Just forced ->
       mapMaybe
         (fmap toProblem . compareWithForced forced)
-        $ filter (\(n, _) -> n `notElem` ignore)
-        $ groupSort
-        $ Set.toList
-        $ Set.unions
-        $ map (grabIdentitiesInClause True) clauses
+        $ filter
+          (\(n, _) -> n `notElem` ignore)
+        $ identities clauses
+  where
+    identities = groupSort . Set.toList . Set.unions . map (grabIdentitiesInClause True)
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
@@ -49,15 +48,13 @@ compareWithForced forced (name, arities) =
         _ -> Nothing
     _ -> Just $ MultipleArities name
 
-forcedIdentities :: [String] -> [Clause] -> Maybe (Map String Int)
-forcedIdentities ignore clauses
+forcedIdentities :: [String] -> [(String, [Int])] -> Maybe (Map String Int)
+forcedIdentities ignore identities
   | any inconsistent identities = Nothing
   | otherwise = Just $ Map.fromList $ map (second head) identities
   where
-    identities = groupSort $ Set.toList $ Set.unions $ map (grabIdentitiesInClause True) clauses
-
     inconsistent (name, arities) =
-      length (nubOrd arities) > 1 && name `notElem` ignore
+      length arities > 1 && name `notElem` ignore
 
 toProblem :: Result -> Problem
 toProblem res =
