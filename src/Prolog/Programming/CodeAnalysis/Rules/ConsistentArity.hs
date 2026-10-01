@@ -5,7 +5,7 @@ module Prolog.Programming.CodeAnalysis.Rules.ConsistentArity (consistentArityChe
 import Data.Bifunctor (second)
 import Data.List.Extra (groupSort, nubOrd)
 import Data.Map (Map)
-import qualified Data.Map as Map
+import qualified Data.Map as Map (fromList, lookup)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (toList, unions)
 import Data.Text.Lazy (pack)
