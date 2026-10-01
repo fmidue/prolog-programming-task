@@ -11,7 +11,7 @@ ungroupedDefinitionsChecker :: ProgramRule
 ungroupedDefinitionsChecker clauses =
   [toProblem "Your code does not group predicate definitions by predicate name." | duplicateExists]
     ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
-       | not (all isSorted groupedByName)
+       | not (all (isSorted . map snd) groupedByName)
        ]
   where
     groupedByName = groupOn fst $ map clauseIdentity clauses
