@@ -14,8 +14,7 @@ ungroupedDefinitionsChecker clauses =
        | not (all isSorted groupedByName)
        ]
   where
-    termIdentities = map clauseIdentity clauses
-    groupedByName = groupOn fst termIdentities
+    groupedByName = groupOn fst $ map clauseIdentity clauses
     groupNames = map (fst . head) groupedByName
     duplicateExists = anySame groupNames
 
