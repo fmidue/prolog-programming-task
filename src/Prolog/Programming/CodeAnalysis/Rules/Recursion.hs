@@ -2,8 +2,9 @@ module Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker) where
 
 import Data.Graph (SCC (..), stronglyConnComp)
 import Data.List (intercalate, sort)
-import Data.List.Extra (groupSort, nubOrd)
-import Data.Maybe (mapMaybe)
+import qualified Data.Map as Map (fromListWith, toList)
+import Data.Set (Set)
+import qualified Data.Set as Set (empty, fromList, toList, union)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (
@@ -16,20 +17,22 @@ import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
 recursionChecker :: AdditionalMessage -> ProgramRule
 recursionChecker (AdditionalMessage cMsg) clauses = map (toProblem cMsg) foundCycles
   where
-    foundCycles = cycles $ buildGraph clauses
+    foundCycles = [c | CyclicSCC c <- stronglyConnComp $ buildGraph clauses]
 
 type Predicate = (String, Int)
 
 buildGraph :: [Clause] -> [(Predicate, Predicate, [Predicate])]
 buildGraph clauses =
-  [ (predicate, predicate, nubOrd $ concat calls)
-  | (predicate, calls) <- groupSort $ mapMaybe clauseEdges clauses
+  [ (predicate, predicate, Set.toList calls)
+  | (predicate, calls) <-
+      Map.toList
+        $ Map.fromListWith Set.union
+        $ map (\c -> (head $ grabIdentity $ lhs c, clauseEdges c)) clauses
   ]
 
-clauseEdges :: Clause -> Maybe (Predicate, [Predicate])
-clauseEdges (Clause (Struct name args) rhs) =
-  Just ((name, length args), concatMap grabIdentity rhs)
-clauseEdges _ = Nothing
+clauseEdges :: Clause -> Set Predicate
+clauseEdges (Clause _ rhs) = Set.fromList $ concatMap grabIdentity rhs
+clauseEdges _ = Set.empty
 
 grabIdentity :: Term -> [Predicate]
 grabIdentity (Struct name args)
@@ -37,9 +40,6 @@ grabIdentity (Struct name args)
       concatMap grabIdentity args
   | otherwise = [(name, length args)]
 grabIdentity _ = []
-
-cycles :: [(Predicate, Predicate, [Predicate])] -> [[Predicate]]
-cycles graph = [c | CyclicSCC c <- stronglyConnComp graph]
 
 toProblem :: Maybe String -> [Predicate] -> Problem
 toProblem cMsg recursivePredicates =
