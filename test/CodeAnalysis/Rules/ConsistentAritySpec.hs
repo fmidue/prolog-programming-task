@@ -20,7 +20,7 @@ import Test.Hspec (Spec, describe, it)
 
 caConfig :: [String] -> CodeAnalysisConfig
 caConfig predicates =
-  emptyCodeAnalysisConfig {consistentArity = ConsistentArityConfig $ Detect Hint $ IgnoredPredicates predicates}
+  emptyCodeAnalysisConfig {inconsistentArity = ConsistentArityConfig $ Detect Hint $ IgnoredPredicates predicates}
 
 hasMultiple :: [(String, [String])]
 hasMultiple =

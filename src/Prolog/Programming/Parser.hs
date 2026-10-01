@@ -139,7 +139,7 @@ instance FromJSON CodeAnalysisConfig where
     CodeAnalysisConfig
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
-      <*> v .:? "consistentArity" .!= ConsistentArityConfig Ignore
+      <*> v .:? "inconsistentArity" .!= ConsistentArityConfig Ignore
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

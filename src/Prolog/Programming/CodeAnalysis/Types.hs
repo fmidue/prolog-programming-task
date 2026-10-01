@@ -64,8 +64,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   singletonVariables :: SingletonVariablesConfig
   -- | Configuration for cutUsage rule
   , cutUsage :: CutUsageConfig
-  -- | Configuration for consistentArity rule
-  , consistentArity :: ConsistentArityConfig
+  -- | Configuration for inconsistentArity rule
+  , inconsistentArity :: ConsistentArityConfig
   }
   deriving (Generic, Show)
 

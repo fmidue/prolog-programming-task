@@ -20,7 +20,7 @@ caConfig =
       SingletonVariablesConfig $ Detect Hint ()
     , cutUsage =
         CutUsageConfig $ Detect Error $ AdditionalMessage Nothing
-    , consistentArity = ConsistentArityConfig Ignore
+    , inconsistentArity = ConsistentArityConfig Ignore
     }
 
 detectsProblems :: String -> Expectation

@@ -24,7 +24,7 @@ configuredRules
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
-    , consistentArity = ConsistentArityConfig consistentArityCfg
+    , inconsistentArity = ConsistentArityConfig consistentArityCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -42,5 +42,5 @@ emptyCodeAnalysisConfig =
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
-    , consistentArity = ConsistentArityConfig Ignore
+    , inconsistentArity = ConsistentArityConfig Ignore
     }
