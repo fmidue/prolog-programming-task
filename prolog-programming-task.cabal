@@ -33,7 +33,7 @@ library
       Prolog.Programming.CodeAnalysis.Config
   other-modules:
       Prolog.Programming.CodeAnalysis.Rules.Cuts
-      Prolog.Programming.CodeAnalysis.Rules.InconsistentArity
+      Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
@@ -97,7 +97,7 @@ test-suite prolog-programming-task-test
   other-modules:
       CodeAnalysis.Helper
       CodeAnalysis.Rules.CutsSpec
-      CodeAnalysis.Rules.InconsistentAritySpec
+      CodeAnalysis.Rules.InconsistentAritiesSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
       ConfigSpec

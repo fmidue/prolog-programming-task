@@ -1,4 +1,4 @@
-module CodeAnalysis.Rules.InconsistentAritySpec where
+module CodeAnalysis.Rules.InconsistentAritiesSpec where
 
 import CodeAnalysis.Helper (
   shouldDetectProblemsStrict,
@@ -13,14 +13,16 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   IgnoredPredicates (IgnoredPredicates),
-  InconsistentArityConfig (InconsistentArityConfig),
+  InconsistentAritiesConfig (InconsistentAritiesConfig),
   Severity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: [String] -> CodeAnalysisConfig
 caConfig predicates =
-  emptyCodeAnalysisConfig {inconsistentArity = InconsistentArityConfig $ Detect Hint $ IgnoredPredicates predicates}
+  emptyCodeAnalysisConfig {
+    inconsistentArities = InconsistentAritiesConfig $ Detect Hint $ IgnoredPredicates predicates
+    }
 
 hasMultiple :: [(String, [String])]
 hasMultiple =
@@ -52,7 +54,7 @@ ignores =
   ]
 
 spec :: Spec
-spec = describe "InconsistentArity" $ do
+spec = describe "InconsistentArities" $ do
   describe "Should detect multiple arities" $
     forM_ hasMultiple $ \(programCode, predicates) ->
       it programCode $
