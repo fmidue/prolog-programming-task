@@ -32,6 +32,7 @@ dependencies:
   - yaml
   - aeson
   - extra
+  - data-ordlist
 
 library:
   source-dirs: src
@@ -73,3 +74,4 @@ tests:
       - prolog-programming-task
       - HUnit
       - hspec
+      - raw-strings-qq
