@@ -22,7 +22,3 @@ jobs:
         uses: haskell-actions/run-fourmolu@v13
         with:
           version: "0.20.1.0"
-          # Types.hs is only excluded since there are currently issues with formatting. See https://github.com/fourmolu/fourmolu/issues/552
-          pattern: |
-            **/*.hs
-            !src/Prolog/Programming/CodeAnalysis/Types.hs

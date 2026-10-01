@@ -1,5 +1,5 @@
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
@@ -23,12 +23,14 @@ import GHC.Generics (Generic)
 import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
 
+{- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Violation found in code
 newtype Problem = Problem {
   -- | User-facing explanation of the violation
   problemDisplay :: Doc
   }
   deriving Show
+{- FOURMOLU_ENABLE -}
 
 type Context = Program
 
@@ -46,18 +48,19 @@ data CodeAnalysisRuleConfig a
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving Show
 
-newtype AdditionalMessage = AdditionalMessage { additionalMessage :: Maybe String }
+newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
   deriving (Generic, Show)
 
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
-newtype IgnoredPredicates = IgnoredPredicates { ignorePredicates :: [String] }
+newtype IgnoredPredicates = IgnoredPredicates {ignorePredicates :: [String]}
   deriving (Generic, Show)
 
 newtype ConsistentArityConfig = ConsistentArityConfig (CodeAnalysisRuleConfig IgnoredPredicates)
   deriving (Generic, Show)
 
+{- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for singletonVariables rule
@@ -90,6 +93,7 @@ data Severity
     -}
     Error
   deriving (Eq, Show)
+{- FOURMOLU_ENABLE -}
 
 -- | Container for values with attached severity
 data WithSeverity a = WithSeverity {
