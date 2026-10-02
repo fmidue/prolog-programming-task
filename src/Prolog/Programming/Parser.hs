@@ -35,10 +35,10 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
-  ForbiddenPredicate (..),
   ForbiddenPredicates (..),
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
+  Predicate (..),
   PredicatesConfig (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
@@ -144,11 +144,11 @@ instance FromJSON UngroupedDefinitionsConfig where
 instance FromJSON RecursionConfig where
   parseJSON = withRuleParser RecursionConfig
 
-instance FromJSON ForbiddenPredicate where
+instance FromJSON Predicate where
   parseJSON (String s) = case T.split (== '/') s of
     [name, arity] -> case T.readMaybe $ T.unpack arity of
       Nothing -> fail "Invalid arity"
-      Just arity' -> pure $ ForbiddenPredicate (T.unpack name, arity')
+      Just arity' -> pure $ Predicate (T.unpack name) arity'
     _ -> fail "Invalid value"
   parseJSON _ = fail "Invalid value type"
 

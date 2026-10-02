@@ -17,8 +17,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
-  Predicate,
-  ForbiddenPredicate (..),
+  Predicate (..),
   ForbiddenPredicates (..),
   PredicatesConfig (..),
 )
@@ -41,7 +40,14 @@ newtype Problem = Problem {
 
 type Context = Program
 
-type Predicate = (String, Int)
+data Predicate = Predicate {
+  predicateName :: String
+  , predicateArity :: Int
+  }
+  deriving (Eq, Generic, Ord)
+
+instance Show Predicate where
+  show (Predicate name arity) = name ++ "/" ++ show arity
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
 type ClauseRule = Clause -> [Problem]
@@ -75,10 +81,7 @@ newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRul
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
-newtype ForbiddenPredicate = ForbiddenPredicate Predicate
-  deriving (Eq, Generic, Ord, Show)
-
-newtype ForbiddenPredicates = ForbiddenPredicates {forbiddenPredicates :: Set ForbiddenPredicate}
+newtype ForbiddenPredicates = ForbiddenPredicates {forbiddenPredicates :: Set Predicate}
   deriving (Generic, Show)
 
 newtype PredicatesConfig = PredicatesConfig (CodeAnalysisRuleConfig ForbiddenPredicates)

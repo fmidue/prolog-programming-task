@@ -3,36 +3,37 @@ module CodeAnalysis.Rules.PredicatesSpec where
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
-import Data.Set (fromList)
+import Data.Set (Set)
+import qualified Data.Set as Set (fromList)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  ForbiddenPredicate (ForbiddenPredicate),
   ForbiddenPredicates (ForbiddenPredicates),
+  Predicate (..),
   PredicatesConfig (PredicatesConfig),
   Severity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
-caConfig :: [(String, Int)] -> CodeAnalysisConfig
+caConfig :: Set Predicate -> CodeAnalysisConfig
 caConfig forbidden =
   emptyCodeAnalysisConfig {
-    predicates = PredicatesConfig $ Detect Hint $ ForbiddenPredicates (fromList (map ForbiddenPredicate forbidden))
+    predicates = PredicatesConfig $ Detect Hint $ ForbiddenPredicates forbidden
     }
 
-withProblems :: [(String, [(String, Int)])]
+withProblems :: [(String, Set Predicate)]
 withProblems =
-  [ ("p(X) :- q(X).", [("q", 1)])
-  , ("p(X) :- q(X), r(X).", [("q", 1), ("r", 1)])
-  , ("p(X) :- q(X); r(X).", [("q", 1), ("r", 1)])
+  [ ("p(X) :- q(X).", Set.fromList [Predicate "q" 1])
+  , ("p(X) :- q(X), r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
+  , ("p(X) :- q(X); r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
   ]
 
-errorFree :: [(String, [(String, Int)])]
+errorFree :: [(String, Set Predicate)]
 errorFree =
-  [ ("p(X) :- q(X).", [("p", 1)])
-  , ("p.", [("p", 1)])
-  , ("p(X) :- q(X).", [("r", 1)])
+  [ ("p(X) :- q(X).", Set.fromList [Predicate "p" 1])
+  , ("p.", Set.fromList [Predicate "p" 1])
+  , ("p(X) :- q(X).", Set.fromList [Predicate "r" 1])
   ]
 
 spec :: Spec
@@ -44,7 +45,7 @@ spec = describe "Predicates" $ do
           (caConfig forbidden)
           [ \problem ->
               isInfixOf "makes use of forbidden predicates" problem
-                && all (\(name, arity) -> (name ++ "/" ++ show arity) `isInfixOf` problem) forbidden
+                && all (\predicate -> show predicate `isInfixOf` problem) forbidden
           ]
           programCode
   describe "Should not detect forbidden predicates in safe clauses" $
