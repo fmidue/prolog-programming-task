@@ -6,7 +6,7 @@ import Data.Bifunctor (second)
 import Data.List.Extra (groupSort)
 import Data.Map (Map)
 import qualified Data.Map as Map (fromList, lookup)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (fromJust, listToMaybe, mapMaybe)
 import qualified Data.Set as Set (insert, toList, unions)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
@@ -51,7 +51,7 @@ compareWithForced forced (name, arities) =
 forcedIdentities :: [String] -> [(String, [Int])] -> Maybe (Map String Int)
 forcedIdentities ignore identities
   | any inconsistent identities = Nothing
-  | otherwise = Just $ Map.fromList $ map (second head) identities
+  | otherwise = Just $ Map.fromList $ map (second (fromJust . listToMaybe)) identities
   where
     inconsistent (name, arities) =
       length arities > 1 && name `notElem` ignore

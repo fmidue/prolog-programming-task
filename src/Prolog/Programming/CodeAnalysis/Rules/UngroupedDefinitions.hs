@@ -2,6 +2,7 @@ module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefi
 
 import Data.List.Extra (anySame, groupOn)
 import Data.List.Ordered (isSorted)
+import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
@@ -15,7 +16,7 @@ ungroupedDefinitionsChecker clauses =
        ]
   where
     groupedByName = groupOn fst $ map (fst . clauseIdentities) clauses
-    groupNames = map (fst . head) groupedByName
+    groupNames = mapMaybe ((fst <$>) . listToMaybe) groupedByName
     duplicateExists = anySame groupNames
 
 toProblem :: String -> Problem

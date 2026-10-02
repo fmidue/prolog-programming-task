@@ -22,6 +22,7 @@ import Data.Aeson.Key (toString)
 import qualified Data.Aeson.KeyMap as KM (keys)
 import qualified Data.ByteString.Char8 as BS (pack)
 import Data.Data (Typeable)
+import Data.Maybe (fromJust, listToMaybe)
 import qualified Data.Text as T (unpack)
 import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
@@ -185,7 +186,7 @@ configuration = do
         when (length optionalLs > 1) $
           fail "There is only one optional section allowed but multiple provided."
 
-        let hiddenPredicates = if null optionalLs then [] else unlines $ head optionalLs
+        let hiddenPredicates = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
 
         pure $
           TaskInstance {
