@@ -85,7 +85,7 @@ codeAnalysis:
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
   clauseAmount:
     # what to do concerning detection of clause amount
-    status: hint
+    status: ignore
     # minimum number of required clauses
     # lowerBound: 2
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
