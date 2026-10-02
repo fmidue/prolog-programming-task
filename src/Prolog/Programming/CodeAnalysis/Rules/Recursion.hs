@@ -5,7 +5,7 @@ import Data.List (intercalate, sort)
 import qualified Data.Map as Map (fromListWith, toList)
 import qualified Data.Set as Set (toList, union)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..))
+import Language.Prolog (Clause)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentity, grabIdentitiesInClause)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),

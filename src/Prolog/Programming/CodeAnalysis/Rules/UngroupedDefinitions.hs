@@ -3,7 +3,6 @@ module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefi
 import Data.List.Extra (anySame, groupOn)
 import Data.List.Ordered (isSorted)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentity)
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string)
