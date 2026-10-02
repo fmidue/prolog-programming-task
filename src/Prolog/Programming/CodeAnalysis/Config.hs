@@ -5,7 +5,9 @@ module Prolog.Programming.CodeAnalysis.Config (
 where
 
 import Data.Maybe (catMaybes)
+import qualified Data.Set as Set (empty)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
@@ -15,9 +17,11 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisRuleConfig (..),
   Context,
   CutUsageConfig (..),
+  ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
   ProgramRule,
   RecursionConfig (..),
+  Severity (Error),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
@@ -31,6 +35,7 @@ configuredRules
     , inconsistentArities = InconsistentAritiesConfig inconsistentAritiesCfg
     , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     , recursion = RecursionConfig recursionCfg
+    , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -39,6 +44,7 @@ configuredRules
       , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
+      , Just $ WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -53,4 +59,5 @@ emptyCodeAnalysisConfig =
     , inconsistentArities = InconsistentAritiesConfig Ignore
     , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
     , recursion = RecursionConfig Ignore
+    , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
     }

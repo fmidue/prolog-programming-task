@@ -6,7 +6,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
-  CodeAnalysisConfig (..),
+  CodeAnalysisConfig (recursion),
   CodeAnalysisRuleConfig (..),
   RecursionConfig (..),
   Severity (..),

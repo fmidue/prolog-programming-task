@@ -23,8 +23,10 @@ import qualified Data.Aeson.KeyMap as KM (keys)
 import Data.Bifunctor (Bifunctor (..))
 import qualified Data.ByteString.Char8 as BS (pack)
 import Data.Data (Typeable)
-import qualified Data.Text as T (unpack)
-import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
+import Data.Foldable (toList)
+import qualified Data.Set as Set (empty, fromList)
+import qualified Data.Text as T (split, unpack)
+import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withArray, withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
 import GHC.Generics (Generic, Rep)
 import Prolog.Programming.CodeAnalysis.Config (
@@ -32,11 +34,13 @@ import Prolog.Programming.CodeAnalysis.Config (
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
-  CodeAnalysisConfig (..),
+  CodeAnalysisConfig (CodeAnalysisConfig),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
+  ForbiddenPredicatesConfig (..),
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
+  Predicate (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
@@ -57,6 +61,7 @@ import Prolog.Programming.Types (
   Visualize (..),
  )
 import Text.Parsec hiding (Error)
+import qualified Text.Read as T (readMaybe)
 
 rejectUnknownFields :: [String] -> Object -> Parser ()
 rejectUnknownFields known obj =
@@ -140,6 +145,18 @@ instance FromJSON UngroupedDefinitionsConfig where
 instance FromJSON RecursionConfig where
   parseJSON = withRuleParser RecursionConfig
 
+instance FromJSON Predicate where
+  parseJSON (String s) = case T.split (== '/') s of
+    [name, arity] -> case T.readMaybe $ T.unpack arity of
+      Nothing -> fail "Invalid arity"
+      Just arity' -> pure $ Predicate (T.unpack name) arity'
+    _ -> fail "Invalid value"
+  parseJSON _ = fail "Invalid value type"
+
+instance FromJSON ForbiddenPredicatesConfig where
+  parseJSON = withArray "ForbiddenPredicatesConfig" $ \v ->
+    ForbiddenPredicatesConfig . Set.fromList <$> traverse parseJSON (toList v)
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -150,6 +167,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Ignore
       <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
       <*> v .:? "recursion" .!= RecursionConfig Ignore
+      <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

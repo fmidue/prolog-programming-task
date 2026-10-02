@@ -17,11 +17,13 @@ module Prolog.Programming.CodeAnalysis.Types (
   UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
-  Predicate,
+  Predicate (..),
+  ForbiddenPredicatesConfig (..),
 )
 where
 
 import Data.Data (Typeable)
+import Data.Set (Set)
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
@@ -37,7 +39,14 @@ newtype Problem = Problem {
 
 type Context = Program
 
-type Predicate = (String, Int)
+data Predicate = Predicate {
+  predicateName :: String
+  , predicateArity :: Int
+  }
+  deriving (Eq, Generic, Ord)
+
+instance Show Predicate where
+  show (Predicate name arity) = name ++ "/" ++ show arity
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
 type ClauseRule = Clause -> [Problem]
@@ -71,6 +80,9 @@ newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRul
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
+newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Predicate}
+  deriving (Generic, Show)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -84,6 +96,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , ungroupedDefinitions :: UngroupedDefinitionsConfig
   -- | Configuration for recursion rule
   , recursion :: RecursionConfig
+  -- | Configuration for forbiddenPredicates rule
+  , forbiddenPredicates :: ForbiddenPredicatesConfig
   }
   deriving (Generic, Show)
 

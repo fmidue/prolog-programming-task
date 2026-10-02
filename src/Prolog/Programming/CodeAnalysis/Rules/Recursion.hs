@@ -41,7 +41,7 @@ toProblem cMsg recursivePredicates =
         ]
     }
   where
-    names = sort $ map (\(n, a) -> n ++ "/" ++ show a) recursivePredicates
+    names = sort $ map show recursivePredicates
 
     recursionDescription [_] = "The self-recursive predicate is:"
     recursionDescription _ = "The mutually recursive predicates are:"

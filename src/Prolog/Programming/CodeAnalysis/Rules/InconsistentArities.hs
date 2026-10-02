@@ -10,7 +10,13 @@ import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (insert, toList, unions)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
-import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
+import Prolog.Programming.CodeAnalysis.Types (
+  Context,
+  IgnoredPredicates (..),
+  Predicate (..),
+  Problem (..),
+  ProgramRule,
+ )
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 inconsistentAritiesChecker :: Context -> IgnoredPredicates -> ProgramRule
@@ -32,7 +38,8 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
           (\(n, _) -> n `notElem` ignore)
         $ identities clauses
   where
-    identities = groupSort . Set.toList . Set.unions . map (uncurry Set.insert . clauseIdentities)
+    identities = groupSort . map toTuple . Set.toList . Set.unions . map (uncurry Set.insert . clauseIdentities)
+    toTuple (Predicate name arity) = (name, arity)
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
