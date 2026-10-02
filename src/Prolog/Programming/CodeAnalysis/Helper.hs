@@ -19,5 +19,5 @@ grabPredicateIdentities _ = Set.empty
 grabIdentitiesInClauseRhs :: Clause -> Set Predicate
 grabIdentitiesInClauseRhs (Clause _ rs) =
   Set.unions $ map grabPredicateIdentities rs
-grabIdentitiesInClauseRhs (ClauseFn ls _) =
+grabIdentitiesInClauseRhs _ =
   Set.empty
