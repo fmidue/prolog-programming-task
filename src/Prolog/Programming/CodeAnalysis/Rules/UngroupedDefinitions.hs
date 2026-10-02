@@ -4,6 +4,7 @@ import Data.List.Extra (anySame, groupOn)
 import Data.List.Ordered (isSorted)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..))
+import Prolog.Programming.CodeAnalysis.Helper (clauseIdentity)
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string)
 
@@ -17,10 +18,6 @@ ungroupedDefinitionsChecker clauses =
     groupedByName = groupOn fst $ map clauseIdentity clauses
     groupNames = map (fst . head) groupedByName
     duplicateExists = anySame groupNames
-
-clauseIdentity :: Clause -> (String, Int)
-clauseIdentity (Clause (Struct name args) _) = (name, length args)
-clauseIdentity _ = error "This should never happen."
 
 toProblem :: String -> Problem
 toProblem msg =
