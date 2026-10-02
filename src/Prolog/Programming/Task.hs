@@ -230,9 +230,9 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                         else ""
                 )
 
-      case checkForProblems codeAnalysis inProg of
-        [] -> pure ()
-        pbs -> either reject inform $ displayProblems pbs
+          case checkForProblems codeAnalysis inProg factProg of
+            [] -> pure ()
+            pbs -> either reject inform $ displayProblems pbs
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)

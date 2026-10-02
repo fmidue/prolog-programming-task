@@ -67,6 +67,24 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  inconsistentArities:
+    # what to do concerning detection of inconsistent arities
+    status: warn
+    # predicates to ignore for detection
+    # useful when predicates provided by libraries can be used with different arities
+    # ignorePredicates:
+    #  - append # append/2 and append/3 are both provided by SWI-Prolog
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  ungroupedDefinitions:
+    # what to do concerning detection of ungrouped predicate definitions
+    status: hint
+  recursion:
+    # what to do concerning detection of recursive predicates
+    status: ignore
+    # additional message to display next to default feedback
+    # additionalMessage: "Recursion is not part of this exercise yet."
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.

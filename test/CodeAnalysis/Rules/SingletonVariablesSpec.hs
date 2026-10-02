@@ -3,10 +3,10 @@ module CodeAnalysis.Rules.SingletonVariablesSpec where
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
+import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
-  CutUsageConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
  )
@@ -14,11 +14,9 @@ import Test.Hspec (Spec, describe, it)
 
 caConfig :: CodeAnalysisConfig
 caConfig =
-  CodeAnalysisConfig {
+  emptyCodeAnalysisConfig {
     singletonVariables =
       SingletonVariablesConfig $ Detect Hint ()
-    , cutUsage =
-        CutUsageConfig Ignore
     }
 
 unmarkedSingletons :: [(String, [String])]

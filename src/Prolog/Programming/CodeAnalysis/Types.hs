@@ -1,36 +1,50 @@
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
-  Rule,
+  Context,
+  ClauseRule,
+  ProgramRule,
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
+  IgnoredPredicates (..),
+  InconsistentAritiesConfig (..),
+  RecursionConfig (..),
+  UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
+  Predicate,
 )
 where
 
 import Data.Data (Data, Typeable)
 import GHC.Generics (Generic)
-import Language.Prolog (Clause (..))
+import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
 
+{- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Violation found in code
-data Problem = Problem {
-  -- | Clause the violation appears in
-  problemClause :: Clause
+newtype Problem = Problem {
   -- | User-facing explanation of the violation
-  , problemDisplay :: Doc
+  problemDisplay :: Doc
   }
   deriving Show
+{- FOURMOLU_ENABLE -}
+
+type Context = Program
+
+type Predicate = (String, Int)
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
-type Rule = Clause -> [Problem]
+type ClauseRule = Clause -> [Problem]
+
+-- | Definition for a code analysis checker that looks for violations in a given program
+type ProgramRule = Program -> [Problem]
 
 data CodeAnalysisRuleConfig a
   = Ignore
@@ -40,18 +54,37 @@ data CodeAnalysisRuleConfig a
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Show)
 
-newtype AdditionalMessage = AdditionalMessage { additionalMessage :: Maybe String }
+newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
   deriving (Data, Generic, Show)
 
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving (Data, Show)
 
+newtype IgnoredPredicates = IgnoredPredicates {ignorePredicates :: [String]}
+  deriving (Generic, Show)
+
+newtype InconsistentAritiesConfig = InconsistentAritiesConfig (CodeAnalysisRuleConfig IgnoredPredicates)
+  deriving (Generic, Show)
+
+newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
+  deriving (Generic, Show)
+
+newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
+  deriving Show
+
+{- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for singletonVariables rule
   singletonVariables :: SingletonVariablesConfig
   -- | Configuration for cutUsage rule
   , cutUsage :: CutUsageConfig
+  -- | Configuration for inconsistentArities rule
+  , inconsistentArities :: InconsistentAritiesConfig
+  -- | Configuration for ungroupedDefinitions rule
+  , ungroupedDefinitions :: UngroupedDefinitionsConfig
+  -- | Configuration for recursion rule
+  , recursion :: RecursionConfig
   }
   deriving (Data, Generic, Show)
 
@@ -76,6 +109,7 @@ data Severity
     -}
     Error
   deriving (Data, Eq, Show)
+{- FOURMOLU_ENABLE -}
 
 -- | Container for values with attached severity
 data WithSeverity a = WithSeverity {

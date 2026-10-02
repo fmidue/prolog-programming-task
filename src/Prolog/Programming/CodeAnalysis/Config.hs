@@ -1,39 +1,56 @@
 module Prolog.Programming.CodeAnalysis.Config (
   configuredRules,
-  defaultCodeAnalysisConfig,
+  emptyCodeAnalysisConfig,
 )
 where
 
 import Data.Maybe (catMaybes)
-import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsRule)
-import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesRule)
+import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
+import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
+import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
+import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
+  Context,
   CutUsageConfig (..),
-  Rule,
+  InconsistentAritiesConfig (InconsistentAritiesConfig),
+  ProgramRule,
+  RecursionConfig (..),
   SingletonVariablesConfig (..),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
 
-configuredRules :: CodeAnalysisConfig -> [WithSeverity Rule]
+configuredRules :: CodeAnalysisConfig -> Context -> [WithSeverity ProgramRule]
 configuredRules
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
-    } =
+    , inconsistentArities = InconsistentAritiesConfig inconsistentAritiesCfg
+    , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
+    , recursion = RecursionConfig recursionCfg
+    }
+  taskAndHiddenDefinitions =
     catMaybes
-      [ toConfigured singletonVarsCfg (const singletonVariablesRule)
-      , toConfigured cutsCfg cutsRule
+      [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
+      , toConfigured cutsCfg (concatMap . cutsChecker)
+      , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
+      , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
+      , toConfigured recursionCfg recursionChecker
       ]
     where
-      toConfigured :: CodeAnalysisRuleConfig a -> (a -> Rule) -> Maybe (WithSeverity Rule)
+      toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
       toConfigured Ignore _ = Nothing
       toConfigured (Detect severity' extra) build = Just (WithSeverity severity' (build extra))
 
-defaultCodeAnalysisConfig :: CodeAnalysisConfig
-defaultCodeAnalysisConfig =
+emptyCodeAnalysisConfig :: CodeAnalysisConfig
+emptyCodeAnalysisConfig =
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig Ignore
     , cutUsage = CutUsageConfig Ignore
+    , inconsistentArities = InconsistentAritiesConfig Ignore
+    , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
+    , recursion = RecursionConfig Ignore
     }

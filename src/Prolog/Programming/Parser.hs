@@ -27,14 +27,18 @@ import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, 
 import Data.Yaml.Aeson (Parser)
 import GHC.Generics (Generic, Rep)
 import Prolog.Programming.CodeAnalysis.Config (
-  defaultCodeAnalysisConfig,
+  emptyCodeAnalysisConfig,
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
+  IgnoredPredicates (..),
+  InconsistentAritiesConfig (..),
+  RecursionConfig (..),
   SingletonVariablesConfig (..),
+  UngroupedDefinitionsConfig (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
 import Prolog.Programming.TypeHelper (FieldNames, recordFieldNames, typeName)
@@ -125,6 +129,20 @@ instance FromJSON AdditionalMessage where
 instance FromJSON CutUsageConfig where
   parseJSON = withRuleParser CutUsageConfig
 
+instance FromJSON IgnoredPredicates where
+  parseJSON = withObject "IgnoredPredicates" $ \v ->
+    IgnoredPredicates
+      <$> v .:? "ignorePredicates" .!= []
+
+instance FromJSON InconsistentAritiesConfig where
+  parseJSON = withRuleParser InconsistentAritiesConfig
+
+instance FromJSON UngroupedDefinitionsConfig where
+  parseJSON = withRuleParser UngroupedDefinitionsConfig
+
+instance FromJSON RecursionConfig where
+  parseJSON = withRuleParser RecursionConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -132,6 +150,9 @@ instance FromJSON CodeAnalysisConfig where
     CodeAnalysisConfig
       <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
       <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
+      <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Ignore
+      <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
+      <*> v .:? "recursion" .!= RecursionConfig Ignore
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
@@ -144,7 +165,7 @@ instance FromJSON TaskConfig where
       <*> v .:? "includeHiddenDefinitions" .!= Yes
       <*> v .:? "allowListPatternMatching" .!= True
       <*> v .:? "showSWISHButton" .!= False
-      <*> v .:? "codeAnalysis" .!= defaultCodeAnalysisConfig
+      <*> v .:? "codeAnalysis" .!= emptyCodeAnalysisConfig
       <*> v .:? "specifications" .!= []
 
 parseInstance :: String -> Either ParseError TaskInstance

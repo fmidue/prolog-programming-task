@@ -1,15 +1,15 @@
-module Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesRule) where
+module Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker) where
 
 import Data.Generics (Data, everything, mkQ)
 import Data.Map (Map)
 import qualified Data.Map as Map (empty, filter, keys, singleton, unionWith)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Term (..), VariableName (..))
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), Rule)
+import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
-singletonVariablesRule :: Rule
-singletonVariablesRule clause = map (toProblem clause) singletonVariables
+singletonVariablesChecker :: ClauseRule
+singletonVariablesChecker clause = map (toProblem clause) singletonVariables
   where
     singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
 
@@ -23,12 +23,11 @@ countVariables = everything (Map.unionWith (+)) $ mkQ Map.empty count
 toProblem :: Clause -> String -> Problem
 toProblem clause var =
   Problem {
-    problemClause = clause
-    , problemDisplay =
-        vsep
-          [ string $ pack "Your clause"
-          , indent 2 $ string $ pack $ show clause
-          , string (pack $ "includes the singleton variable " ++ var ++ ".") <> linebreak
-          , string $ pack "You can safely replace it with a wildcard (_)."
-          ]
+    problemDisplay =
+      vsep
+        [ string $ pack "Your clause"
+        , indent 2 $ string $ pack $ show clause
+        , string (pack $ "includes the singleton variable " ++ var ++ ".") <> linebreak
+        , string $ pack "You can safely replace it with a wildcard (_)."
+        ]
     }

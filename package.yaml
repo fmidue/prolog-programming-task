@@ -31,6 +31,8 @@ dependencies:
   - syb >= 0.3
   - yaml
   - aeson
+  - extra
+  - data-ordlist
 
 library:
   source-dirs: src

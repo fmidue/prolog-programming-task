@@ -1,4 +1,5 @@
 Aeson
+arities
 arity
 Autotool
 Bifunctor
@@ -20,7 +21,9 @@ mempty
 pbs
 rhs
 snd
+SWI
 SYB
+uncurry
 unlines
 unwords
 vsep

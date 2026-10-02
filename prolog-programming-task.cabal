@@ -33,8 +33,12 @@ library
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
   other-modules:
+      Prolog.Programming.CodeAnalysis.Helper
       Prolog.Programming.CodeAnalysis.Rules.Cuts
+      Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
+      Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
+      Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.Examples
       Prolog.Programming.Helper
       Prolog.Programming.Print
@@ -51,6 +55,8 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-ordlist
+    , extra
     , mtl
     , parsec
     , prolog
@@ -76,6 +82,8 @@ executable test-task-prolog
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-ordlist
+    , extra
     , mtl
     , parsec
     , prolog
@@ -95,8 +103,11 @@ test-suite prolog-programming-task-test
   other-modules:
       CodeAnalysis.Helper
       CodeAnalysis.Rules.CutsSpec
+      CodeAnalysis.Rules.InconsistentAritiesSpec
       CodeAnalysis.Rules.MixedSpec
+      CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
+      CodeAnalysis.Rules.UngroupedDefinitionsSpec
       ExamplesSpec
       ParseSpec
       Paths_prolog_programming_task
@@ -110,6 +121,8 @@ test-suite prolog-programming-task-test
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-ordlist
+    , extra
     , hspec
     , mtl
     , parsec
