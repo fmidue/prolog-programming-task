@@ -51,6 +51,8 @@ library
   build-depends:
       MonadRandom
     , aeson
+    , autolib-reader
+    , autolib-todoc
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -78,6 +80,8 @@ executable test-task-prolog
   build-depends:
       MonadRandom
     , aeson
+    , autolib-reader
+    , autolib-todoc
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -117,6 +121,8 @@ test-suite prolog-programming-task-test
       HUnit
     , MonadRandom
     , aeson
+    , autolib-reader
+    , autolib-todoc
     , base >=4.7 && <5
     , bytestring
     , containers

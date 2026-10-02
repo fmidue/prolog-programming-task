@@ -1,25 +1,31 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Prolog.Programming.Types where
 
+import Autolib.Reader (Reader (..))
+import Autolib.ToDoc (ToDoc (..))
+import Control.Monad (mzero)
 import Data.Data (Data)
 import Data.Void (Void)
 import GHC.Generics (Generic)
-import Language.Prolog (Term)
+import Language.Prolog (Term (..), VariableName (..))
 import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
 
 type TimeoutDuration = Int
 
 data TreeStyle = QueryStyle | ResolutionStyle
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 type IncludeTask = Include ()
 
 type IncludeHidden = Include Void
 
 data Include a = Yes | Filtered | No a
-  deriving (Data, Eq, Show)
+  deriving (Data, Eq, Generic, Reader, Show, ToDoc)
 
 type AllowListMatching = Bool
 
@@ -35,7 +41,7 @@ data TaskConfig = TaskConfig {
   , codeAnalysis :: CodeAnalysisConfig
   , specifications :: [Spec]
   }
-  deriving (Data, Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
@@ -43,7 +49,7 @@ data TaskInstance = TaskInstance {
   , visiblePredicates :: String
   , hiddenPredicates :: String
   }
-  deriving (Generic, Show)
+  deriving (Generic, Reader, Show, ToDoc)
 
 data Spec = Spec {
   specVisibility :: Visibility
@@ -52,22 +58,37 @@ data Spec = Spec {
   , specTimeout :: Timeout
   , specRequirement :: Requirement
   }
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data Visibility = Hidden String | Visible
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data Visualize = ShowTree | DontShowTree
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data Expection = PositiveResult | NegativeResult
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data Timeout = GlobalTimeout | LocalTimeout Int
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data Requirement
   = StatementToCheck [Term]
   | QueryWithAnswers [Term] [[Term]]
   | NewPredDecl Term String
-  deriving (Data, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
+deriving instance Generic VariableName
+deriving instance Reader VariableName
+deriving instance ToDoc VariableName
+
+deriving instance Generic Term
+deriving instance Reader Term
+deriving instance ToDoc Term
+
+instance ToDoc Void where
+  toDocPrec _ _ =
+    error "instance ToDoc Void -- in Let.Void"
+
+instance Reader Void where
+  atomic_readerPrec _ = mzero

@@ -33,6 +33,8 @@ dependencies:
   - aeson
   - extra
   - data-ordlist
+  - autolib-reader
+  - autolib-todoc
 
 library:
   source-dirs: src
