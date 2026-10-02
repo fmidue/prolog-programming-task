@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -32,6 +33,8 @@ import Prolog.Programming.CodeAnalysis.Config (
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
+  BoundsConfig (..),
+  ClauseAmountConfig (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
@@ -140,6 +143,24 @@ instance FromJSON UngroupedDefinitionsConfig where
 instance FromJSON RecursionConfig where
   parseJSON = withRuleParser RecursionConfig
 
+instance FromJSON BoundsConfig where
+  parseJSON = withObject "BoundsConfig" $ \v -> do
+    lowerBound <- v .:? "lowerBound"
+    upperBound <- v .:? "upperBound"
+
+    case (,) <$> lowerBound <*> upperBound of
+      Just (lowerB, upperB) | lowerB > upperB -> fail "The lower bound cannot be greater than the upper bound."
+      _ -> pure ()
+
+    pure $
+      BoundsConfig {
+        lowerBound
+        , upperBound
+        }
+
+instance FromJSON ClauseAmountConfig where
+  parseJSON = withRuleParser ClauseAmountConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -150,6 +171,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Ignore
       <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
       <*> v .:? "recursion" .!= RecursionConfig Ignore
+      <*> v .:? "clauseAmount" .!= ClauseAmountConfig Ignore
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
