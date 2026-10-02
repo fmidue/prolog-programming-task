@@ -1,8 +1,8 @@
 {-# LANGUAGE CPP #-}
 #if !MIN_VERSION_base(4,18,0)
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DerivingStrategies #-}
 #endif
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
 
