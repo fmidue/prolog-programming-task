@@ -32,7 +32,7 @@ import Prolog.Programming.CodeAnalysis.Config (
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
-  CodeAnalysisConfig (..),
+  CodeAnalysisConfig (CodeAnalysisConfig),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
   ForbiddenPredicates (..),
@@ -202,8 +202,8 @@ configuration = do
   case decodeEither' (BS.pack rawCfg) of
     Left err -> fail $ show err
     Right taskCfg -> do
-      let predicates' = bimap unlines unlines $ breakWhen ("---" `isPrefixOf`) rest
-      pure (taskCfg, predicates')
+      let predicates = bimap unlines unlines $ breakWhen ("---" `isPrefixOf`) rest
+      pure (taskCfg, predicates)
 
 parseSpec :: Parsec String () Spec
 parseSpec = try newPredDeclParser <|> specLine

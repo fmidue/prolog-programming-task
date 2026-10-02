@@ -10,7 +10,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
-  CodeAnalysisConfig (..),
+  CodeAnalysisConfig (inconsistentArities),
   CodeAnalysisRuleConfig (..),
   IgnoredPredicates (IgnoredPredicates),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
@@ -19,9 +19,9 @@ import Prolog.Programming.CodeAnalysis.Types (
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: [String] -> CodeAnalysisConfig
-caConfig predicates' =
+caConfig predicates =
   emptyCodeAnalysisConfig {
-    inconsistentArities = InconsistentAritiesConfig $ Detect Hint $ IgnoredPredicates predicates'
+    inconsistentArities = InconsistentAritiesConfig $ Detect Hint $ IgnoredPredicates predicates
     }
 
 hasMultiple :: [(String, [String])]
@@ -56,11 +56,11 @@ ignores =
 spec :: Spec
 spec = describe "InconsistentArities" $ do
   describe "Should detect multiple arities" $
-    forM_ hasMultiple $ \(programCode, predicates') ->
+    forM_ hasMultiple $ \(programCode, predicates) ->
       it programCode $
         shouldDetectProblemsStrict
           (caConfig [])
-          (map (isInfixOf . ("Your program contains the predicate " ++)) predicates')
+          (map (isInfixOf . ("Your program contains the predicate " ++)) predicates)
           programCode
   describe "Should not detect any problems" $
     forM_ errorFree $ \programCode ->
@@ -69,10 +69,10 @@ spec = describe "InconsistentArities" $ do
           (caConfig [])
           programCode
   describe "should ignore predicates when configured" $
-    forM_ ignores $ \(programCode, predicates') ->
+    forM_ ignores $ \(programCode, predicates) ->
       it programCode $
         shouldNotHaveProblems
-          (caConfig predicates')
+          (caConfig predicates)
           programCode
   it "should ignore predicates in task/hidden definitions when configured" $
     shouldNotHaveProblems'

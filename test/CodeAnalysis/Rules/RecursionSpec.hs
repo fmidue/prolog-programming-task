@@ -6,7 +6,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
-  CodeAnalysisConfig (..),
+  CodeAnalysisConfig (recursion),
   CodeAnalysisRuleConfig (..),
   RecursionConfig (..),
   Severity (..),
@@ -38,13 +38,13 @@ errorFree =
 spec :: Spec
 spec = describe "Recursion" $ do
   describe "Should detect recursive predicates" $
-    forM_ recursivePrograms $ \(programCode, description, predicates') ->
+    forM_ recursivePrograms $ \(programCode, description, predicates) ->
       it programCode $
         shouldDetectProblemsStrict
           (caConfig Nothing)
           [ \problem ->
               isInfixOf "potentially makes use of recursion" problem
-                && isInfixOf (description ++ "\n  " ++ predicates') problem
+                && isInfixOf (description ++ "\n  " ++ predicates) problem
           ]
           programCode
   describe "Should not detect any problems" $
