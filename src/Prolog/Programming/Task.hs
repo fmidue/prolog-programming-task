@@ -16,7 +16,7 @@ module Prolog.Programming.Task (
   taskDefinitionsIncluded,
   initialTask,
   displaySWISHButton,
-  TaskInstance
+  TaskInstance,
 ) where
 
 import Prolog.Programming.Data
