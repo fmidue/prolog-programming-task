@@ -6,7 +6,8 @@ import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Predicate (..))
 
 clauseIdentities :: Clause -> (Predicate, Set Predicate)
-clauseIdentities (Clause (Struct name args) rs) = (Predicate name (length args), Set.unions $ map grabPredicateIdentities rs)
+clauseIdentities (Clause (Struct name args) rs) =
+  (Predicate name (length args), Set.unions $ map grabPredicateIdentities rs)
 clauseIdentities _ = error "This should never be accessed."
 
 grabPredicateIdentities :: Term -> Set Predicate

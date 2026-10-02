@@ -10,7 +10,13 @@ import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (insert, toList, unions)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
-import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Predicate (..), Problem (..), ProgramRule)
+import Prolog.Programming.CodeAnalysis.Types (
+  Context,
+  IgnoredPredicates (..),
+  Predicate (..),
+  Problem (..),
+  ProgramRule,
+ )
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 inconsistentAritiesChecker :: Context -> IgnoredPredicates -> ProgramRule
