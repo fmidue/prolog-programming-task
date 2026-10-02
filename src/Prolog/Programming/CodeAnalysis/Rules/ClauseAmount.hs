@@ -3,7 +3,11 @@
 module Prolog.Programming.CodeAnalysis.Rules.ClauseAmount (clauseAmountChecker) where
 
 import Data.Text.Lazy (pack)
-import Prolog.Programming.CodeAnalysis.Types (BoundsConfig (BoundsConfig, lowerBound, upperBound), Problem (..), ProgramRule)
+import Prolog.Programming.CodeAnalysis.Types (
+  BoundsConfig (..),
+  Problem (..),
+  ProgramRule,
+ )
 import Text.PrettyPrint.Leijen.Text (string)
 
 clauseAmountChecker :: BoundsConfig -> ProgramRule
