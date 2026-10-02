@@ -15,6 +15,8 @@ module Prolog.Programming.CodeAnalysis.Types (
   InconsistentAritiesConfig (..),
   RecursionConfig (..),
   UngroupedDefinitionsConfig (..),
+  BoundsConfig (..),
+  ClauseAmountConfig (..),
   Severity (..),
   WithSeverity (..),
   Predicate,
@@ -71,6 +73,15 @@ newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRul
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
+data BoundsConfig = BoundsConfig {
+  lowerBound :: Maybe Int
+  , upperBound :: Maybe Int
+  }
+  deriving (Generic, Show)
+
+newtype ClauseAmountConfig = ClauseAmountConfig (CodeAnalysisRuleConfig BoundsConfig)
+  deriving (Generic, Show)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -84,6 +95,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , ungroupedDefinitions :: UngroupedDefinitionsConfig
   -- | Configuration for recursion rule
   , recursion :: RecursionConfig
+  -- | Configuration for clause amount rule
+  , clauseAmount :: ClauseAmountConfig
   }
   deriving (Generic, Show)
 

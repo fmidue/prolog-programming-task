@@ -83,6 +83,15 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  clauseAmount:
+    # what to do concerning detection of clause amount
+    status: hint
+    # minimum number of required clauses
+    # lowerBound: 2
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # maximum number of required clauses
+    # upperBound: 3
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
 
 ------------------------------
 /* Everything from here on (up to an optional hidden section separated by a line of 3 or more dashes)
