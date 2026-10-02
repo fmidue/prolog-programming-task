@@ -1,4 +1,8 @@
+{-# LANGUAGE CPP #-}
+#if !MIN_VERSION_base(4,18,0)
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DerivingStrategies #-}
+#endif
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
 
@@ -22,7 +26,10 @@ module Prolog.Programming.CodeAnalysis.Types (
 )
 where
 
-import Data.Data (Data, Typeable)
+import Data.Data (Data)
+#if !MIN_VERSION_base(4,18,0)
+import Data.Typeable                    (Typeable)
+#endif
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
@@ -49,7 +56,10 @@ type ProgramRule = Program -> [Problem]
 data CodeAnalysisRuleConfig a
   = Ignore
   | Detect {ruleSeverity :: Severity, extraConfig :: a}
-  deriving (Data, Eq, Functor, Show, Typeable)
+  deriving (Data, Eq, Functor, Show)
+#if !MIN_VERSION_base(4,18,0)
+  deriving Typeable
+#endif
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Show)
