@@ -61,16 +61,16 @@ newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessag
   deriving (Data, Show)
 
 newtype IgnoredPredicates = IgnoredPredicates {ignorePredicates :: [String]}
-  deriving (Generic, Show)
+  deriving (Data, Generic, Show)
 
 newtype InconsistentAritiesConfig = InconsistentAritiesConfig (CodeAnalysisRuleConfig IgnoredPredicates)
-  deriving (Generic, Show)
+  deriving (Data, Generic, Show)
 
 newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
-  deriving (Generic, Show)
+  deriving (Data, Generic, Show)
 
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
-  deriving Show
+  deriving (Data, Show)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
