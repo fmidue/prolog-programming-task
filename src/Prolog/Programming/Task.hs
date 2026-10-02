@@ -17,6 +17,7 @@ module Prolog.Programming.Task (
   initialTask,
   displaySWISHButton,
   TaskInstance,
+  toInstance,
 ) where
 
 import Prolog.Programming.Data
@@ -47,6 +48,7 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.Either (fromRight)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.Types (
@@ -94,6 +96,9 @@ verifyConfig (Config cfg) = case parseInstance cfg of
            (const $ pure ())
            (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
            (Code sampleSolution)
+
+toInstance :: Config -> TaskInstance
+toInstance (Config cfg) = fromRight (error "config should have been validated before") $ parseInstance cfg
 
 describeTask :: TaskInstance -> Doc
 describeTask TaskInstance {visiblePredicates} =
@@ -304,8 +309,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-            <$$> resultMsg mActual
-              <> treeMsg mTree
+              <$$> resultMsg mActual
+            <> treeMsg mTree
       , mTree
       )
 
