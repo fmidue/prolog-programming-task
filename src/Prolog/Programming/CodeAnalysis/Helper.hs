@@ -5,7 +5,7 @@ import qualified Data.Set as Set (empty, singleton, unions)
 import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Predicate)
 
-clauseIdentity :: Clause -> (String, Int)
+clauseIdentity :: Clause -> Predicate
 clauseIdentity (Clause (Struct name args) _) = (name, length args)
 clauseIdentity _ = error "This should never happen."
 
@@ -16,10 +16,8 @@ grabPredicateIdentities (Struct name args)
   | otherwise = Set.singleton (name, length args)
 grabPredicateIdentities _ = Set.empty
 
-grabIdentitiesInClause :: Bool -> Clause -> Set Predicate
-grabIdentitiesInClause includeLhs (Clause ls rs) =
-  Set.unions $ map grabPredicateIdentities $ if includeLhs then ls : rs else rs
-grabIdentitiesInClause includeLhs (ClauseFn ls _) =
-  if includeLhs
-    then grabPredicateIdentities ls
-    else Set.empty
+grabIdentitiesInClauseRhs :: Clause -> Set Predicate
+grabIdentitiesInClauseRhs (Clause _ rs) =
+  Set.unions $ map grabPredicateIdentities rs
+grabIdentitiesInClauseRhs (ClauseFn ls _) =
+  Set.empty

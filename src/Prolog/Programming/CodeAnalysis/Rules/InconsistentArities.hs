@@ -7,9 +7,9 @@ import Data.List.Extra (groupSort)
 import Data.Map (Map)
 import qualified Data.Map as Map (fromList, lookup)
 import Data.Maybe (mapMaybe)
-import qualified Data.Set as Set (toList, unions)
+import qualified Data.Set as Set (insert, toList, unions)
 import Data.Text.Lazy (pack)
-import Prolog.Programming.CodeAnalysis.Helper (grabIdentitiesInClause)
+import Prolog.Programming.CodeAnalysis.Helper (clauseIdentity, grabIdentitiesInClauseRhs)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
@@ -32,7 +32,7 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
           (\(n, _) -> n `notElem` ignore)
         $ identities clauses
   where
-    identities = groupSort . Set.toList . Set.unions . map (grabIdentitiesInClause True)
+    identities = groupSort . Set.toList . Set.unions . map (\c -> Set.insert (clauseIdentity c) (grabIdentitiesInClauseRhs c))
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
