@@ -9,7 +9,7 @@
 module Prolog.Programming.Task (
   checkTask,
   displaySampleSolution,
-  exampleInstance,
+  exampleConfig,
   verifyInstance,
   describeTask,
   taskDefinitions,
@@ -20,7 +20,7 @@ module Prolog.Programming.Task (
 ) where
 
 import Prolog.Programming.Data
-import Prolog.Programming.Examples
+import Prolog.Programming.ExampleConfig
 import Prolog.Programming.Helper (Arity, escalateSeverity, termHead)
 import Prolog.Programming.TestRunner
 

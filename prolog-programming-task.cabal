@@ -39,7 +39,7 @@ library
       Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
-      Prolog.Programming.Examples
+      Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
       Prolog.Programming.TestRunner
       Prolog.Programming.TypeHelper
