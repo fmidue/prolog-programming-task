@@ -6,7 +6,7 @@ import qualified Data.Map as Map (fromListWith, toList)
 import qualified Data.Set as Set (toList, union)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause)
-import Prolog.Programming.CodeAnalysis.Helper (clauseIdentity, grabIdentitiesInClauseRhs)
+import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   Predicate,
@@ -26,7 +26,7 @@ buildGraph clauses =
   | (predicate, calls) <-
       Map.toList
         $ Map.fromListWith Set.union
-        $ map (\c -> (clauseIdentity c, grabIdentitiesInClauseRhs c)) clauses
+        $ map clauseIdentities clauses
   ]
 
 toProblem :: Maybe String -> [Predicate] -> Problem

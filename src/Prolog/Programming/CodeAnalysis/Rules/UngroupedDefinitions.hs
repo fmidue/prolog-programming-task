@@ -3,7 +3,7 @@ module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefi
 import Data.List.Extra (anySame, groupOn)
 import Data.List.Ordered (isSorted)
 import Data.Text.Lazy (pack)
-import Prolog.Programming.CodeAnalysis.Helper (clauseIdentity)
+import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string)
 
@@ -14,7 +14,7 @@ ungroupedDefinitionsChecker clauses =
        | not (all (isSorted . map snd) groupedByName)
        ]
   where
-    groupedByName = groupOn fst $ map clauseIdentity clauses
+    groupedByName = groupOn fst $ map (fst . clauseIdentities) clauses
     groupNames = map (fst . head) groupedByName
     duplicateExists = anySame groupNames
 
