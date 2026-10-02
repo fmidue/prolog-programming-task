@@ -40,10 +40,10 @@ compareWithForced :: Map String Int -> (String, [Int]) -> Maybe Result
 compareWithForced forced (name, arities) =
   case arities of
     [] -> Nothing
-    [_] ->
+    [arity] ->
       case Map.lookup name forced of
         Just expected
-          | expected /= head arities ->
+          | expected /= arity ->
               Just $ InconsistentWithForced name expected
         _ -> Nothing
     _ -> Just $ MultipleArities name
