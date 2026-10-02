@@ -1,10 +1,11 @@
-module Prolog.Programming.CodeAnalysis.Helper where
+module Prolog.Programming.CodeAnalysis.Helper (clauseIdentities) where
 
 import Data.Set (Set)
 import qualified Data.Set as Set (empty, singleton, unions)
 import Language.Prolog (Clause (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Predicate (..))
 
+-- | Return predicate information (name and arity) for left- and right-hand side of a program clause
 clauseIdentities :: Clause -> (Predicate, Set Predicate)
 clauseIdentities (Clause (Struct name args) rs) =
   (Predicate name (length args), Set.unions $ map grabPredicateIdentities rs)
