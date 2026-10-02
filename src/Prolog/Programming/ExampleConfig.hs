@@ -83,13 +83,12 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
-  predicates:
-    # what to do concerning detection of predicate use
-    status: ignore
-    # predicates not allowed to be used
-    # forbiddenPredicates:
-    #  - number/1
-    # This field is required to appear when status is not set to 'ignore'.
+
+  # which predicates are not allowed to be used
+  # forbiddenPredicates:
+  #  - number/1
+  # This field is optional and otherwise takes a list of predicate identities.
+
 
 ------------------------------
 /* Everything from here on (up to an optional hidden section separated by a line of 3 or more dashes)

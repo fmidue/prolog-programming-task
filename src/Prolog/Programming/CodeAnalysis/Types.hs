@@ -18,8 +18,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   Severity (..),
   WithSeverity (..),
   Predicate (..),
-  ForbiddenPredicates (..),
-  PredicatesConfig (..),
+  ForbiddenPredicatesConfig (..),
 )
 where
 
@@ -81,10 +80,7 @@ newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRul
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving Show
 
-newtype ForbiddenPredicates = ForbiddenPredicates {forbiddenPredicates :: Set Predicate}
-  deriving (Generic, Show)
-
-newtype PredicatesConfig = PredicatesConfig (CodeAnalysisRuleConfig ForbiddenPredicates)
+newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Predicate}
   deriving (Generic, Show)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
@@ -100,8 +96,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , ungroupedDefinitions :: UngroupedDefinitionsConfig
   -- | Configuration for recursion rule
   , recursion :: RecursionConfig
-  -- | Configuration for predicates rule
-  , predicates :: PredicatesConfig
+  -- | Configuration for forbiddenPredicates rule
+  , forbiddenPredicates :: ForbiddenPredicatesConfig
   }
   deriving (Generic, Show)
 

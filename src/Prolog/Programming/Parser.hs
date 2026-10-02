@@ -17,14 +17,16 @@ import Data.List (intercalate, isPrefixOf)
 
 import Language.Prolog (Term, term, terms)
 
-import Data.Aeson (Result (..), fromJSON, (.:))
+import Data.Aeson (Result (..), fromJSON)
 import Data.Aeson.Key (toString)
 import qualified Data.Aeson.KeyMap as KM (keys)
 import Data.Bifunctor (Bifunctor (..))
 import qualified Data.ByteString.Char8 as BS (pack)
 import Data.Data (Typeable)
+import Data.Foldable (toList)
+import qualified Data.Set as Set (empty, fromList)
 import qualified Data.Text as T (split, unpack)
-import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
+import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withArray, withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
 import GHC.Generics (Generic, Rep)
 import Prolog.Programming.CodeAnalysis.Config (
@@ -35,11 +37,10 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (CodeAnalysisConfig),
   CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
-  ForbiddenPredicates (..),
+  ForbiddenPredicatesConfig (..),
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
   Predicate (..),
-  PredicatesConfig (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
@@ -152,13 +153,9 @@ instance FromJSON Predicate where
     _ -> fail "Invalid value"
   parseJSON _ = fail "Invalid value type"
 
-instance FromJSON ForbiddenPredicates where
-  parseJSON = withObject "ForbiddenPredicates" $ \v ->
-    ForbiddenPredicates
-      <$> v .: "forbiddenPredicates"
-
-instance FromJSON PredicatesConfig where
-  parseJSON = withRuleParser PredicatesConfig
+instance FromJSON ForbiddenPredicatesConfig where
+  parseJSON = withArray "ForbiddenPredicatesConfig" $ \v ->
+    ForbiddenPredicatesConfig . Set.fromList <$> traverse parseJSON (toList v)
 
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
@@ -170,7 +167,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Ignore
       <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
       <*> v .:? "recursion" .!= RecursionConfig Ignore
-      <*> v .:? "predicates" .!= PredicatesConfig Ignore
+      <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

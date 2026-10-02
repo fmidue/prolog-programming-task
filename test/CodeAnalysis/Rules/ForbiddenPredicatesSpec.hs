@@ -1,4 +1,4 @@
-module CodeAnalysis.Rules.PredicatesSpec where
+module CodeAnalysis.Rules.ForbiddenPredicatesSpec where
 
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Control.Monad (forM_)
@@ -8,18 +8,15 @@ import qualified Data.Set as Set (fromList)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
-  ForbiddenPredicates (ForbiddenPredicates),
+  ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
   Predicate (..),
-  PredicatesConfig (PredicatesConfig),
-  Severity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: Set Predicate -> CodeAnalysisConfig
 caConfig forbidden =
   emptyCodeAnalysisConfig {
-    predicates = PredicatesConfig $ Detect Hint $ ForbiddenPredicates forbidden
+    forbiddenPredicates = ForbiddenPredicatesConfig forbidden
     }
 
 withProblems :: [(String, Set Predicate)]
@@ -37,7 +34,7 @@ errorFree =
   ]
 
 spec :: Spec
-spec = describe "Predicates" $ do
+spec = describe "Forbidden predicates" $ do
   describe "Should detect forbidden predicate usage" $
     forM_ withProblems $ \(programCode, forbidden) ->
       it programCode $

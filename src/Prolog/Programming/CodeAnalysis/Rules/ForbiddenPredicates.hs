@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Prolog.Programming.CodeAnalysis.Rules.Predicates (predicatesChecker) where
+module Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker) where
 
 import Data.List (intercalate)
 import Data.Set (Set)
@@ -8,11 +8,11 @@ import qualified Data.Set as Set (intersection, toList)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..))
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
-import Prolog.Programming.CodeAnalysis.Types (ClauseRule, ForbiddenPredicates (..), Predicate, Problem (..))
+import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Predicate, Problem (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
 
-predicatesChecker :: ForbiddenPredicates -> ClauseRule
-predicatesChecker (ForbiddenPredicates forbidden) clause
+forbiddenPredicatesChecker :: Set Predicate -> ClauseRule
+forbiddenPredicatesChecker forbidden clause
   | null usedForbidden = []
   | otherwise = [toProblem Nothing usedForbidden clause]
   where
