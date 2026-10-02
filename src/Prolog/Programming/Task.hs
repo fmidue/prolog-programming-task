@@ -10,7 +10,7 @@ module Prolog.Programming.Task (
   checkTask,
   displaySampleSolution,
   exampleConfig,
-  verifyInstance,
+  verifyConfig,
   describeTask,
   taskDefinitions,
   taskDefinitionsIncluded,
@@ -48,6 +48,7 @@ import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -77,20 +78,22 @@ import Text.PrettyPrint.Leijen.Text (
   (<+>),
  )
 
-verifyInstance :: (MonadFail m, MonadIO m, MonadRandom m) => TaskInstance -> m ()
-verifyInstance inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} =
-  let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
-  in do
-       when (includeHiddenDefinitions == Yes && showSWISHButton) $
-         fail
-           "SWISH Button must not be enabled together with unfiltered hidden predicates."
+verifyConfig :: (MonadFail m, MonadIO m, MonadRandom m) => Config -> m ()
+verifyConfig (Config cfg) = case parseInstance cfg of
+  Left err -> fail $ show err
+  Right inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} ->
+    let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
+    in do
+         when (includeHiddenDefinitions == Yes && showSWISHButton) $
+           fail
+             "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
-       checkTask
-         solutionErrorDisplay
-         (const $ pure ())
-         (const $ pure ())
-         (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
-         (Code sampleSolution)
+         checkTask
+           solutionErrorDisplay
+           (const $ pure ())
+           (const $ pure ())
+           (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
+           (Code sampleSolution)
 
 describeTask :: TaskInstance -> Doc
 describeTask TaskInstance {visiblePredicates} =
