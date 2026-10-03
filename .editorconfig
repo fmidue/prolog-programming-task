@@ -20,5 +20,5 @@ max_line_length = unset
 [**.cabal]
 max_line_length = unset
 
-[src/Prolog/Programming/Examples.hs]
+[src/Prolog/Programming/ExampleConfig.hs]
 max_line_length = unset
