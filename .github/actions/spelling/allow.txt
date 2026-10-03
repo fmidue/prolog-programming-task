@@ -1,6 +1,7 @@
 Aeson
 arities
 arity
+Autolib
 Autotool
 Bifunctor
 bimap
@@ -18,10 +19,12 @@ Hspec
 HUnit
 mconcat
 mempty
+mzero
 pbs
 rhs
 snd
 SWI
+SYB
 uncurry
 unlines
 unwords

@@ -33,6 +33,8 @@ dependencies:
   - aeson
   - extra
   - data-ordlist
+  - autolib-reader
+  - autolib-todoc
 
 library:
   source-dirs: src
@@ -41,6 +43,7 @@ library:
     - -Werror
     - -Wincomplete-patterns
     - -Wincomplete-uni-patterns
+    - -Wx-partial
   exposed-modules:
     - Prolog.Programming.Data
     - Prolog.Programming.Task

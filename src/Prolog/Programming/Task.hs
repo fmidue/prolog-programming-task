@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -7,6 +8,7 @@
 
 module Prolog.Programming.Task (
   checkTask,
+  displaySampleSolution,
   exampleConfig,
   verifyConfig,
   describeTask,
@@ -14,12 +16,13 @@ module Prolog.Programming.Task (
   taskDefinitionsIncluded,
   initialTask,
   displaySWISHButton,
+  TaskInstance,
+  toInstance,
 ) where
 
 import Prolog.Programming.Data
 import Prolog.Programming.ExampleConfig
-import Prolog.Programming.Helper (Arity, termHead)
-import Prolog.Programming.Parser
+import Prolog.Programming.Helper (Arity, escalateSeverity, termHead)
 import Prolog.Programming.TestRunner
 
 import Control.Monad (when)
@@ -27,7 +30,6 @@ import Control.Monad.Random.Class (MonadRandom)
 import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
-import Data.Either (fromRight)
 import Data.List (intercalate, nub)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
@@ -46,7 +48,9 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.Either (fromRight)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -55,6 +59,7 @@ import Prolog.Programming.Types (
   Requirement (..),
   Spec (..),
   TaskConfig (..),
+  TaskInstance (..),
   TreeStyle (..),
   Visibility (..),
  )
@@ -65,34 +70,42 @@ import Text.PrettyPrint.Leijen.Text (
   empty,
   indent,
   line,
+  linebreak,
   nest,
   parens,
   text,
   vcat,
+  vsep,
   (<$$>),
   (<+>),
  )
 
-verifyConfig :: MonadFail m => Config -> m ()
-verifyConfig (Config cfg) =
-  case parseConfig cfg of
-    Left err -> fail $ show err
-    Right (TaskConfig _ _ _ Yes _ True _ _, (_, hiddenFacts)) -> case consultString hiddenFacts of
-      Left err -> fail $ show err
-      Right (_ : _) -> fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
-      _ -> pure ()
-    _ -> pure ()
+verifyConfig :: (MonadFail m, MonadIO m, MonadRandom m) => Config -> m ()
+verifyConfig (Config cfg) = case parseInstance cfg of
+  Left err -> fail $ show err
+  Right inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} ->
+    let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
+    in do
+         when (includeHiddenDefinitions == Yes && showSWISHButton) $
+           fail
+             "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
-describeTask :: Config -> Doc
-describeTask (Config cfg) =
-  text . pack $
-    either
-      (const "Error in task configuration!")
-      (\(TaskConfig {}, (visible_facts, _)) -> visible_facts)
-      (parseConfig cfg)
+         checkTask
+           solutionErrorDisplay
+           (const $ pure ())
+           (const $ pure ())
+           (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
+           (Code sampleSolution)
 
-initialTask :: Config -> Code
-initialTask (Config cfg) =
+toInstance :: Config -> TaskInstance
+toInstance (Config cfg) = fromRight (error "config should have been validated before") $ parseInstance cfg
+
+describeTask :: TaskInstance -> Doc
+describeTask TaskInstance {visiblePredicates} =
+  text . pack $ visiblePredicates
+
+initialTask :: TaskInstance -> Code
+initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
   Code $
     if null newDecls
       then ""
@@ -107,37 +120,24 @@ initialTask (Config cfg) =
           "% Any additional definitions can go below this line"
           newDecls
   where
-    (TaskConfig {..}, _) = parseConfig cfg `orError` "config should have been validated earlier"
     newDecls = mapMaybe (\(Spec _ _ _ _ r) -> newPredDesc r) specifications
     newPredDesc (NewPredDecl _ desc) = Just desc
     newPredDesc StatementToCheck {} = Nothing
     newPredDesc QueryWithAnswers {} = Nothing
 
-taskDefinitions :: Config -> Either ParseError [Clause]
-taskDefinitions (Config cfg) =
-  case parseConfig cfg of
-    Left err -> Left err
-    Right (TaskConfig {}, (visibleFacts, _)) ->
-      consultString visibleFacts
+taskDefinitions :: TaskInstance -> Either ParseError [Clause]
+taskDefinitions TaskInstance {visiblePredicates} = consultString visiblePredicates
 
-taskDefinitionsIncluded :: Config -> Bool
-taskDefinitionsIncluded (Config cfg) =
-  case parseConfig cfg of
-    Left _ -> False
-    Right (TaskConfig {..}, _) -> case includeTaskDefinitions of
-      Yes -> True
-      Filtered -> True
-      No () -> False
+taskDefinitionsIncluded :: TaskInstance -> Bool
+taskDefinitionsIncluded TaskInstance {taskConfig = TaskConfig {..}} = case includeTaskDefinitions of
+  Yes -> True
+  Filtered -> True
+  No () -> False
 
-displaySWISHButton :: Config -> Bool
-displaySWISHButton (Config cfg) = showSWISHButton
-  where
-    (TaskConfig {..}, _) = parseConfig cfg `orError` "config should have been validated earlier"
+displaySWISHButton :: TaskInstance -> Bool
+displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 
-orError :: Either a b -> String -> b
-orError x str = fromRight (error str) x
-
-{- Runs the following checks in this order:
+{- | Runs the following checks in this order:
 
 1. Does the program parse?
 2. Does the program respect a configured ban of head/tail pattern-matching on lists?
@@ -152,16 +152,13 @@ checkTask
   => (forall a. Doc -> m a)
   -> (Doc -> m ())
   -> (ByteString -> m ())
-  -> Config
+  -> TaskInstance
   -> Code
   -> m ()
-checkTask reject inform drawPicture (Config cfg) (Code input) = do
-  let
-    (TaskConfig {..}, (visible_facts, hidden_facts)) =
-      parseConfig cfg `orError` "config should have been validated earlier"
-    drawTree tree = do
-      svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-      drawPicture svg
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} (Code input) = do
+  let drawTree tree = do
+        svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+        drawPicture svg
 
   case consultString input of
     Left err -> reject . text . pack $ show err
@@ -186,9 +183,9 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
           pure newDefs
 
       case consultStringsAndFilter
-        visible_facts
+        visiblePredicates
         (taskFilter includeTaskDefinitions inProg)
-        hidden_facts
+        hiddenPredicates
         (hiddenFilter includeHiddenDefinitions inProg) of
         Left err -> reject . text . pack $ show err
         Right factProg -> do
@@ -245,6 +242,18 @@ checkTask reject inform drawPicture (Config cfg) (Code input) = do
           case checkForProblems codeAnalysis inProg factProg of
             [] -> pure ()
             pbs -> either reject inform $ displayProblems pbs
+
+displaySampleSolution
+  :: (MonadIO m, MonadRandom m)
+  => (Doc -> m ())
+  -> TaskInstance
+  -> m ()
+displaySampleSolution inform TaskInstance {sampleSolution} =
+  inform $
+    vsep
+      [ text (pack "A sample solution for this task is:") <> linebreak
+      , text $ pack sampleSolution
+      ]
 
 consultStringsAndFilter :: String -> (Clause -> Bool) -> String -> (Clause -> Bool) -> Either ParseError [Clause]
 consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do

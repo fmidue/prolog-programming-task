@@ -1,3 +1,9 @@
+{-# LANGUAGE CPP #-}
+#if !MIN_VERSION_base(4,18,0)
+{-# LANGUAGE DerivingStrategies #-}
+#endif
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
 
@@ -21,7 +27,12 @@ module Prolog.Programming.CodeAnalysis.Types (
 )
 where
 
-import Data.Data (Typeable)
+import Data.Data (Data)
+#if !MIN_VERSION_base(4,18,0)
+import Data.Typeable                    (Typeable)
+#endif
+import Autolib.Reader (Reader)
+import Autolib.ToDoc (ToDoc)
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..), Program)
 import Text.PrettyPrint.Leijen.Text (Doc)
@@ -48,28 +59,31 @@ type ProgramRule = Program -> [Problem]
 data CodeAnalysisRuleConfig a
   = Ignore
   | Detect Severity a
-  deriving (Eq, Functor, Show, Typeable)
+  deriving (Data, Eq, Functor, Generic, Reader, Show, ToDoc)
+#if !MIN_VERSION_base(4,18,0)
+  deriving Typeable
+#endif
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype IgnoredPredicates = IgnoredPredicates {ignorePredicates :: [String]}
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype InconsistentAritiesConfig = InconsistentAritiesConfig (CodeAnalysisRuleConfig IgnoredPredicates)
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
@@ -85,7 +99,7 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for recursion rule
   , recursion :: RecursionConfig
   }
-  deriving (Generic, Show)
+  deriving (Data, Generic, Show, Reader, ToDoc)
 
 {- | Classification for seriousness of violation
 
@@ -107,7 +121,7 @@ data Severity
     Example violation: cut operator was used even though the use of it was forbidden
     -}
     Error
-  deriving (Eq, Show)
+  deriving (Data, Eq, Generic, Show, Reader, ToDoc)
 {- FOURMOLU_ENABLE -}
 
 -- | Container for values with attached severity

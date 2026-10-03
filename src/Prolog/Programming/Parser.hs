@@ -1,17 +1,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Prolog.Programming.Parser (
-  parseConfig,
+  parseInstance,
   parseSpec,
 ) where
 
-import Control.Arrow ((&&&), (>>>))
-import Control.Monad (unless, void)
+import Control.Monad (unless, void, when)
 
 import Data.List (intercalate, isPrefixOf)
 
@@ -20,9 +20,9 @@ import Language.Prolog (Term, term, terms)
 import Data.Aeson (Result (..), fromJSON)
 import Data.Aeson.Key (toString)
 import qualified Data.Aeson.KeyMap as KM (keys)
-import Data.Bifunctor (Bifunctor (..))
 import qualified Data.ByteString.Char8 as BS (pack)
 import Data.Data (Typeable)
+import Data.Maybe (fromJust, listToMaybe)
 import qualified Data.Text as T (unpack)
 import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
@@ -51,6 +51,7 @@ import Prolog.Programming.Types (
   Requirement (..),
   Spec (..),
   TaskConfig (..),
+  TaskInstance (..),
   Timeout (..),
   TreeStyle (..),
   Visibility (..),
@@ -72,12 +73,15 @@ instance FromJSON TreeStyle where
   parseJSON _ = fail "Invalid value"
 
 instance FromJSON IncludeTask where
+  parseJSON (String "yes") = pure Yes
   parseJSON (Bool True) = pure Yes
   parseJSON (String "filtered") = pure Filtered
+  parseJSON (String "no") = pure $ No ()
   parseJSON (Bool False) = pure $ No ()
   parseJSON _ = fail "Invalid value"
 
 instance FromJSON IncludeHidden where
+  parseJSON (String "yes") = pure Yes
   parseJSON (Bool True) = pure Yes
   parseJSON (String "filtered") = pure Filtered
   parseJSON _ = fail "Invalid value"
@@ -165,24 +169,33 @@ instance FromJSON TaskConfig where
       <*> v .:? "codeAnalysis" .!= emptyCodeAnalysisConfig
       <*> v .:? "specifications" .!= []
 
-parseConfig :: String -> Either ParseError (TaskConfig, (String, String))
-parseConfig = parse (configuration <* eof) "(config)"
+parseInstance :: String -> Either ParseError TaskInstance
+parseInstance = parse (configuration <* eof) "(config)"
 
 configuration
   :: Parsec
        String
        ()
-       ( TaskConfig
-       , (String, String)
-       )
+       TaskInstance
 configuration = do
   ls <- lines <$> anyChar `manyTill` eof
-  let (rawCfg, rest) = first unlines $ breakWhen ("---" `isPrefixOf`) ls
-  case decodeEither' (BS.pack rawCfg) of
-    Left err -> fail $ show err
-    Right taskCfg -> do
-      let predicates = bimap unlines unlines $ breakWhen ("---" `isPrefixOf`) rest
-      pure (taskCfg, predicates)
+  case breakWhen ("---" `isPrefixOf`) ls of
+    (rawCfgLs : taskLs : solutionLs : optionalLs) -> case decodeEither' (BS.pack $ unlines rawCfgLs) of
+      Left err -> fail $ show err
+      Right taskCfg -> do
+        when (length optionalLs > 1) $
+          fail "There is only one optional section allowed but multiple provided."
+
+        let hiddenPredicates = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
+
+        pure $
+          TaskInstance {
+            taskConfig = taskCfg
+            , sampleSolution = unlines solutionLs
+            , visiblePredicates = unlines taskLs
+            , hiddenPredicates
+            }
+    _ -> fail "Config does not include the required sections: config, task, sample solution"
 
 parseSpec :: Parsec String () Spec
 parseSpec = try newPredDeclParser <|> specLine
@@ -242,10 +255,13 @@ parseSpec = try newPredDeclParser <|> specLine
 defaultOptions :: Requirement -> Spec
 defaultOptions = Spec Visible DontShowTree PositiveResult GlobalTimeout
 
-{- FOURMOLU_DISABLE -}
-breakWhen :: (a -> Bool) -> [a] -> ([a], [a])
-breakWhen p = (takeWhile (not . p) &&& dropWhile (not . p)) >>> second (drop 1)
-{- FOURMOLU_ENABLE -}
+breakWhen :: (a -> Bool) -> [a] -> [[a]]
+breakWhen _ [] = []
+breakWhen p xs =
+  let (before, after) = break p xs
+  in before : case after of
+       [] -> []
+       (_ : xs') -> breakWhen p xs'
 
 queryWithAnswers :: [Term] -> [[Term]] -> Spec
 queryWithAnswers q as = defaultOptions $ QueryWithAnswers q as
