@@ -68,7 +68,6 @@ import Text.PrettyPrint.Leijen.Text (
   Doc,
   align,
   empty,
-  hsep,
   indent,
   line,
   linebreak,
@@ -76,6 +75,7 @@ import Text.PrettyPrint.Leijen.Text (
   parens,
   text,
   vcat,
+  vsep,
   (<$$>),
   (<+>),
  )
@@ -250,9 +250,8 @@ displaySampleSolution
   -> m ()
 displaySampleSolution inform TaskInstance {sampleSolution} =
   inform $
-    hsep
+    vsep
       [ text (pack "A sample solution for this task is:") <> linebreak
-      , linebreak
       , text $ pack sampleSolution
       ]
 
@@ -309,8 +308,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-              <$$> resultMsg mActual
-            <> treeMsg mTree
+            <$$> resultMsg mActual
+              <> treeMsg mTree
       , mTree
       )
 
