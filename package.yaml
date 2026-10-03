@@ -43,6 +43,7 @@ library:
     - -Werror
     - -Wincomplete-patterns
     - -Wincomplete-uni-patterns
+    - -Wx-partial
   exposed-modules:
     - Prolog.Programming.Data
     - Prolog.Programming.Task
