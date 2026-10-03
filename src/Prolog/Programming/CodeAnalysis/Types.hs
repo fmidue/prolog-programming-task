@@ -58,7 +58,7 @@ type ProgramRule = Program -> [Problem]
 
 data CodeAnalysisRuleConfig a
   = Ignore
-  | Detect {ruleSeverity :: Severity, extraConfig :: a}
+  | Detect Severity a
   deriving (Data, Eq, Functor, Generic, Reader, Show, ToDoc)
 #if !MIN_VERSION_base(4,18,0)
   deriving Typeable
