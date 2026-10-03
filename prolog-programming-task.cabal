@@ -111,8 +111,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
       CodeAnalysis.Rules.UngroupedDefinitionsSpec
-      ExamplesSpec
-      ParseSpec
+      ConfigSpec
       Paths_prolog_programming_task
   hs-source-dirs:
       test
