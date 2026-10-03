@@ -45,9 +45,7 @@ library:
     - -Wincomplete-uni-patterns
   exposed-modules:
     - Prolog.Programming.Data
-    - Prolog.Programming.Types
     - Prolog.Programming.Task
-    - Prolog.Programming.Parser
     - Prolog.Programming.CodeAnalysis
     - Prolog.Programming.CodeAnalysis.Types
     - Prolog.Programming.CodeAnalysis.Config

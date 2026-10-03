@@ -27,9 +27,7 @@ source-repository head
 library
   exposed-modules:
       Prolog.Programming.Data
-      Prolog.Programming.Types
       Prolog.Programming.Task
-      Prolog.Programming.Parser
       Prolog.Programming.CodeAnalysis
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
@@ -42,8 +40,10 @@ library
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
+      Prolog.Programming.Parser
       Prolog.Programming.TestRunner
       Prolog.Programming.TypeHelper
+      Prolog.Programming.Types
       Paths_prolog_programming_task
   hs-source-dirs:
       src
