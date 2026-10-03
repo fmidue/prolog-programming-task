@@ -50,4 +50,4 @@ spec = describe "NoSingletonVariables" $ do
     shouldDetectProblemsStrict
       (caConfig $ Just "We have not introduced this operator yet.")
       [isInfixOf "We have not introduced this operator yet."]
-      (head hasCut)
+      "p(X) :- q(X), !."
