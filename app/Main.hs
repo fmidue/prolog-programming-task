@@ -7,10 +7,7 @@ import System.Environment (getArgs)
 import Text.PrettyPrint.Leijen.Text ()
 
 import Prolog.Programming.Data (Code (..), Config (..))
-import Prolog.Programming.Parser
 import Prolog.Programming.Task
-
-import Data.Either (fromRight)
 
 main :: IO ()
 main = do
@@ -23,9 +20,10 @@ main = do
     _ -> putStrLn "usage test-task-prolog <task> <solution>"
 
 runMain :: Config -> Code -> IO ()
-runMain cfg@(Config raw) code = do
-  verifyConfig cfg
-  let inst = fromRight undefined $ parseInstance raw
+runMain config code = do
+  verifyConfig config
+
+  let inst = toInstance config
   checkTask (fail . show) print writeTreeToDisk inst code
   displaySampleSolution print inst
 
