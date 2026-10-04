@@ -15,7 +15,7 @@ ungroupedDefinitionsChecker clauses =
        | not (all (isSorted . map predicateArity . NE.toList) groupedByName)
        ]
   where
-    groupedByName = NE.groupWith predicateName $ map (fst . clauseIdentities False) clauses
+    groupedByName = NE.groupWith predicateName $ map (fst . clauseIdentities undefined) clauses
     duplicateExists = anySame $ map (predicateName . NE.head) groupedByName
 
 toProblem :: String -> Problem
