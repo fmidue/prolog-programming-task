@@ -1,6 +1,7 @@
 module Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker) where
 
-import Data.List.Extra (anySame, groupOn)
+import Data.List.Extra (anySame)
+import qualified Data.List.NonEmpty as NE (groupWith, head, toList)
 import Data.List.Ordered (isSorted)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
@@ -11,12 +12,11 @@ ungroupedDefinitionsChecker :: ProgramRule
 ungroupedDefinitionsChecker clauses =
   [toProblem "Your code does not group predicate definitions by predicate name." | duplicateExists]
     ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
-       | not (all (isSorted . map predicateArity) groupedByName)
+       | not (all (isSorted . map predicateArity . NE.toList) groupedByName)
        ]
   where
-    groupedByName = groupOn predicateName $ map (fst . clauseIdentities) clauses
-    groupNames = map (predicateName . head) groupedByName
-    duplicateExists = anySame groupNames
+    groupedByName = NE.groupWith predicateName $ map (fst . clauseIdentities) clauses
+    duplicateExists = anySame $ map (predicateName . NE.head) groupedByName
 
 toProblem :: String -> Problem
 toProblem msg =
