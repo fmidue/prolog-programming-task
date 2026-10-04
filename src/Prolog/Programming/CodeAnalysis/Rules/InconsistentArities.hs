@@ -2,11 +2,10 @@
 
 module Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker) where
 
-import Data.Bifunctor (second)
 import Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty as NE (groupWith, head, length, map)
+import qualified Data.List.NonEmpty as NE (groupWith, head, map)
 import Data.Map (Map)
-import qualified Data.Map as Map (fromList, lookup)
+import qualified Data.Map as Map (empty, insert, lookup)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (filter, insert, unions)
 import Data.Text.Lazy (pack)
@@ -53,12 +52,12 @@ compareWithForced forced (name, arities) =
     _ -> Just $ MultipleArities name
 
 forcedIdentities :: [(String, NonEmpty Int)] -> Maybe (Map String Int)
-forcedIdentities identities
-  | any inconsistent identities = Nothing
-  | otherwise = Just $ Map.fromList $ map (second NE.head) identities
+forcedIdentities = foldr addIdentity (Just Map.empty)
   where
-    inconsistent (_, arities) =
-      NE.length arities > 1
+    addIdentity (name, arities) forced =
+      case arities of
+        arity :| [] -> Map.insert name arity <$> forced
+        _ -> Nothing
 
 toProblem :: Result -> Problem
 toProblem res =
