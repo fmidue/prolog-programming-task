@@ -57,7 +57,7 @@ forcedIdentities = foldM (flip addIdentity) Map.empty
     addIdentity (name, arities) =
       case arities of
         arity :| [] -> Just . Map.insert name arity
-        _ -> \_ -> Nothing
+        _ -> const Nothing
 
 toProblem :: Result -> Problem
 toProblem res =
