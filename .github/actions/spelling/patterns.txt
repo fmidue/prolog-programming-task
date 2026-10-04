@@ -41,4 +41,3 @@ https?://[-+0-9a-zA-Z?&=_\/%.]*
 
 # marker to ignore all code on line
 ^.*-- no-spell-check$
-^.*# no-spell-check$
