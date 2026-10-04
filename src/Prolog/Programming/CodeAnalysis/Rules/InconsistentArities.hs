@@ -2,12 +2,13 @@
 
 module Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker) where
 
-import Data.Bifunctor (second)
-import Data.List.Extra (groupSort)
+import Control.Monad (foldM)
+import Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.List.NonEmpty as NE (groupWith, head, map)
 import Data.Map (Map)
-import qualified Data.Map as Map (fromList, lookup)
+import qualified Data.Map as Map (empty, insert, lookup)
 import Data.Maybe (mapMaybe)
-import qualified Data.Set as Set (insert, toList, unions)
+import qualified Data.Set as Set (filter, insert, unions)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
@@ -15,7 +16,7 @@ import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 inconsistentAritiesChecker :: Context -> IgnoredPredicates -> ProgramRule
 inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
-  case forcedIdentities ignore (identities otherDefinitions) of
+  case forcedIdentities (identities otherDefinitions) of
     Nothing ->
       [ Problem $
           vcat
@@ -28,19 +29,21 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
     Just forced ->
       mapMaybe
         (fmap toProblem . compareWithForced forced)
-        $ filter
-          (\(n, _) -> n `notElem` ignore)
         $ identities clauses
   where
-    identities = groupSort . Set.toList . Set.unions . map (uncurry Set.insert . clauseIdentities)
+    identities =
+      map
+        (\group -> (fst (NE.head group), NE.map snd group))
+        . NE.groupWith fst
+        . Set.unions
+        . map (Set.filter ((`notElem` ignore) . fst) . uncurry Set.insert . clauseIdentities)
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
-compareWithForced :: Map String Int -> (String, [Int]) -> Maybe Result
+compareWithForced :: Map String Int -> (String, NonEmpty Int) -> Maybe Result
 compareWithForced forced (name, arities) =
   case arities of
-    [] -> Nothing
-    [arity] ->
+    arity :| [] ->
       case Map.lookup name forced of
         Just expected
           | expected /= arity ->
@@ -48,13 +51,13 @@ compareWithForced forced (name, arities) =
         _ -> Nothing
     _ -> Just $ MultipleArities name
 
-forcedIdentities :: [String] -> [(String, [Int])] -> Maybe (Map String Int)
-forcedIdentities ignore identities
-  | any inconsistent identities = Nothing
-  | otherwise = Just $ Map.fromList $ map (second head) identities
+forcedIdentities :: [(String, NonEmpty Int)] -> Maybe (Map String Int)
+forcedIdentities = foldM (flip addIdentity) Map.empty
   where
-    inconsistent (name, arities) =
-      length arities > 1 && name `notElem` ignore
+    addIdentity (name, arities) =
+      case arities of
+        arity :| [] -> Just . Map.insert name arity
+        _ -> const Nothing
 
 toProblem :: Result -> Problem
 toProblem res =
