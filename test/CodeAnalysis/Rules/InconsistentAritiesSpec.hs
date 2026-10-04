@@ -33,6 +33,7 @@ hasMultiple =
   , ("p(X) :- q(Y), (p(X,Y); w(X,Y)).", ["p"])
   , ("p(X) :- not(p(X,_)).", ["p"])
   , ("p(X) :- \\+ p(X,_).", ["p"])
+  , ("p(X) :- not(q(X)), not(w(X),v(X)).", ["not"])
   ]
 
 errorFree :: [String]
