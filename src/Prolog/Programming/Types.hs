@@ -78,11 +78,9 @@ data Requirement
   | NewPredDecl Term String
   deriving (Data, Generic, Reader, Show, ToDoc)
 
-deriving instance Generic VariableName
 deriving instance Reader VariableName
 deriving instance ToDoc VariableName
 
-deriving instance Generic Term
 deriving instance Reader Term
 deriving instance ToDoc Term
 
