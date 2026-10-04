@@ -34,9 +34,8 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
       map
         (\group -> (fst (NE.head group), NE.map snd group))
         . NE.groupWith fst
-        . Set.filter ((`notElem` ignore) . fst)
         . Set.unions
-        . map (uncurry Set.insert . clauseIdentities)
+        . map (Set.filter ((`notElem` ignore) . fst) . uncurry Set.insert . clauseIdentities)
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
