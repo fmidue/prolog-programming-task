@@ -2,13 +2,13 @@
 
 module Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker) where
 
-import Data.Bifunctor (second)
+import Control.Monad (foldM)
 import Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty as NE (groupWith, head, length, map)
+import qualified Data.List.NonEmpty as NE (groupWith, head, map)
 import Data.Map (Map)
-import qualified Data.Map as Map (fromList, lookup)
+import qualified Data.Map as Map (empty, insert, lookup)
 import Data.Maybe (mapMaybe)
-import qualified Data.Set as Set (filter, insert, toList, unions)
+import qualified Data.Set as Set (filter, insert, unions)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
@@ -29,18 +29,14 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
     Just forced ->
       mapMaybe
         (fmap toProblem . compareWithForced forced)
-        $ filter
-          (\(n, _) -> n `notElem` ignore)
         $ identities clauses
   where
     identities =
       map
         (\group -> (fst (NE.head group), NE.map snd group))
         . NE.groupWith fst
-        . Set.toList
-        . Set.filter ((`notElem` ignore) . fst)
         . Set.unions
-        . map (uncurry Set.insert . clauseIdentities)
+        . map (Set.filter ((`notElem` ignore) . fst) . uncurry Set.insert . clauseIdentities)
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 
@@ -56,12 +52,12 @@ compareWithForced forced (name, arities) =
     _ -> Just $ MultipleArities name
 
 forcedIdentities :: [(String, NonEmpty Int)] -> Maybe (Map String Int)
-forcedIdentities identities
-  | any inconsistent identities = Nothing
-  | otherwise = Just $ Map.fromList $ map (second NE.head) identities
+forcedIdentities = foldM (flip addIdentity) Map.empty
   where
-    inconsistent (_, arities) =
-      NE.length arities > 1
+    addIdentity (name, arities) =
+      case arities of
+        arity :| [] -> Just . Map.insert name arity
+        _ -> const Nothing
 
 toProblem :: Result -> Problem
 toProblem res =

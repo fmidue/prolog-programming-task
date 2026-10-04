@@ -29,7 +29,7 @@ where
 
 import Data.Data (Data)
 #if !MIN_VERSION_base(4,18,0)
-import Data.Typeable                    (Typeable)
+import Data.Typeable (Typeable)
 #endif
 import Autolib.Reader (Reader)
 import Autolib.ToDoc (ToDoc)
