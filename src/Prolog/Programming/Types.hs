@@ -56,8 +56,8 @@ data TaskInstance = TaskInstance {
   }
   deriving (Generic, Show)
 
-deriving instance Reader TaskConfig => Reader TaskInstance
-deriving instance ToDoc TaskConfig => ToDoc TaskInstance
+deriving instance Reader Void => Reader TaskInstance
+deriving instance ToDoc Void => ToDoc TaskInstance
 
 data Spec = Spec {
   specVisibility :: Visibility
