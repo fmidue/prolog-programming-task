@@ -24,6 +24,7 @@ withProblems =
   [ ("p(X) :- q(X).", Set.fromList [Predicate "q" 1])
   , ("p(X) :- q(X), r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
   , ("p(X) :- q(X); r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
+  , ("p(X) :- not(q(X)).", Set.fromList [Predicate "not" 1])
   ]
 
 errorFree :: [(String, Set Predicate)]
