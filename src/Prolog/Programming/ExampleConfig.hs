@@ -49,8 +49,8 @@ specifications:
   # New predicates will be mapped to required predicates in the order they are defined.
   # (The initial solution automatically provides comments helping the user with the correct ordering.)
 
-# whether to run all tests and checks on the sample solution or not; disabled by default
-rigorousValidation: false
+# whether to run all tests and checks on the sample solution or not; enabled by default
+rigorousValidation: true
 
 # setting for code analysis;
 # The status field for each aspect has the following possible values:
