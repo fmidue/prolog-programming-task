@@ -2,6 +2,7 @@
 
 module Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker) where
 
+import Control.Monad (foldM)
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NE (groupWith, head, map)
 import Data.Map (Map)
@@ -51,11 +52,11 @@ compareWithForced forced (name, arities) =
     _ -> Just $ MultipleArities name
 
 forcedIdentities :: [(String, NonEmpty Int)] -> Maybe (Map String Int)
-forcedIdentities = foldr addIdentity (Just Map.empty)
+forcedIdentities = foldM addIdentity Map.empty
   where
-    addIdentity (name, arities) forced =
+    addIdentity forced (name, arities) =
       case arities of
-        arity :| [] -> Map.insert name arity <$> forced
+        arity :| [] -> Just $ Map.insert name arity forced
         _ -> Nothing
 
 toProblem :: Result -> Problem
