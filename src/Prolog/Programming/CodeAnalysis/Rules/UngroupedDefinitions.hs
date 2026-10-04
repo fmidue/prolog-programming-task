@@ -5,19 +5,18 @@ import qualified Data.List.NonEmpty as NE (groupWith, head, toList)
 import Data.List.Ordered (isSorted)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
+import Prolog.Programming.CodeAnalysis.Types (Predicate (predicateArity, predicateName), Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (string)
 
 ungroupedDefinitionsChecker :: ProgramRule
 ungroupedDefinitionsChecker clauses =
   [toProblem "Your code does not group predicate definitions by predicate name." | duplicateExists]
     ++ [ toProblem "Your code does not sort the predicate definitions ascending by arity (per group)."
-       | not (all (isSorted . map snd . NE.toList) groupedByName)
+       | not (all (isSorted . map predicateArity . NE.toList) groupedByName)
        ]
   where
-    groupedByName = NE.groupWith fst $ map (fst . clauseIdentities) clauses
-    groupNames = map (fst . NE.head) groupedByName
-    duplicateExists = anySame groupNames
+    groupedByName = NE.groupWith predicateName $ map (fst . clauseIdentities undefined) clauses
+    duplicateExists = anySame $ map (predicateName . NE.head) groupedByName
 
 toProblem :: String -> Problem
 toProblem msg =

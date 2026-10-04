@@ -26,7 +26,7 @@ buildGraph clauses =
   | (predicate, calls) <-
       Map.toList
         $ Map.fromListWith Set.union
-        $ map clauseIdentities clauses
+        $ map (clauseIdentities False) clauses
   ]
 
 toProblem :: Maybe String -> [Predicate] -> Problem
@@ -41,7 +41,7 @@ toProblem cMsg recursivePredicates =
         ]
     }
   where
-    names = sort $ map (\(n, a) -> n ++ "/" ++ show a) recursivePredicates
+    names = sort $ map show recursivePredicates
 
     recursionDescription [_] = "The self-recursive predicate is:"
     recursionDescription _ = "The mutually recursive predicates are:"

@@ -34,6 +34,7 @@ library
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
       Prolog.Programming.CodeAnalysis.Rules.Cuts
+      Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates
       Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
       Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
@@ -106,6 +107,7 @@ test-suite prolog-programming-task-test
   other-modules:
       CodeAnalysis.Helper
       CodeAnalysis.Rules.CutsSpec
+      CodeAnalysis.Rules.ForbiddenPredicatesSpec
       CodeAnalysis.Rules.InconsistentAritiesSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.RecursionSpec
