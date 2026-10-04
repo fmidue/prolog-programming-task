@@ -42,7 +42,7 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
         (\group -> (predicateName (NE.head group), NE.map predicateArity group))
         . NE.groupWith predicateName
         . Set.unions
-        . map (Set.filter ((`notElem` ignore) . predicateName) . uncurry Set.insert . clauseIdentities)
+        . map (Set.filter ((`notElem` ignore) . predicateName) . uncurry Set.insert . clauseIdentities False)
 
 data Result = MultipleArities String | InconsistentWithForced String Int
 

@@ -19,7 +19,7 @@ forbiddenPredicatesChecker forbidden clause
     usedForbidden = Set.toList $ forbiddenInClause forbidden clause
 
 forbiddenInClause :: Set Predicate -> Clause -> Set Predicate
-forbiddenInClause forbidden clause = forbidden `Set.intersection` snd (clauseIdentities clause)
+forbiddenInClause forbidden clause = forbidden `Set.intersection` snd (clauseIdentities True clause)
 
 toProblem :: Maybe String -> [Predicate] -> Clause -> Problem
 toProblem msg predicates clause =

@@ -26,7 +26,7 @@ buildGraph clauses =
   | (predicate, calls) <-
       Map.toList
         $ Map.fromListWith Set.union
-        $ map clauseIdentities clauses
+        $ map (clauseIdentities False) clauses
   ]
 
 toProblem :: Maybe String -> [Predicate] -> Problem
