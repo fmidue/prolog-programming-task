@@ -148,8 +148,8 @@ instance FromJSON RecursionConfig where
 instance FromJSON Predicate where
   parseJSON (String s) = case T.split (== '/') s of
     [name, arity] -> case T.readMaybe $ T.unpack arity of
-      Nothing -> fail "Invalid arity"
-      Just arity' -> pure $ Predicate (T.unpack name) arity'
+      Just arity' | arity' >= 0 -> pure $ Predicate (T.unpack name) arity'
+      _ -> fail "Invalid arity: expected a non-negative integer"
     _ -> fail "Invalid value"
   parseJSON _ = fail "Invalid value type"
 
