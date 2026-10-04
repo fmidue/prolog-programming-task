@@ -87,8 +87,11 @@ verifyConfig (Config cfg) = case parseInstance cfg of
     let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
     in do
          when (includeHiddenDefinitions == Yes && showSWISHButton) $
-           fail
-             "SWISH Button must not be enabled together with unfiltered hidden predicates."
+           case consultString hiddenPredicates of
+             Left err -> fail $ show err
+             Right (_ : _) ->
+               fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
+             Right [] -> pure ()
 
          when rigorousValidation $
            checkTask
