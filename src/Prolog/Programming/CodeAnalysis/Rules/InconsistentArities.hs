@@ -52,12 +52,12 @@ compareWithForced forced (name, arities) =
     _ -> Just $ MultipleArities name
 
 forcedIdentities :: [(String, NonEmpty Int)] -> Maybe (Map String Int)
-forcedIdentities = foldM addIdentity Map.empty
+forcedIdentities = foldM (flip addIdentity) Map.empty
   where
-    addIdentity forced (name, arities) =
+    addIdentity (name, arities) =
       case arities of
-        arity :| [] -> Just $ Map.insert name arity forced
-        _ -> Nothing
+        arity :| [] -> Just . Map.insert name arity
+        _ -> \_ -> Nothing
 
 toProblem :: Result -> Problem
 toProblem res =
