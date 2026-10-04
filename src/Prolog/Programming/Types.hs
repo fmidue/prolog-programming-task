@@ -1,14 +1,15 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Prolog.Programming.Types where
 
 import Autolib.Reader (Reader (..))
 import Autolib.ToDoc (ToDoc (..))
-import Control.Monad (mzero)
 import Data.Data (Data)
 import Data.Void (Void)
 import GHC.Generics (Generic)
@@ -42,7 +43,10 @@ data TaskConfig = TaskConfig {
   , specifications :: [Spec]
   , rigorousValidation :: Bool
   }
-  deriving (Data, Generic, Reader, Show, ToDoc)
+  deriving (Data, Generic, Show)
+
+deriving instance Reader Void => Reader TaskConfig
+deriving instance ToDoc Void => ToDoc TaskConfig
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
@@ -50,7 +54,10 @@ data TaskInstance = TaskInstance {
   , visiblePredicates :: String
   , hiddenPredicates :: String
   }
-  deriving (Generic, Reader, Show, ToDoc)
+  deriving (Generic, Show)
+
+deriving instance Reader TaskConfig => Reader TaskInstance
+deriving instance ToDoc TaskConfig => ToDoc TaskInstance
 
 data Spec = Spec {
   specVisibility :: Visibility
@@ -84,10 +91,3 @@ deriving instance ToDoc VariableName
 
 deriving instance Reader Term
 deriving instance ToDoc Term
-
-instance ToDoc Void where
-  toDocPrec _ _ =
-    error "instance ToDoc Void -- in Let.Void"
-
-instance Reader Void where
-  atomic_readerPrec _ = mzero
