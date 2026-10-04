@@ -8,7 +8,7 @@ import qualified Data.List.NonEmpty as NE (groupWith, head, length, map)
 import Data.Map (Map)
 import qualified Data.Map as Map (fromList, lookup)
 import Data.Maybe (mapMaybe)
-import qualified Data.Set as Set (filter, insert, toList, unions)
+import qualified Data.Set as Set (filter, insert, unions)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (Context, IgnoredPredicates (..), Problem (..), ProgramRule)
@@ -35,7 +35,6 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
       map
         (\group -> (fst (NE.head group), NE.map snd group))
         . NE.groupWith fst
-        . Set.toList
         . Set.filter ((`notElem` ignore) . fst)
         . Set.unions
         . map (uncurry Set.insert . clauseIdentities)
