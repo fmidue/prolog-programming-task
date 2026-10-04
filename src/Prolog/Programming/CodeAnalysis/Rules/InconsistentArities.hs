@@ -29,8 +29,6 @@ inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
     Just forced ->
       mapMaybe
         (fmap toProblem . compareWithForced forced)
-        $ filter
-          (\(n, _) -> n `notElem` ignore)
         $ identities clauses
   where
     identities =
