@@ -85,10 +85,10 @@ codeAnalysis:
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
 
   # which predicates are not allowed to be used
-  # forbiddenPredicates:
-  #  - number/1
+  forbiddenPredicates:
+   - not/1
+   - \+/1
   # This field is optional and otherwise takes a list of predicate identities.
-
 
 ------------------------------
 /* Everything from here on (up to an optional hidden section separated by a line of 3 or more dashes)
