@@ -275,7 +275,7 @@ defaultOptions :: Requirement -> Spec
 defaultOptions = Spec Visible DontShowTree PositiveResult GlobalTimeout
 
 breakWhen :: (a -> Bool) -> [a] -> [[a]]
-breakWhen _ [] = []
+breakWhen _ [] = [[]]
 breakWhen p xs =
   let (before, after) = break p xs
   in before : case after of
