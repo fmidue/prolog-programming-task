@@ -40,6 +40,7 @@ data TaskConfig = TaskConfig {
   , showSWISHButton :: ShowSWISHButton
   , codeAnalysis :: CodeAnalysisConfig
   , specifications :: [Spec]
+  , rigorousValidation :: Bool
   }
   deriving (Data, Generic, Reader, Show, ToDoc)
 

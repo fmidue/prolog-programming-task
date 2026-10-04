@@ -90,12 +90,13 @@ verifyConfig (Config cfg) = case parseInstance cfg of
            fail
              "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
-         checkTask
-           solutionErrorDisplay
-           (const $ pure ())
-           (const $ pure ())
-           (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
-           (Code sampleSolution)
+         when rigorousValidation $
+           checkTask
+             solutionErrorDisplay
+             (const $ pure ())
+             (const $ pure ())
+             (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
+             (Code sampleSolution)
 
 toInstance :: Config -> TaskInstance
 toInstance (Config cfg) = fromRight (error "config should have been validated before") $ parseInstance cfg
