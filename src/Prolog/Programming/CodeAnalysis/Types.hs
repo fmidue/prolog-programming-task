@@ -24,9 +24,9 @@ module Prolog.Programming.CodeAnalysis.Types (
 )
 where
 
-import Data.Data (Data)
 import Autolib.Reader (Reader)
 import Autolib.ToDoc (ToDoc)
+import Data.Data (Data)
 import Data.Set (Set)
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..), Program)
