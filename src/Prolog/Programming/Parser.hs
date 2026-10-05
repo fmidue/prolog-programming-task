@@ -42,6 +42,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InconsistentAritiesConfig (..),
   Predicate (..),
   RecursionConfig (..),
+  RhsPatternMatchingConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
   WithSeverity (..),
@@ -129,6 +130,9 @@ instance FromJSON AdditionalMessage where
     AdditionalMessage
       <$> v .:? "additionalMessage"
 
+instance FromJSON RhsPatternMatchingConfig where
+  parseJSON = withRuleParser RhsPatternMatchingConfig
+
 instance FromJSON CutUsageConfig where
   parseJSON = withRuleParser CutUsageConfig
 
@@ -169,6 +173,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Nothing
       <*> v .:? "recursion" .!= RecursionConfig Nothing
       <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
+      <*> v .:? "rhsPatternMatching" .!= RhsPatternMatchingConfig Nothing
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

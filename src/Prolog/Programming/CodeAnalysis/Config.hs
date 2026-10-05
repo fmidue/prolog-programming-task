@@ -10,6 +10,7 @@ import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
+import Prolog.Programming.CodeAnalysis.Rules.RhsPatternMatching (rhsPatternMatchingChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
@@ -21,6 +22,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InconsistentAritiesConfig (InconsistentAritiesConfig),
   ProgramRule,
   RecursionConfig (..),
+  RhsPatternMatchingConfig (..),
   Severity (Error),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
@@ -36,6 +38,7 @@ configuredRules
     , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     , recursion = RecursionConfig recursionCfg
     , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
+    , rhsPatternMatching = RhsPatternMatchingConfig rhsPatternMatchingCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -45,6 +48,7 @@ configuredRules
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
       , configuredForbiddenPredicates
+      , toConfigured rhsPatternMatchingCfg (concatMap . const rhsPatternMatchingChecker)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -64,4 +68,5 @@ emptyCodeAnalysisConfig =
     , ungroupedDefinitions = UngroupedDefinitionsConfig Nothing
     , recursion = RecursionConfig Nothing
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
+    , rhsPatternMatching = RhsPatternMatchingConfig Nothing
     }

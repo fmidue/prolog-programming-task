@@ -8,6 +8,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   ProgramRule,
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig,
+  RhsPatternMatchingConfig (..),
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
@@ -58,6 +59,9 @@ type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving Show
 
+newtype RhsPatternMatchingConfig = RhsPatternMatchingConfig (CodeAnalysisRuleConfig ())
+  deriving Show
+
 newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
   deriving (Generic, Show)
 
@@ -94,6 +98,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , recursion :: RecursionConfig
   -- | Configuration for forbiddenPredicates rule
   , forbiddenPredicates :: ForbiddenPredicatesConfig
+  -- | Configuration for rhsPatternMatching rule
+  , rhsPatternMatching :: RhsPatternMatchingConfig
   }
   deriving (Generic, Show)
 

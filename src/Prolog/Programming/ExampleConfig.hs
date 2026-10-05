@@ -83,6 +83,9 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  rhsPatternMatching:
+    # what to do concerning pattern matching that can be moved to the clause head
+    status: hint
 
   # which predicates are not allowed to be used
   forbiddenPredicates:
