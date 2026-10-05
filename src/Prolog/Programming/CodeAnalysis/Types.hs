@@ -1,7 +1,3 @@
-{-# LANGUAGE CPP #-}
-#if !MIN_VERSION_base(4,18,0)
-{-# LANGUAGE DerivingStrategies #-}
-#endif
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -13,7 +9,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   ClauseRule,
   ProgramRule,
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
+  CodeAnalysisRuleConfig,
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
@@ -29,9 +25,6 @@ module Prolog.Programming.CodeAnalysis.Types (
 where
 
 import Data.Data (Data)
-#if !MIN_VERSION_base(4,18,0)
-import Data.Typeable (Typeable)
-#endif
 import Autolib.Reader (Reader)
 import Autolib.ToDoc (ToDoc)
 import Data.Set (Set)
@@ -65,13 +58,7 @@ type ClauseRule = Clause -> [Problem]
 -- | Definition for a code analysis checker that looks for violations in a given program
 type ProgramRule = Program -> [Problem]
 
-data CodeAnalysisRuleConfig a
-  = Ignore
-  | Detect Severity a
-  deriving (Data, Eq, Functor, Generic, Reader, Show, ToDoc)
-#if !MIN_VERSION_base(4,18,0)
-  deriving Typeable
-#endif
+type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Generic, Reader, Show, ToDoc)
@@ -143,4 +130,4 @@ data WithSeverity a = WithSeverity {
   severity :: Severity
   , value :: a
   }
-  deriving (Foldable, Functor, Traversable)
+  deriving (Eq, Foldable, Functor, Show, Traversable)

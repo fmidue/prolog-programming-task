@@ -5,7 +5,7 @@ module Prolog.Programming.CodeAnalysis.Config (
 where
 
 import Data.Maybe (catMaybes)
-import qualified Data.Set as Set (empty)
+import qualified Data.Set as Set (empty, null)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
@@ -14,7 +14,7 @@ import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariab
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
+  CodeAnalysisRuleConfig,
   Context,
   CutUsageConfig (..),
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
@@ -44,20 +44,24 @@ configuredRules
       , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
-      , Just $ WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg)
+      , configuredForbiddenPredicates
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
-      toConfigured Ignore _ = Nothing
-      toConfigured (Detect severity' extra) build = Just (WithSeverity severity' (build extra))
+      toConfigured config build = fmap (build <$>) config
+
+      configuredForbiddenPredicates =
+        if Set.null forbiddenPredicatesCfg
+          then Nothing
+          else Just $ WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg)
 
 emptyCodeAnalysisConfig :: CodeAnalysisConfig
 emptyCodeAnalysisConfig =
   CodeAnalysisConfig {
-    singletonVariables = SingletonVariablesConfig Ignore
-    , cutUsage = CutUsageConfig Ignore
-    , inconsistentArities = InconsistentAritiesConfig Ignore
-    , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
-    , recursion = RecursionConfig Ignore
+    singletonVariables = SingletonVariablesConfig Nothing
+    , cutUsage = CutUsageConfig Nothing
+    , inconsistentArities = InconsistentAritiesConfig Nothing
+    , ungroupedDefinitions = UngroupedDefinitionsConfig Nothing
+    , recursion = RecursionConfig Nothing
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
     }
