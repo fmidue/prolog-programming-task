@@ -6,9 +6,9 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
+  WithSeverity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
@@ -16,7 +16,7 @@ caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
     singletonVariables =
-      SingletonVariablesConfig $ Detect Hint ()
+      SingletonVariablesConfig $ Just $ WithSeverity Hint ()
     }
 
 unmarkedSingletons :: [(String, [String])]

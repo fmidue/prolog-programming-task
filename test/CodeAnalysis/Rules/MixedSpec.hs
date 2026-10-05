@@ -6,10 +6,10 @@ import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
+  WithSeverity (..),
  )
 import Test.Hspec (Expectation, Spec, describe, it)
 
@@ -17,9 +17,9 @@ caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
     singletonVariables =
-      SingletonVariablesConfig $ Detect Hint ()
+      SingletonVariablesConfig $ Just $ WithSeverity Hint ()
     , cutUsage =
-        CutUsageConfig $ Detect Error $ AdditionalMessage Nothing
+        CutUsageConfig $ Just $ WithSeverity Error $ AdditionalMessage Nothing
     }
 
 detectsProblems :: String -> Expectation
