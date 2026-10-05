@@ -5,7 +5,7 @@ module Prolog.Programming.CodeAnalysis.Config (
 where
 
 import Data.Maybe (catMaybes)
-import qualified Data.Set as Set (empty)
+import qualified Data.Set as Set (empty, null)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
@@ -44,11 +44,16 @@ configuredRules
       , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
-      , Just $ WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg)
+      , configuredForbiddenPredicates
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
       toConfigured config build = fmap (build <$>) config
+
+      configuredForbiddenPredicates =
+        if Set.null forbiddenPredicatesCfg
+          then Nothing
+          else Just $ WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg)
 
 emptyCodeAnalysisConfig :: CodeAnalysisConfig
 emptyCodeAnalysisConfig =
