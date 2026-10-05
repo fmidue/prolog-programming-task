@@ -6,9 +6,9 @@ import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
   Severity (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
+  WithSeverity (..),
  )
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -18,7 +18,7 @@ import qualified Text.RawString.QQ as RS (r)
 caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
-    ungroupedDefinitions = UngroupedDefinitionsConfig $ Detect Hint ()
+    ungroupedDefinitions = UngroupedDefinitionsConfig $ Just $ WithSeverity Hint ()
     }
 
 spec :: Spec

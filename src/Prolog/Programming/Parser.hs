@@ -35,7 +35,7 @@ import Prolog.Programming.CodeAnalysis.Config (
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
   CodeAnalysisConfig (CodeAnalysisConfig),
-  CodeAnalysisRuleConfig (..),
+  CodeAnalysisRuleConfig,
   CutUsageConfig (..),
   ForbiddenPredicatesConfig (..),
   IgnoredPredicates (..),
@@ -44,6 +44,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
+  WithSeverity (..),
  )
 import qualified Prolog.Programming.CodeAnalysis.Types as CA (Severity (..))
 import Prolog.Programming.TypeHelper (FieldNames, recordFieldNames, typeName)
@@ -94,10 +95,10 @@ instance FromJSON Spec where
   parseJSON _ = fail "Invalid value type"
 
 parseStatus :: Value -> Parser (CodeAnalysisRuleConfig ())
-parseStatus (String "ignore") = pure Ignore
-parseStatus (String "hint") = pure $ Detect CA.Hint ()
-parseStatus (String "warn") = pure $ Detect CA.Warn ()
-parseStatus (String "reject") = pure $ Detect CA.Error ()
+parseStatus (String "ignore") = pure Nothing
+parseStatus (String "hint") = pure $ Just $ WithSeverity CA.Hint ()
+parseStatus (String "warn") = pure $ Just $ WithSeverity CA.Warn ()
+parseStatus (String "reject") = pure $ Just $ WithSeverity CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
 withRuleParser
@@ -108,17 +109,17 @@ withRuleParser
   -> Parser b
 withRuleParser cons = withObject (typeName @b) $ \v -> do
   mStatus <- v .:? "status"
-  status <- maybe (pure Ignore) parseStatus mStatus
+  status <- maybe (pure Nothing) parseStatus mStatus
 
   case status of
-    Ignore -> do
+    Nothing -> do
       rejectUnknownFields ["status"] v
-      pure $ cons Ignore
-    base -> case fromJSON (Object v) of
+      pure $ cons Nothing
+    Just base -> case fromJSON (Object v) of
       Error err -> fail $ show err
       Success extra -> do
         rejectUnknownFields ("status" : recordFieldNames @a) v
-        pure $ cons (extra <$ base)
+        pure $ cons $ Just (extra <$ base)
 
 instance FromJSON SingletonVariablesConfig where
   parseJSON = withRuleParser SingletonVariablesConfig
@@ -162,11 +163,11 @@ instance FromJSON CodeAnalysisConfig where
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
 
     CodeAnalysisConfig
-      <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Ignore
-      <*> v .:? "cutUsage" .!= CutUsageConfig Ignore
-      <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Ignore
-      <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Ignore
-      <*> v .:? "recursion" .!= RecursionConfig Ignore
+      <$> v .:? "singletonVariables" .!= SingletonVariablesConfig Nothing
+      <*> v .:? "cutUsage" .!= CutUsageConfig Nothing
+      <*> v .:? "inconsistentArities" .!= InconsistentAritiesConfig Nothing
+      <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Nothing
+      <*> v .:? "recursion" .!= RecursionConfig Nothing
       <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
 
 instance FromJSON TaskConfig where

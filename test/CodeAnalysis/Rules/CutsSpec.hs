@@ -7,9 +7,9 @@ import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
   CutUsageConfig (..),
   Severity (..),
+  WithSeverity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
@@ -17,7 +17,7 @@ caConfig :: Maybe String -> CodeAnalysisConfig
 caConfig cMsg =
   emptyCodeAnalysisConfig {
     cutUsage =
-      CutUsageConfig $ Detect Error $ AdditionalMessage cMsg
+      CutUsageConfig $ Just $ WithSeverity Error $ AdditionalMessage cMsg
     }
 
 hasCut :: [String]

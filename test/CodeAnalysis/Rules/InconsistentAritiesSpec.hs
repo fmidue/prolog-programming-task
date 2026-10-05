@@ -11,17 +11,17 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (inconsistentArities),
-  CodeAnalysisRuleConfig (..),
   IgnoredPredicates (IgnoredPredicates),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
   Severity (..),
+  WithSeverity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: [String] -> CodeAnalysisConfig
 caConfig predicates =
   emptyCodeAnalysisConfig {
-    inconsistentArities = InconsistentAritiesConfig $ Detect Hint $ IgnoredPredicates predicates
+    inconsistentArities = InconsistentAritiesConfig $ Just $ WithSeverity Hint $ IgnoredPredicates predicates
     }
 
 hasMultiple :: [(String, [String])]

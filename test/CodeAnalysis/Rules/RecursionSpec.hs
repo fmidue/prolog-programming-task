@@ -7,9 +7,9 @@ import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
   CodeAnalysisConfig (recursion),
-  CodeAnalysisRuleConfig (..),
   RecursionConfig (..),
   Severity (..),
+  WithSeverity (..),
  )
 import Test.Hspec (Spec, describe, it)
 
@@ -17,7 +17,7 @@ caConfig :: Maybe String -> CodeAnalysisConfig
 caConfig cMsg =
   emptyCodeAnalysisConfig {
     recursion =
-      RecursionConfig $ Detect Hint $ AdditionalMessage cMsg
+      RecursionConfig $ Just $ WithSeverity Hint $ AdditionalMessage cMsg
     }
 
 recursivePrograms :: [(String, String, String)]

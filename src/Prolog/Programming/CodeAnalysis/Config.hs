@@ -14,7 +14,7 @@ import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariab
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
-  CodeAnalysisRuleConfig (..),
+  CodeAnalysisRuleConfig,
   Context,
   CutUsageConfig (..),
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
@@ -48,16 +48,15 @@ configuredRules
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
-      toConfigured Ignore _ = Nothing
-      toConfigured (Detect severity' extra) build = Just (WithSeverity severity' (build extra))
+      toConfigured config build = fmap (build <$>) config
 
 emptyCodeAnalysisConfig :: CodeAnalysisConfig
 emptyCodeAnalysisConfig =
   CodeAnalysisConfig {
-    singletonVariables = SingletonVariablesConfig Ignore
-    , cutUsage = CutUsageConfig Ignore
-    , inconsistentArities = InconsistentAritiesConfig Ignore
-    , ungroupedDefinitions = UngroupedDefinitionsConfig Ignore
-    , recursion = RecursionConfig Ignore
+    singletonVariables = SingletonVariablesConfig Nothing
+    , cutUsage = CutUsageConfig Nothing
+    , inconsistentArities = InconsistentAritiesConfig Nothing
+    , ungroupedDefinitions = UngroupedDefinitionsConfig Nothing
+    , recursion = RecursionConfig Nothing
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
     }
