@@ -16,10 +16,10 @@ import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
 rhsPatternMatchingChecker :: ClauseRule
-rhsPatternMatchingChecker clause@(Clause (Struct _ lhsTerm) rhs) =
+rhsPatternMatchingChecker clause@(Clause (Struct _ args) rhs) =
   map (toProblem clause) patternMatches
   where
-    lhsVariables = Map.keys $ countVariables lhsTerm
+    lhsVariables = Map.keys $ countVariables args
     rhsVariableCounts = countVariables rhs
     patternMatches = findPatternMatches False rhs
 
