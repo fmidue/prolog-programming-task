@@ -1,13 +1,30 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module ConfigSpec where
 
-import Data.Maybe (isJust, isNothing)
+import Control.Exception (SomeException, try)
+import qualified Data.Text as T (pack, replace, unpack)
 import Prolog.Programming.Data (Config (..))
 import Prolog.Programming.Task (exampleConfig, verifyConfig)
-import Test.Hspec (Spec, describe, it, shouldSatisfy)
+import Test.Hspec (Spec, describe, it, shouldReturn)
+
+doesNotThrow :: forall a. IO a -> IO Bool
+doesNotThrow action = do
+  result <- try action :: IO (Either SomeException a)
+  pure $ case result of
+    Left _ -> False
+    Right _ -> True
+
+invalidConfig :: Config
+invalidConfig = Config invalid
+  where
+    (Config cfg) = exampleConfig
+    invalid = T.unpack $ T.replace "globalTimeout" "globalTiimeout" $ T.pack cfg -- no-spell-check
 
 spec :: Spec
 spec = describe "ExampleConfig" $ do
   it "example config should be valid" $
-    verifyConfig exampleConfig `shouldSatisfy` isJust
+    doesNotThrow (verifyConfig exampleConfig :: IO ()) `shouldReturn` True
   it "rejects config with unknown fields" $
-    verifyConfig (Config "globalTiimeout: 1000") `shouldSatisfy` isNothing -- no-spell-check
+    doesNotThrow (verifyConfig invalidConfig :: IO ()) `shouldReturn` False

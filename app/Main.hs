@@ -22,7 +22,10 @@ main = do
 runMain :: Config -> Code -> IO ()
 runMain config code = do
   verifyConfig config
-  checkTask (fail . show) print writeTreeToDisk config code
+
+  let inst = toInstance config
+  checkTask (fail . show) print writeTreeToDisk inst code
+  displaySampleSolution print inst
 
 writeTreeToDisk :: BS.ByteString -> IO ()
 writeTreeToDisk g = BS.writeFile "tree.svg" g >> putStrLn "wrote tree to file://tree.svg"
