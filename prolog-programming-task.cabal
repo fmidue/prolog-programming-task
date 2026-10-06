@@ -49,10 +49,13 @@ library
       Paths_prolog_programming_task
   hs-source-dirs:
       src
-  ghc-options: -Wall -Werror -Wincomplete-patterns -Wincomplete-uni-patterns
+  ghc-options: -Wall -Werror -Wincomplete-patterns -Wincomplete-uni-patterns -Wx-partial
   build-depends:
       MonadRandom
     , aeson
+    , autolib-data
+    , autolib-reader
+    , autolib-todoc
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -80,6 +83,9 @@ executable test-task-prolog
   build-depends:
       MonadRandom
     , aeson
+    , autolib-data
+    , autolib-reader
+    , autolib-todoc
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -120,6 +126,9 @@ test-suite prolog-programming-task-test
       HUnit
     , MonadRandom
     , aeson
+    , autolib-data
+    , autolib-reader
+    , autolib-todoc
     , base >=4.7 && <5
     , bytestring
     , containers

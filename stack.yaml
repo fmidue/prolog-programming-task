@@ -4,8 +4,18 @@ packages:
   - .
 extra-deps:
   - git: https://github.com/fmidue/prolog
-    commit: a80adc8c5915a6e15371753b691f082e707924e1
+    commit: b699f3f0077e68632e02271ef61b203d458f5037
   - git: https://github.com/fmidue/prolog-graph-lib
     commit: 4b4060e2592d145b3744222cbfd68e2775c0348f
 
   - fgl-5.8.1.1
+
+  - git: https://git.uni-due.de/fmi/autotool-dev
+    commit: 06978a67cff507ffd5ceb1d4cbc280efafd78fb3
+    subdirs:
+      - base
+      - data
+      - reader
+      - todoc
+      - transport
+      - util

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
 
@@ -23,6 +25,10 @@ module Prolog.Programming.CodeAnalysis.Types (
 )
 where
 
+import Autolib.Reader (Reader)
+import Autolib.Set ()
+import Autolib.ToDoc (ToDoc)
+import Data.Data (Data)
 import Data.Set (Set)
 import GHC.Generics (Generic)
 import Language.Prolog (Clause (..), Program)
@@ -43,7 +49,7 @@ data Predicate = Predicate {
   predicateName :: String
   , predicateArity :: Int
   }
-  deriving (Eq, Generic, Ord)
+  deriving (Data, Eq, Generic, Ord, Reader, ToDoc)
 
 instance Show Predicate where
   show (Predicate name arity) = name ++ "/" ++ show arity
@@ -57,31 +63,31 @@ type ProgramRule = Program -> [Problem]
 type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype RhsPatternMatchingConfig = RhsPatternMatchingConfig (CodeAnalysisRuleConfig ())
   deriving Show
 
 newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype CutUsageConfig = CutUsageConfig (CodeAnalysisRuleConfig AdditionalMessage)
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype IgnoredPredicates = IgnoredPredicates {ignorePredicates :: [String]}
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype InconsistentAritiesConfig = InconsistentAritiesConfig (CodeAnalysisRuleConfig IgnoredPredicates)
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRuleConfig ())
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Predicate}
-  deriving (Generic, Show)
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
@@ -101,7 +107,7 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   -- | Configuration for rhsPatternMatching rule
   , rhsPatternMatching :: RhsPatternMatchingConfig
   }
-  deriving (Generic, Show)
+  deriving (Data, Generic, Show, Reader, ToDoc)
 
 {- | Classification for seriousness of violation
 
@@ -123,7 +129,7 @@ data Severity
     Example violation: cut operator was used even though the use of it was forbidden
     -}
     Error
-  deriving (Eq, Show)
+  deriving (Data, Eq, Generic, Show, Reader, ToDoc)
 {- FOURMOLU_ENABLE -}
 
 -- | Container for values with attached severity
@@ -131,4 +137,4 @@ data WithSeverity a = WithSeverity {
   severity :: Severity
   , value :: a
   }
-  deriving (Eq, Foldable, Functor, Show, Traversable)
+  deriving (Data, Eq, Foldable, Functor, Generic, Reader, Show, ToDoc, Traversable)
