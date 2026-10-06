@@ -130,4 +130,4 @@ data WithSeverity a = WithSeverity {
   severity :: Severity
   , value :: a
   }
-  deriving (Eq, Foldable, Functor, Show, Traversable)
+  deriving (Data, Eq, Foldable, Functor, Generic, Reader, Show, ToDoc, Traversable)

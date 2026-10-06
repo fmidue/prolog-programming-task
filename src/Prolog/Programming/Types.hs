@@ -43,10 +43,7 @@ data TaskConfig = TaskConfig {
   , specifications :: [Spec]
   , rigorousValidation :: Bool
   }
-  deriving (Data, Generic, Show)
-
-deriving instance Reader Void => Reader TaskConfig
-deriving instance ToDoc Void => ToDoc TaskConfig
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
@@ -54,10 +51,7 @@ data TaskInstance = TaskInstance {
   , visiblePredicates :: String
   , hiddenPredicates :: String
   }
-  deriving (Generic, Show)
-
-deriving instance Reader Void => Reader TaskInstance
-deriving instance ToDoc Void => ToDoc TaskInstance
+  deriving (Generic, Reader, Show, ToDoc)
 
 data Spec = Spec {
   specVisibility :: Visibility
