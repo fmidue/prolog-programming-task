@@ -66,7 +66,7 @@ newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleCon
   deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype RhsPatternMatchingConfig = RhsPatternMatchingConfig (CodeAnalysisRuleConfig ())
-  deriving Show
+  deriving (Data, Generic, Reader, Show, ToDoc)
 
 newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
   deriving (Data, Generic, Reader, Show, ToDoc)
