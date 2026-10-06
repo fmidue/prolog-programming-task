@@ -23,6 +23,7 @@ module Prolog.Programming.Task (
 import Prolog.Programming.Data
 import Prolog.Programming.ExampleConfig
 import Prolog.Programming.Helper (Arity, escalateSeverity, termHead)
+import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.TestRunner
 
 import Control.Monad (when)
@@ -30,6 +31,7 @@ import Control.Monad.Random.Class (MonadRandom)
 import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
+import Data.Either (fromRight)
 import Data.List (intercalate, nub)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
@@ -48,9 +50,7 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
-import Data.Either (fromRight)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
-import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -145,7 +145,7 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 
 1. Does the program parse?
 2. Does the program respect a configured ban of head/tail pattern-matching on lists?
-3. Are all required predicates present?
+3. Are all required predicates-to-be-defined present?
 4. Is the specification (the tests) fulfilled by the program together with task and hidden predicates?
 5. Does the code analysis run through without rejections?
 
