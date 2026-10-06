@@ -25,6 +25,7 @@ module Prolog.Programming.CodeAnalysis.Types (
 where
 
 import Autolib.Reader (Reader)
+import Autolib.Set ()
 import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Set (Set)

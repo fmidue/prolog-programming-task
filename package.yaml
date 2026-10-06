@@ -35,6 +35,7 @@ dependencies:
   - data-ordlist
   - autolib-reader
   - autolib-todoc
+  - autolib-data
 
 library:
   source-dirs: src

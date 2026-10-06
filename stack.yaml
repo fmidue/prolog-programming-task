@@ -11,7 +11,7 @@ extra-deps:
   - fgl-5.8.1.1
 
   - git: https://git.uni-due.de/fmi/autotool-dev
-    commit: f6f44e1a5b63ba5c64e9982a7feb21f8e3e44e40
+    commit: 06978a67cff507ffd5ceb1d4cbc280efafd78fb3
     subdirs:
       - base
       - data
@@ -19,9 +19,3 @@ extra-deps:
       - todoc
       - transport
       - util
-
-flags:
-  autolib-reader:
-    fmidue: true
-  autolib-todoc:
-    fmidue: true
