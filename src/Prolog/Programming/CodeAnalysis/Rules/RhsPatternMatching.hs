@@ -1,9 +1,16 @@
 module Prolog.Programming.CodeAnalysis.Rules.RhsPatternMatching where
 
+import Data.List (delete)
 import qualified Data.Map as Map (Map, keys, lookup)
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..), VariableName (VariableName))
+import Language.Prolog (
+  Clause (..),
+  Term (..),
+  VariableName (VariableName),
+  apply,
+  unify,
+ )
 import Prolog.Programming.CodeAnalysis.Helper (containsCut, countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
@@ -50,8 +57,19 @@ toProblem clause term =
       vsep
         [ string $ pack "Your clause"
         , indent 2 $ string $ pack $ show clause
-        , string $ pack "uses pattern-matching on the right-hand side of the clause"
+        , string $ pack "uses pattern-matching on the right-hand side of the clause using term"
         , indent 2 $ string $ pack $ show term
-        , string $ pack "that can be moved to the left-hand side."
+        , string $ pack "that can be moved to the left-hand side. Doing that would result in"
+        , indent 2 $ string $ pack $ show $ fixedClause clause term
         ]
     }
+
+fixedClause :: Clause -> Term -> Clause
+fixedClause (Clause headTerm rhs) t@(Struct "=" [left, right]) =
+  case unify left right of
+    Just unifier ->
+      Clause
+        (apply unifier headTerm)
+        (map (apply unifier) $ delete t rhs)
+    Nothing -> error "Pattern-matching equality should always be unifiable."
+fixedClause _ _ = error "Pattern-matching term should be an equality."
