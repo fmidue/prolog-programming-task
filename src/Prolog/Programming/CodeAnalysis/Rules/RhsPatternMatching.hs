@@ -11,7 +11,7 @@ import Language.Prolog (
   apply,
   unify,
  )
-import Prolog.Programming.CodeAnalysis.Helper (containsCut, countVariables)
+import Prolog.Programming.CodeAnalysis.Helper (countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
@@ -21,14 +21,9 @@ rhsPatternMatchingChecker clause@(Clause (Struct _ args) rhs) =
   where
     lhsVariables = Map.keys $ countVariables args
     rhsVariableCounts = countVariables rhs
-    patternMatches = findPatternMatches False rhs
-
-    findPatternMatches _ [] = []
-    findPatternMatches cutSeen (term : terms)
-      | cutSeen = []
-      | isPatternMatch lhsVariables rhsVariableCounts term =
-          term : findPatternMatches (containsCut term) terms
-      | otherwise = findPatternMatches (containsCut term) terms
+    patternMatches = case rhs of
+      term : _ | isPatternMatch lhsVariables rhsVariableCounts term -> [term]
+      _ -> []
 rhsPatternMatchingChecker _ = []
 
 isPatternMatch :: [String] -> Map.Map String Int -> Term -> Bool
