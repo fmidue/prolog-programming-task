@@ -28,8 +28,7 @@ rhsPatternMatchingChecker clause@(Clause (Struct _ args) rhs) =
       | cutSeen = []
       | isPatternMatch lhsVariables rhsVariableCounts term =
           term : findPatternMatches (containsCut term) terms
-      | containsCut term = []
-      | otherwise = findPatternMatches False terms
+      | otherwise = findPatternMatches (containsCut term) terms
 rhsPatternMatchingChecker _ = []
 
 isPatternMatch :: [String] -> Map.Map String Int -> Term -> Bool
