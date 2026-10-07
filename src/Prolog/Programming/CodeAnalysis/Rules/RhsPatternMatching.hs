@@ -1,6 +1,5 @@
 module Prolog.Programming.CodeAnalysis.Rules.RhsPatternMatching (rhsPatternMatchingChecker) where
 
-import Data.List (delete)
 import qualified Data.Map as Map (Map, keys, lookup)
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
@@ -16,14 +15,11 @@ import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
 rhsPatternMatchingChecker :: ClauseRule
-rhsPatternMatchingChecker clause@(Clause (Struct _ args) rhs) =
-  map (toProblem clause) patternMatches
+rhsPatternMatchingChecker clause@(Clause (Struct _ args) rhs@(term : _)) =
+  [toProblem clause term | isPatternMatch lhsVariables rhsVariableCounts term]
   where
     lhsVariables = Map.keys $ countVariables args
     rhsVariableCounts = countVariables rhs
-    patternMatches = case rhs of
-      term : _ | isPatternMatch lhsVariables rhsVariableCounts term -> [term]
-      _ -> []
 rhsPatternMatchingChecker _ = []
 
 isPatternMatch :: [String] -> Map.Map String Int -> Term -> Bool
@@ -52,11 +48,11 @@ toProblem clause term =
     }
 
 fixedClause :: Clause -> Term -> Clause
-fixedClause (Clause headTerm rhs) t@(Struct "=" [left, right]) =
+fixedClause (Clause headTerm (_ : rhs)) (Struct "=" [left, right]) =
   case unify left right of
     Just unifier ->
       Clause
         (apply unifier headTerm)
-        (map (apply unifier) $ delete t rhs)
+        (map (apply unifier) rhs)
     Nothing -> error "Pattern-matching equality should always be unifiable."
 fixedClause _ _ = error "Pattern-matching term should be an equality."
