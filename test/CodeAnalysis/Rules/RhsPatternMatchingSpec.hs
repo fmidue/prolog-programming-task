@@ -33,8 +33,8 @@ detectsPatternMatches =
   , ("p(X,Y) :- X = Y.", "p(Y, Y).")
   ]
 
-errorFree :: [String]
-errorFree =
+detectionFree :: [String]
+detectionFree =
   [ "p(Xs,X) :- Xs = [X,_], q(Xs)."
   , "p(X) :- q(X), X = [a]."
   , "p(X,Y) :- q(Y), X = [Y]."
@@ -64,7 +64,7 @@ spec = describe "RhsPatternMatching" $ do
           ]
           programCode
   describe "Should not detect unsafe or unrelated equalities" $
-    forM_ errorFree $ \programCode ->
+    forM_ detectionFree $ \programCode ->
       it programCode $
         shouldNotHaveProblems
           caConfig
