@@ -1,4 +1,4 @@
-module CodeAnalysis.Rules.RhsPatternMatchingSpec where
+module CodeAnalysis.Rules.InliningSpec where
 
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Control.Monad (forM_)
@@ -6,7 +6,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
-  RhsPatternMatchingConfig (..),
+  InliningConfig (..),
   Severity (..),
   WithSeverity (..),
  )
@@ -15,8 +15,8 @@ import Test.Hspec (Spec, describe, it)
 caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
-    rhsPatternMatching =
-      RhsPatternMatchingConfig $ Just $ WithSeverity Hint ()
+    inlining =
+      InliningConfig $ Just $ WithSeverity Hint ()
     }
 
 detectsPatternMatches :: [(String, String)]
@@ -52,14 +52,14 @@ detectionFree =
   ]
 
 spec :: Spec
-spec = describe "RhsPatternMatching" $ do
-  describe "Should detect pattern matching on the RHS" $
+spec = describe "Inlining" $ do
+  describe "Should detect terms that can be inlined into the clause head" $
     forM_ detectsPatternMatches $ \(programCode, expectedFixedClause) ->
       it programCode $
         shouldDetectProblemsStrict
           caConfig
           [ \display ->
-              isInfixOf "can be moved to the left-hand side" display
+              isInfixOf "as its first goal which can be inlined into the clause head." display
                 && isInfixOf expectedFixedClause display
           ]
           programCode

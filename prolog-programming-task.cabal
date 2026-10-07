@@ -36,8 +36,8 @@ library
       Prolog.Programming.CodeAnalysis.Rules.Cuts
       Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates
       Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
+      Prolog.Programming.CodeAnalysis.Rules.Inlining
       Prolog.Programming.CodeAnalysis.Rules.Recursion
-      Prolog.Programming.CodeAnalysis.Rules.RhsPatternMatching
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
@@ -112,9 +112,9 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.CutsSpec
       CodeAnalysis.Rules.ForbiddenPredicatesSpec
       CodeAnalysis.Rules.InconsistentAritiesSpec
+      CodeAnalysis.Rules.InliningSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.RecursionSpec
-      CodeAnalysis.Rules.RhsPatternMatchingSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
       CodeAnalysis.Rules.UngroupedDefinitionsSpec
       ConfigSpec
