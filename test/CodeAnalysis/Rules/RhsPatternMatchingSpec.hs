@@ -30,6 +30,7 @@ detectsPatternMatches =
     , "p(node(L, V, R)) :- q(V), p(L), p(R)."
     )
   , ("p(X) :- X = a, !.", "p(a) :- !.")
+  , ("p(X,Y) :- X = Y.", "p(Y, Y).")
   ]
 
 errorFree :: [String]
