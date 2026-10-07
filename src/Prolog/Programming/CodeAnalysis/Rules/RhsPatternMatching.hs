@@ -27,18 +27,11 @@ rhsPatternMatchingChecker clause@(Clause (Struct _ args) rhs) =
 rhsPatternMatchingChecker _ = []
 
 isPatternMatch :: [String] -> Map.Map String Int -> Term -> Bool
-isPatternMatch lhsVariables rhsVariableCounts term =
-  case lhsVariableInEquation lhsVariables term of
-    Just variable ->
-      Map.lookup variable rhsVariableCounts == Just 1
-    Nothing -> False
-
-lhsVariableInEquation :: [String] -> Term -> Maybe String
-lhsVariableInEquation lhsVariables (Struct "=" [left, right]) =
-  case filter (`elem` lhsVariables) $ mapMaybe variableName [left, right] of
-    variable : _ -> Just variable
-    [] -> Nothing
-lhsVariableInEquation _ _ = Nothing
+isPatternMatch lhsVariables rhsVariableCounts (Struct "=" args) =
+  case filter (`elem` lhsVariables) $ mapMaybe variableName args of
+    variable : _ -> Map.lookup variable rhsVariableCounts == Just 1
+    [] -> False
+isPatternMatch _ _ _ = False
 
 variableName :: Term -> Maybe String
 variableName (Var (VariableName _ name)) = Just name
