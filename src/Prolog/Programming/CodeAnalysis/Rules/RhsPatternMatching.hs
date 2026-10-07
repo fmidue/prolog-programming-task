@@ -1,4 +1,4 @@
-module Prolog.Programming.CodeAnalysis.Rules.RhsPatternMatching where
+module Prolog.Programming.CodeAnalysis.Rules.RhsPatternMatching (rhsPatternMatchingChecker) where
 
 import Data.List (delete)
 import qualified Data.Map as Map (Map, keys, lookup)
