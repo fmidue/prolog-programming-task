@@ -102,7 +102,7 @@ verifyConfig cfg = case parseInstance cfg of
              sampleSolution
 
 toInstance :: Config -> TaskInstance
-toInstance cfg = fromRight (error "config should have been validated before") $ parseInstance cfg
+toInstance = fromRight (error "config should have been validated before") . parseInstance
 
 describeTask :: TaskInstance -> Doc
 describeTask TaskInstance {visiblePredicates} =
