@@ -91,6 +91,8 @@ codeAnalysis:
   forbiddenPredicates:
    - not/1
    - \+/1
+   - \=/2
+   - \==/2
   # This field is optional and otherwise takes a list of predicate identities.
 
 ------------------------------
