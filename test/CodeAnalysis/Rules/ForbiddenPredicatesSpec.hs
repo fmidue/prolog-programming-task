@@ -11,6 +11,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
   Predicate (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: Set Predicate -> CodeAnalysisConfig
@@ -19,7 +20,7 @@ caConfig forbidden =
     forbiddenPredicates = ForbiddenPredicatesConfig forbidden
     }
 
-withProblems :: [(String, Set Predicate)]
+withProblems :: [(Code, Set Predicate)]
 withProblems =
   [ ("p(X) :- q(X).", Set.fromList [Predicate "q" 1])
   , ("p(X) :- q(X), r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
@@ -27,7 +28,7 @@ withProblems =
   , ("p(X) :- not(q(X)).", Set.fromList [Predicate "not" 1])
   ]
 
-errorFree :: [(String, Set Predicate)]
+errorFree :: [(Code, Set Predicate)]
 errorFree =
   [ ("p(X) :- q(X).", Set.fromList [Predicate "p" 1])
   , ("p.", Set.fromList [Predicate "p" 1])

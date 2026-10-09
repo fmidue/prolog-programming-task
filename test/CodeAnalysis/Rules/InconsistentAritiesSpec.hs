@@ -16,6 +16,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   Severity (..),
   WithSeverity (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: [String] -> CodeAnalysisConfig
@@ -24,7 +25,7 @@ caConfig predicates =
     inconsistentArities = InconsistentAritiesConfig $ Just $ WithSeverity Hint $ IgnoredPredicates predicates
     }
 
-hasMultiple :: [(String, [String])]
+hasMultiple :: [(Code, [String])]
 hasMultiple =
   [ ("p(X) :- q(Y), p(X,Y).", ["p"])
   , ("p(X) :- q(X). p(X,Y) :- w(X,Y).", ["p"])
@@ -36,7 +37,7 @@ hasMultiple =
   , ("p(X) :- not(q(X)), not(w(X),v(X)).", ["not"])
   ]
 
-errorFree :: [String]
+errorFree :: [Code]
 errorFree =
   [ "p."
   , "p(_)."
@@ -48,7 +49,7 @@ errorFree =
   , "p(X) :- X = node(L,R), q(L), q(R). u(node(_,V,_)) :- w(V)."
   ]
 
-ignores :: [(String, [String])]
+ignores :: [(Code, [String])]
 ignores =
   [ ("p(X) :- q(Y), p(X,Y).", ["p"])
   , ("'predicate with spaces' :- q(X), 'predicate with spaces'(X).", ["predicate with spaces"])

@@ -258,7 +258,7 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-consultStringsAndFilter :: String -> (Clause -> Bool) -> String -> (Clause -> Bool) -> Either ParseError [Clause]
+consultStringsAndFilter :: Code -> (Clause -> Bool) -> Code -> (Clause -> Bool) -> Either ParseError [Clause]
 consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do
   vs <- consultString visibleDefs
   hs <- consultString hiddenDefs

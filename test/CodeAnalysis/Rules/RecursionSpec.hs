@@ -11,6 +11,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   Severity (..),
   WithSeverity (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: Maybe String -> CodeAnalysisConfig
@@ -20,7 +21,7 @@ caConfig cMsg =
       RecursionConfig $ Just $ WithSeverity Hint $ AdditionalMessage cMsg
     }
 
-recursivePrograms :: [(String, String, String)]
+recursivePrograms :: [(Code, String, String)]
 recursivePrograms =
   [ ("p(X) :- p(X).", "self-recursive predicate is:", "p/1")
   , ("p(X) :- q(X). q(X) :- p(X).", "mutually recursive predicates are:", "p/1, q/1")
@@ -28,7 +29,7 @@ recursivePrograms =
   , ("p(X) :- (q(X), r(X)); p(X).", "self-recursive predicate is:", "p/1")
   ]
 
-errorFree :: [String]
+errorFree :: [Code]
 errorFree =
   [ "p(X) :- q(X)."
   , "p(X) :- q(X). q(X) :- r(X)."

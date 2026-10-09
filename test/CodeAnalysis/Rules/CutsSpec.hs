@@ -11,6 +11,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   Severity (..),
   WithSeverity (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: Maybe String -> CodeAnalysisConfig
@@ -20,13 +21,13 @@ caConfig cMsg =
       CutUsageConfig $ Just $ WithSeverity Error $ AdditionalMessage cMsg
     }
 
-hasCut :: [String]
+hasCut :: [Code]
 hasCut =
   [ "p(X) :- q(X), !."
   , "p(X) :- a(X), (b(X), ! ; c(X))."
   ]
 
-errorFree :: [String]
+errorFree :: [Code]
 errorFree =
   [ "p(X,Y) :- q(X,Y)."
   ]

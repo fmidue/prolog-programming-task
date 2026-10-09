@@ -10,6 +10,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   SingletonVariablesConfig (..),
   WithSeverity (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: CodeAnalysisConfig
@@ -19,7 +20,7 @@ caConfig =
       SingletonVariablesConfig $ Just $ WithSeverity Hint ()
     }
 
-unmarkedSingletons :: [(String, [String])]
+unmarkedSingletons :: [(Code, [String])]
 unmarkedSingletons =
   [ ("p(X,Y) :- q(X).", ["Y"])
   , ("p(X) :- X = [Z|Zs], q(Z).", ["Zs"])
@@ -31,7 +32,7 @@ unmarkedSingletons =
   , ("p(A,_).", ["A"])
   ]
 
-errorFree :: [String]
+errorFree :: [Code]
 errorFree =
   [ "p(X) :- q(X)."
   , "p(X,X)."
