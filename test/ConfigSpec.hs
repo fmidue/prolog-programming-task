@@ -5,7 +5,7 @@ module ConfigSpec where
 
 import Control.Exception (SomeException, try)
 import qualified Data.Text as T (pack, replace, unpack)
-import Prolog.Programming.Data (Config (..))
+import Prolog.Programming.Data (Config)
 import Prolog.Programming.Task (exampleConfig, verifyConfig)
 import Test.Hspec (Spec, describe, it, shouldReturn)
 
@@ -17,10 +17,7 @@ doesNotThrow action = do
     Right _ -> True
 
 invalidConfig :: Config
-invalidConfig = Config invalid
-  where
-    (Config cfg) = exampleConfig
-    invalid = T.unpack $ T.replace "globalTimeout" "globalTiimeout" $ T.pack cfg -- no-spell-check
+invalidConfig = T.unpack $ T.replace "globalTimeout" "globalTiimeout" $ T.pack exampleConfig -- no-spell-check
 
 spec :: Spec
 spec = describe "ExampleConfig" $ do

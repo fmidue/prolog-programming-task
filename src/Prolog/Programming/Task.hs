@@ -81,7 +81,7 @@ import Text.PrettyPrint.Leijen.Text (
  )
 
 verifyConfig :: (MonadFail m, MonadIO m, MonadRandom m) => Config -> m ()
-verifyConfig (Config cfg) = case parseInstance cfg of
+verifyConfig cfg = case parseInstance cfg of
   Left err -> fail $ show err
   Right inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} ->
     let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
@@ -99,10 +99,10 @@ verifyConfig (Config cfg) = case parseInstance cfg of
              (const $ pure ())
              (const $ pure ())
              (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
-             (Code sampleSolution)
+             sampleSolution
 
 toInstance :: Config -> TaskInstance
-toInstance (Config cfg) = fromRight (error "config should have been validated before") $ parseInstance cfg
+toInstance = fromRight (error "config should have been validated before") . parseInstance
 
 describeTask :: TaskInstance -> Doc
 describeTask TaskInstance {visiblePredicates} =
@@ -110,19 +110,18 @@ describeTask TaskInstance {visiblePredicates} =
 
 initialTask :: TaskInstance -> Code
 initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
-  Code $
-    if null newDecls
-      then ""
-      else
-        foldr
-          ( \desc s ->
-              "% Define predicate for '"
-                ++ desc
-                ++ "' below this line\n \n\n"
-                ++ s
-          )
-          "% Any additional definitions can go below this line"
-          newDecls
+  if null newDecls
+    then ""
+    else
+      foldr
+        ( \desc s ->
+            "% Define predicate for '"
+              ++ desc
+              ++ "' below this line\n \n\n"
+              ++ s
+        )
+        "% Any additional definitions can go below this line"
+        newDecls
   where
     newDecls = mapMaybe (\(Spec _ _ _ _ r) -> newPredDesc r) specifications
     newPredDesc (NewPredDecl _ desc) = Just desc
@@ -159,7 +158,7 @@ checkTask
   -> TaskInstance
   -> Code
   -> m ()
-checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} (Code input) = do
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} input = do
   let drawTree tree = do
         svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
         drawPicture svg
@@ -259,7 +258,7 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-consultStringsAndFilter :: String -> (Clause -> Bool) -> String -> (Clause -> Bool) -> Either ParseError [Clause]
+consultStringsAndFilter :: Code -> (Clause -> Bool) -> Code -> (Clause -> Bool) -> Either ParseError [Clause]
 consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do
   vs <- consultString visibleDefs
   hs <- consultString hiddenDefs

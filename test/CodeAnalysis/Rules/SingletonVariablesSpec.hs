@@ -10,6 +10,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   SingletonVariablesConfig (..),
   WithSeverity (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
 caConfig :: CodeAnalysisConfig
@@ -19,7 +20,7 @@ caConfig =
       SingletonVariablesConfig $ Just $ WithSeverity Hint ()
     }
 
-unmarkedSingletons :: [(String, [String])]
+unmarkedSingletons :: [(Code, [String])]
 unmarkedSingletons =
   [ ("p(X,Y) :- q(X).", ["Y"])
   , ("p(X) :- X = [Z|Zs], q(Z).", ["Zs"])
@@ -31,8 +32,8 @@ unmarkedSingletons =
   , ("p(A,_).", ["A"])
   ]
 
-errorFree :: [String]
-errorFree =
+detectionFree :: [Code]
+detectionFree =
   [ "p(X) :- q(X)."
   , "p(X,X)."
   , "p(X) :- X = [Z|Zs], q(Z,Zs)."
@@ -59,7 +60,7 @@ spec = describe "NoSingletonVariables" $ do
           (map (\v -> isInfixOf $ "includes the singleton variable " ++ v) unmarked)
           programCode
   describe "Should not detect any problems" $
-    forM_ errorFree $ \programCode ->
+    forM_ detectionFree $ \programCode ->
       it programCode $
         shouldNotHaveProblems
           caConfig
