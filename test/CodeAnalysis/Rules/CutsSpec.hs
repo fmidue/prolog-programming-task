@@ -27,8 +27,8 @@ hasCut =
   , "p(X) :- a(X), (b(X), ! ; c(X))."
   ]
 
-errorFree :: [Code]
-errorFree =
+detectionFree :: [Code]
+detectionFree =
   [ "p(X,Y) :- q(X,Y)."
   ]
 
@@ -42,7 +42,7 @@ spec = describe "NoSingletonVariables" $ do
           [isInfixOf "makes use of the cut (!) operator"]
           programCode
   describe "Should not detect any problems" $
-    forM_ errorFree $ \programCode ->
+    forM_ detectionFree $ \programCode ->
       it programCode $
         shouldNotHaveProblems
           (caConfig Nothing)

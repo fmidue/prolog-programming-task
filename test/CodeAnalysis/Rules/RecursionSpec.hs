@@ -29,8 +29,8 @@ recursivePrograms =
   , ("p(X) :- (q(X), r(X)); p(X).", "self-recursive predicate is:", "p/1")
   ]
 
-errorFree :: [Code]
-errorFree =
+detectionFree :: [Code]
+detectionFree =
   [ "p(X) :- q(X)."
   , "p(X) :- q(X). q(X) :- r(X)."
   , "p(X) :- q(X). q(X,Y) :- p(X)."
@@ -49,7 +49,7 @@ spec = describe "Recursion" $ do
           ]
           programCode
   describe "Should not detect any problems" $
-    forM_ errorFree $ \programCode ->
+    forM_ detectionFree $ \programCode ->
       it programCode $
         shouldNotHaveProblems (caConfig Nothing) programCode
   it "should provide additional message when configured" $

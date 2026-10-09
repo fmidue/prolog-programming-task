@@ -28,8 +28,8 @@ withProblems =
   , ("p(X) :- not(q(X)).", Set.fromList [Predicate "not" 1])
   ]
 
-errorFree :: [(Code, Set Predicate)]
-errorFree =
+detectionFree :: [(Code, Set Predicate)]
+detectionFree =
   [ ("p(X) :- q(X).", Set.fromList [Predicate "p" 1])
   , ("p.", Set.fromList [Predicate "p" 1])
   , ("p(X) :- q(X).", Set.fromList [Predicate "r" 1])
@@ -48,7 +48,7 @@ spec = describe "Forbidden predicates" $ do
           ]
           programCode
   describe "Should not detect forbidden predicates in safe clauses" $
-    forM_ errorFree $ \(programCode, forbidden) ->
+    forM_ detectionFree $ \(programCode, forbidden) ->
       it programCode $
         shouldNotHaveProblems
           (caConfig forbidden)

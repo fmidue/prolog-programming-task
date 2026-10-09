@@ -37,8 +37,8 @@ hasMultiple =
   , ("p(X) :- not(q(X)), not(w(X),v(X)).", ["not"])
   ]
 
-errorFree :: [Code]
-errorFree =
+detectionFree :: [Code]
+detectionFree =
   [ "p."
   , "p(_)."
   , "p(X) :- q(X)."
@@ -65,7 +65,7 @@ spec = describe "InconsistentArities" $ do
           (map (isInfixOf . ("Your program contains the predicate " ++)) predicates)
           programCode
   describe "Should not detect any problems" $
-    forM_ errorFree $ \programCode ->
+    forM_ detectionFree $ \programCode ->
       it programCode $
         shouldNotHaveProblems
           (caConfig [])
