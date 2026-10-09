@@ -11,6 +11,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   SingletonVariablesConfig (..),
   WithSeverity (..),
  )
+import Prolog.Programming.Data (Code)
 import Test.Hspec (Expectation, Spec, describe, it)
 
 caConfig :: CodeAnalysisConfig
@@ -22,7 +23,7 @@ caConfig =
         CutUsageConfig $ Just $ WithSeverity Error $ AdditionalMessage Nothing
     }
 
-detectsProblems :: String -> Expectation
+detectsProblems :: Code -> Expectation
 detectsProblems =
   shouldDetectProblemsStrict
     caConfig

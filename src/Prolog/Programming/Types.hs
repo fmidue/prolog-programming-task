@@ -15,6 +15,7 @@ import Data.Void (Void)
 import GHC.Generics (Generic)
 import Language.Prolog (Term (..), VariableName (..))
 import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
+import Prolog.Programming.Data (Code)
 
 type TimeoutDuration = Int
 
@@ -47,9 +48,9 @@ data TaskConfig = TaskConfig {
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
-  , sampleSolution :: String
-  , visiblePredicates :: String
-  , hiddenPredicates :: String
+  , sampleSolution :: Code
+  , visiblePredicates :: Code
+  , hiddenPredicates :: Code
   }
   deriving (Generic, Reader, Show, ToDoc)
 

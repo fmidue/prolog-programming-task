@@ -14,8 +14,8 @@ main = do
   args <- getArgs
   case args of
     [task, solution] -> do
-      config <- Config <$> readFile task
-      code <- Code <$> readFile solution
+      config <- readFile task
+      code <- readFile solution
       runMain config code
     _ -> putStrLn "usage test-task-prolog <task> <solution>"
 
