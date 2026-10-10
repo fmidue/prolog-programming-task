@@ -6,7 +6,7 @@ import System.Environment (getArgs)
 
 import Text.PrettyPrint.Leijen.Text ()
 
-import Prolog.Programming.Data (Code (..), Config (..))
+import Prolog.Programming.Data (Code, Config)
 import Prolog.Programming.Task
 
 main :: IO ()
