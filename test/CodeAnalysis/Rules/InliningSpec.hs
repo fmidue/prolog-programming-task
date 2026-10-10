@@ -31,7 +31,7 @@ detectsPatternMatches =
     )
   , ("p(X) :- X = a, !.", "p(a) :- !.") -- Fulfills rule 1
   , ("p(X,Y) :- X = Y.", "p(X, X).") -- Fulfills rule 1
-  , ("p(X) :- q(a), X = b. p(b).", "p(b) :- q(a).") -- Fulfills rule 1
+  , ("p(X) :- q(a), X = b.", "p(b) :- q(a).") -- Fulfills rule 1
   , ("p(X) :- !, X = a.", "p(a) :- !.") -- Fulfills rule 1
   , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", "p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs).") -- Fulfills rule 1
   , ("p(X) :- X = b, q(a).", "p(b) :- q(a).") -- Fulfills rule 1
