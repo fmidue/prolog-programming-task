@@ -35,7 +35,7 @@ inliningChecker c@(Clause clauseHead goals) =
 
     information = collectInformation goals Map.empty [] []
     fixedClause rhs sub =
-      Clause (apply [sub] clauseHead) $ map (apply [sub]) rhs
+      Clause (apply [sub] clauseHead) $ map (apply [sub]) $ reverse rhs
 inliningChecker _ = []
 
 collectInformation
@@ -46,11 +46,11 @@ collectInformation
   -> [(Term, Map String Int, Map String Int, [Term])]
 collectInformation [] _ _ us = us
 collectInformation (t : ts) vs goals us =
-  collectInformation ts (addVarsFromT vs) (goals ++ [t]) newUs
+  collectInformation ts (addVarsFromT vs) (t : goals) newUs
   where
     addVarsFromT = Map.unionWith (+) (countVariables t)
     newUs =
-      map (\(t', p, s, goals') -> (t', p, addVarsFromT s, goals' ++ [t])) us ++ case t of
+      map (\(t', p, s, goals') -> (t', p, addVarsFromT s, t : goals')) us ++ case t of
         Struct "=" [l, r]
           | Map.disjoint (countVariables l) (countVariables r) ->
               [(t, vs, Map.empty, goals)]
