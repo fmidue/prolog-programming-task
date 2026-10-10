@@ -41,11 +41,11 @@ collectInformation
   -> [(Term, Map String Int, Map String Int)]
   -> [(Term, Map String Int, Map String Int)]
 collectInformation [] _ us = us
-collectInformation (t : ts) vs us = collectInformation ts (addTVars vs) newUs
+collectInformation (t : ts) vs us = collectInformation ts (addVarsFromT vs) newUs
   where
-    addTVars = Map.unionWith (+) (countVariables t)
+    addVarsFromT = Map.unionWith (+) (countVariables t)
     newUs =
-      map (\(t', p, s) -> (t', p, addTVars s)) us ++ case t of
+      map (\(t', p, s) -> (t', p, addVarsFromT s)) us ++ case t of
         Struct "=" [l, r]
           | Map.disjoint (countVariables l) (countVariables r) ->
               [(t, vs, Map.empty)]
