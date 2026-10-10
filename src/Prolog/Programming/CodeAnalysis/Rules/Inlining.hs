@@ -1,12 +1,16 @@
-{-# LANGUAGE TupleSections #-}
-
 module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
-import Control.Applicative ((<|>))
 import Data.List (delete)
 import Data.Map (Map)
-import qualified Data.Map as Map (empty, intersection, lookup, null, unionWith)
-import Data.Maybe (fromJust, fromMaybe, isNothing, mapMaybe)
+import qualified Data.Map as Map (
+  disjoint,
+  empty,
+  findWithDefault,
+  lookup,
+  notMember,
+  unionWith,
+ )
+import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -43,7 +47,7 @@ collectInformation (t : ts) vs us = collectInformation ts (addTVars vs) newUs
     newUs =
       map (\(t', p, s) -> (t', p, addTVars s)) us ++ case t of
         Struct "=" [l, r]
-          | Map.null $ Map.intersection (countVariables l) (countVariables r) ->
+          | Map.disjoint (countVariables l) (countVariables r) ->
               [(t, vs, Map.empty)]
         _ -> []
 
@@ -55,7 +59,9 @@ unification totalVars (Struct "=" [left, right]) = pick (var left) (var right)
 
     pick :: Maybe String -> Maybe String -> (String, Term)
     pick (Just l) (Just r) = if Map.lookup l totalVars < Map.lookup r totalVars then (l, right) else (r, left)
-    pick ml mr = fromJust (((,right) <$> ml) <|> (,left) <$> mr)
+    pick (Just l) Nothing = (l, right)
+    pick Nothing (Just r) = (r, left)
+    pick Nothing Nothing = error "Unification has no variable side"
 unification _ _ = error "Only works on unification"
 
 checkApplicable
@@ -66,12 +72,12 @@ checkApplicable
 checkApplicable totalVars headVars (t, prefixVars, suffixVars)
   | Map.lookup uv headVars == Just 1 =
       -- rule 1
-      if Map.null (Map.intersection tVars prefixVars) && isNothing (Map.lookup uv suffixVars)
+      if Map.disjoint tVars prefixVars && Map.notMember uv suffixVars
         then Just (VariableName 0 uv, ut)
         else Nothing
-  | isNothing (Map.lookup uv headVars) =
+  | Map.notMember uv headVars =
       -- rule 2
-      if isNothing (Map.lookup uv prefixVars) && 1 >= fromMaybe 0 (Map.lookup uv suffixVars)
+      if Map.notMember uv prefixVars && 1 >= Map.findWithDefault 0 uv suffixVars
         then Just (VariableName 0 uv, ut)
         else Nothing
   | otherwise = Nothing
