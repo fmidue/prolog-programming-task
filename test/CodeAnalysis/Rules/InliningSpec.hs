@@ -19,28 +19,29 @@ caConfig =
       InliningConfig $ Just $ WithSeverity Hint ()
     }
 
-detectsPatternMatches :: [(String, String)]
+detectsPatternMatches :: [(String, [String])]
 detectsPatternMatches =
-  [ ("p(Xs,X) :- Xs = [X,_].", "p([X,_], X).") -- Fulfills rule 1
-  , ("p([X]) :- X = a.", "p([a]).") -- Fulfills rule 1
-  , ("p(X) :- X = leaf.", "p(leaf).") -- Fulfills rule 1
-  , ("p(X) :- leaf = X.", "p(leaf).") -- Fulfills rule 1
+  [ ("p(Xs,X) :- Xs = [X,_].", ["p([X,_], X)."]) -- Fulfills rule 1
+  , ("p([X]) :- X = a.", ["p([a])."]) -- Fulfills rule 1
+  , ("p(X) :- X = leaf.", ["p(leaf)."]) -- Fulfills rule 1
+  , ("p(X) :- leaf = X.", ["p(leaf)."]) -- Fulfills rule 1
   ,
     ( "p(X) :- X = node(L,V,R), q(V), p(L), p(R)." -- Fulfills rule 1
-    , "p(node(L, V, R)) :- q(V), p(L), p(R)."
+    , ["p(node(L, V, R)) :- q(V), p(L), p(R)."]
     )
-  , ("p(X) :- X = a, !.", "p(a) :- !.") -- Fulfills rule 1
-  , ("p(X,Y) :- X = Y.", "p(X, X).") -- Fulfills rule 1
-  , ("p(X) :- q(a), X = b.", "p(b) :- q(a).") -- Fulfills rule 1
-  , ("p(X) :- !, X = a.", "p(a) :- !.") -- Fulfills rule 1
-  , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", "p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs).") -- Fulfills rule 1
-  , ("p(X) :- X = b, q(a).", "p(b) :- q(a).") -- Fulfills rule 1
-  , ("p(X) :- X = [Y|Ys], q(Y), qs(Ys).", "p([Y|Ys]) :- q(Y), qs(Ys).") -- Fulfills rule 1
-  , ("p(X,X,Y) :- X = Y.", "p(X, X, X).") -- Fulfills rule 1
-  , ("p :- r, X = a, q(X, b).", "p :- r, q(a, b).") -- Fulfills rule 2
-  , ("p :- r, a = X, q(X, b).", "p :- r, q(a, b).") -- Fulfills rule 2
-  , ("p(X) :- X = aVeryLongAtomName.", "p(aVeryLongAtomName).") -- Fulfills rule 1
-  , ("p(X,Y) :- Y = [Z], q(Y), X = a.", "p(a, Y) :- Y = [Z], q(Y).") -- Fulfills rule 1
+  , ("p(X) :- X = a, !.", ["p(a) :- !."]) -- Fulfills rule 1
+  , ("p(X,Y) :- X = Y.", ["p(X, X)."]) -- Fulfills rule 1
+  , ("p(X) :- q(a), X = b.", ["p(b) :- q(a)."]) -- Fulfills rule 1
+  , ("p(X) :- !, X = a.", ["p(a) :- !."]) -- Fulfills rule 1
+  , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", ["p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs)."]) -- Fulfills rule 1
+  , ("p(X) :- X = b, q(a).", ["p(b) :- q(a)."]) -- Fulfills rule 1
+  , ("p(X) :- X = [Y|Ys], q(Y), qs(Ys).", ["p([Y|Ys]) :- q(Y), qs(Ys)."]) -- Fulfills rule 1
+  , ("p(X,X,Y) :- X = Y.", ["p(X, X, X)."]) -- Fulfills rule 1
+  , ("p :- r, X = a, q(X, b).", ["p :- r, q(a, b)."]) -- Fulfills rule 2
+  , ("p :- r, a = X, q(X, b).", ["p :- r, q(a, b)."]) -- Fulfills rule 2
+  , ("p(X) :- X = aVeryLongAtomName.", ["p(aVeryLongAtomName)."]) -- Fulfills rule 1
+  , ("p(X,Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."]) -- Fulfills rule 1
+  , ("p(X,Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
   ]
 
 detectionFree :: [String]
@@ -69,14 +70,17 @@ detectionFree =
 spec :: Spec
 spec = describe "Inlining" $ do
   describe "Should detect terms that can be inlined into the clause head" $
-    forM_ detectsPatternMatches $ \(programCode, expectedFixedClause) ->
+    forM_ detectsPatternMatches $ \(programCode, expectedFixedClauses) ->
       it programCode $
         shouldDetectProblemsStrict
           caConfig
-          [ \display ->
-              isInfixOf "as a goal that can also directly be applied to the clause." display
-                && isInfixOf expectedFixedClause display
-          ]
+          ( map
+              ( \fixedClause display ->
+                  isInfixOf "as a goal that can also directly be applied to the clause." display
+                    && isInfixOf fixedClause display
+              )
+              expectedFixedClauses
+          )
           programCode
   describe "Should not detect unsafe or unrelated equalities" $
     forM_ detectionFree $ \programCode ->
