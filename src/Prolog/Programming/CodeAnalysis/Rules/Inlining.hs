@@ -1,59 +1,100 @@
+{-# LANGUAGE TupleSections #-}
+
 module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
-import qualified Data.Map as Map (Map, keys, lookup)
-import Data.Maybe (mapMaybe)
+import Control.Applicative ((<|>))
+import Data.List (delete)
+import Data.Map (Map)
+import qualified Data.Map as Map (empty, intersection, lookup, null, unionWith)
+import Data.Maybe (fromJust, fromMaybe, isNothing, mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
+  Substitution,
   Term (..),
   VariableName (VariableName),
   apply,
-  unify,
  )
 import Prolog.Programming.CodeAnalysis.Helper (countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
 inliningChecker :: ClauseRule
-inliningChecker clause@(Clause (Struct _ args) rhs@(term : _)) =
-  [toProblem clause term | canBeInlinedToClauseHead lhsVariables rhsVariableCounts term]
+inliningChecker c@(Clause clauseHead goals) =
+  mapMaybe
+    (\i@(t, _, _) -> toProblem c t <$> checkApplicable totalVars headVars i)
+    information
   where
-    lhsVariables = Map.keys $ countVariables args
-    rhsVariableCounts = countVariables rhs
+    totalVars = countVariables c
+    headVars = countVariables clauseHead
+
+    information = collectInformation goals Map.empty []
 inliningChecker _ = []
 
-canBeInlinedToClauseHead :: [String] -> Map.Map String Int -> Term -> Bool
-canBeInlinedToClauseHead lhsVariables rhsVariableCounts (Struct "=" args) =
-  case filter (`elem` lhsVariables) $ mapMaybe variableName args of
-    variable : _ -> Map.lookup variable rhsVariableCounts == Just 1
-    [] -> False
-canBeInlinedToClauseHead _ _ _ = False
+collectInformation
+  :: [Term]
+  -> Map String Int
+  -> [(Term, Map String Int, Map String Int)]
+  -> [(Term, Map String Int, Map String Int)]
+collectInformation [] _ us = us
+collectInformation (t : ts) vs us = collectInformation ts (addTVars vs) newUs
+  where
+    addTVars = Map.unionWith (+) (countVariables t)
+    newUs =
+      map (\(t', p, s) -> (t', p, addTVars s)) us ++ case t of
+        Struct "=" [l, r]
+          | Map.null $ Map.intersection (countVariables l) (countVariables r) ->
+              [(t, vs, Map.empty)]
+        _ -> []
 
-variableName :: Term -> Maybe String
-variableName (Var (VariableName _ name)) = Just name
-variableName _ = Nothing
+unification :: Map String Int -> Term -> (String, Term)
+unification totalVars (Struct "=" [left, right]) = pick (var left) (var right)
+  where
+    var (Var (VariableName _ name)) = Just name
+    var _ = Nothing
 
-toProblem :: Clause -> Term -> Problem
-toProblem clause term =
+    pick :: Maybe String -> Maybe String -> (String, Term)
+    pick (Just l) (Just r) = if Map.lookup l totalVars < Map.lookup r totalVars then (l, right) else (r, left)
+    pick ml mr = fromJust (((,right) <$> ml) <|> (,left) <$> mr)
+unification _ _ = error "Only works on unification"
+
+checkApplicable
+  :: Map String Int
+  -> Map String Int
+  -> (Term, Map String Int, Map String Int)
+  -> Maybe Substitution
+checkApplicable totalVars headVars (t, prefixVars, suffixVars)
+  | Map.lookup uv headVars == Just 1 =
+      -- rule 1
+      if Map.null (Map.intersection tVars prefixVars) && isNothing (Map.lookup uv suffixVars)
+        then Just (VariableName 0 uv, ut)
+        else Nothing
+  | isNothing (Map.lookup uv headVars) =
+      -- rule 2
+      if isNothing (Map.lookup uv prefixVars) && 1 >= fromMaybe 0 (Map.lookup uv suffixVars)
+        then Just (VariableName 0 uv, ut)
+        else Nothing
+  | otherwise = Nothing
+  where
+    (uv, ut) = unification totalVars t
+    tVars = countVariables t
+
+toProblem :: Clause -> Term -> Substitution -> Problem
+toProblem clause term sub =
   Problem {
     problemDisplay =
       vsep
         [ string $ pack "Your clause"
         , indent 2 $ string $ pack $ show clause
-        , string $ pack "uses the term"
+        , string $ pack "uses the unification"
         , indent 2 $ string $ pack $ show term
-        , string $ pack "as its first goal which can be inlined into the clause head."
-        , string $ pack "That would result in:"
-        , indent 2 $ string $ pack $ show $ inlinedClause clause term
+        , string $ pack "as a goal that can also directly be applied to the clause."
+        , string $ pack "Doing that would result in:"
+        , indent 2 $ string $ pack $ show $ inlinedClause clause term sub
         ]
     }
 
-inlinedClause :: Clause -> Term -> Clause
-inlinedClause (Clause headTerm (_ : rhs)) (Struct "=" [left, right]) =
-  case unify left right of
-    Just unifier ->
-      Clause
-        (apply unifier headTerm)
-        (map (apply unifier) rhs)
-    Nothing -> error "Inlining equality should always be unifiable."
-inlinedClause _ _ = error "Inlining term should be an equality."
+inlinedClause :: Clause -> Term -> Substitution -> Clause
+inlinedClause (Clause headTerm rhs) t sub =
+  Clause (apply [sub] headTerm) $ map (apply [sub]) $ delete t rhs
+inlinedClause _ _ _ = error "Inlining term should be an equality."

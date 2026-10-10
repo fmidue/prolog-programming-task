@@ -73,7 +73,7 @@ spec = describe "Inlining" $ do
         shouldDetectProblemsStrict
           caConfig
           [ \display ->
-              isInfixOf "as its first goal which can be inlined into the clause head." display
+              isInfixOf "as a goal that can also directly be applied to the clause." display
                 && isInfixOf expectedFixedClause display
           ]
           programCode
