@@ -42,6 +42,7 @@ detectsPatternMatches =
   , ("p(X) :- X = aVeryLongAtomName.", ["p(aVeryLongAtomName)."]) -- Fulfills rule 1
   , ("p(X,Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."]) -- Fulfills rule 1
   , ("p(X,Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
+  , ("p(X,Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
   ]
 
 detectionFree :: [String]
