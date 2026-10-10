@@ -63,6 +63,7 @@ detectionFree =
   , "p(X, Y) :- X = a, q(X,Y)." -- X used after unification
   , "p :- r, X = a, q(X), d(X)." -- X used twice after unification
   , "p(X,X) :- X = f(g(c))." -- X used twice in head
+  , "p(Y) :- X = f(Y)." -- Y occurs in head
   ]
 
 spec :: Spec

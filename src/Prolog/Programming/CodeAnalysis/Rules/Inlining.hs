@@ -77,7 +77,7 @@ checkApplicable totalVars headVars (t, prefixVars, suffixVars)
         else Nothing
   | Map.notMember uv headVars =
       -- rule 2
-      if Map.notMember uv prefixVars && 1 >= Map.findWithDefault 0 uv suffixVars
+      if Map.notMember uv prefixVars && 1 >= Map.findWithDefault 0 uv suffixVars && Map.disjoint tVars headVars
         then Just (VariableName 0 uv, ut)
         else Nothing
   | otherwise = Nothing
