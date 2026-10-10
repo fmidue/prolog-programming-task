@@ -1,6 +1,5 @@
 module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
-import Data.List (delete)
 import Data.Map (Map)
 import qualified Data.Map as Map (
   disjoint,
@@ -26,29 +25,35 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker c@(Clause clauseHead goals) =
   mapMaybe
-    (\i@(t, _, _) -> toProblem c t <$> checkApplicable totalVars headVars i)
+    ( \i@(term, _, _, goals') ->
+        toProblem c term . fixedClause goals' <$> checkApplicable totalVars headVars i
+    )
     information
   where
     totalVars = countVariables c
     headVars = countVariables clauseHead
 
-    information = collectInformation goals Map.empty []
+    information = collectInformation goals Map.empty [] []
+    fixedClause rhs sub =
+      Clause (apply [sub] clauseHead) $ map (apply [sub]) rhs
 inliningChecker _ = []
 
 collectInformation
   :: [Term]
   -> Map String Int
-  -> [(Term, Map String Int, Map String Int)]
-  -> [(Term, Map String Int, Map String Int)]
-collectInformation [] _ us = us
-collectInformation (t : ts) vs us = collectInformation ts (addVarsFromT vs) newUs
+  -> [Term]
+  -> [(Term, Map String Int, Map String Int, [Term])]
+  -> [(Term, Map String Int, Map String Int, [Term])]
+collectInformation [] _ _ us = us
+collectInformation (t : ts) vs goals us =
+  collectInformation ts (addVarsFromT vs) (goals ++ [t]) newUs
   where
     addVarsFromT = Map.unionWith (+) (countVariables t)
     newUs =
-      map (\(t', p, s) -> (t', p, addVarsFromT s)) us ++ case t of
+      map (\(t', p, s, goals') -> (t', p, addVarsFromT s, goals' ++ [t])) us ++ case t of
         Struct "=" [l, r]
           | Map.disjoint (countVariables l) (countVariables r) ->
-              [(t, vs, Map.empty)]
+              [(t, vs, Map.empty, goals)]
         _ -> []
 
 unification :: Map String Int -> Term -> (String, Term)
@@ -67,9 +72,9 @@ unification _ _ = error "Only works on unification"
 checkApplicable
   :: Map String Int
   -> Map String Int
-  -> (Term, Map String Int, Map String Int)
+  -> (Term, Map String Int, Map String Int, [Term])
   -> Maybe Substitution
-checkApplicable totalVars headVars (t, prefixVars, suffixVars)
+checkApplicable totalVars headVars (t, prefixVars, suffixVars, _)
   | Map.lookup uv headVars == Just 1 =
       -- rule 1
       if Map.disjoint tVars prefixVars && Map.notMember uv suffixVars
@@ -85,22 +90,17 @@ checkApplicable totalVars headVars (t, prefixVars, suffixVars)
     (uv, ut) = unification totalVars t
     tVars = countVariables t
 
-toProblem :: Clause -> Term -> Substitution -> Problem
-toProblem clause term sub =
+toProblem :: Clause -> Term -> Clause -> Problem
+toProblem originalClause term fixedClause =
   Problem {
     problemDisplay =
       vsep
         [ string $ pack "Your clause"
-        , indent 2 $ string $ pack $ show clause
+        , indent 2 $ string $ pack $ show originalClause
         , string $ pack "uses the unification"
         , indent 2 $ string $ pack $ show term
         , string $ pack "as a goal that can also directly be applied to the clause."
         , string $ pack "Doing that would result in:"
-        , indent 2 $ string $ pack $ show $ inlinedClause clause term sub
+        , indent 2 $ string $ pack $ show fixedClause
         ]
     }
-
-inlinedClause :: Clause -> Term -> Substitution -> Clause
-inlinedClause (Clause headTerm rhs) t sub =
-  Clause (apply [sub] headTerm) $ map (apply [sub]) $ delete t rhs
-inlinedClause _ _ _ = error "Inlining term should be an equality."
