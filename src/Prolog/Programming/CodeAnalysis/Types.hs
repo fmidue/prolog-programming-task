@@ -10,6 +10,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   ProgramRule,
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig,
+  InliningConfig (..),
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
@@ -64,6 +65,9 @@ type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Generic, Reader, Show, ToDoc)
 
+newtype InliningConfig = InliningConfig (CodeAnalysisRuleConfig ())
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
 newtype AdditionalMessage = AdditionalMessage {additionalMessage :: Maybe String}
   deriving (Data, Generic, Reader, Show, ToDoc)
 
@@ -100,6 +104,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , recursion :: RecursionConfig
   -- | Configuration for forbiddenPredicates rule
   , forbiddenPredicates :: ForbiddenPredicatesConfig
+  -- | Configuration for inlining rule
+  , inlining :: InliningConfig
   }
   deriving (Data, Generic, Show, Reader, ToDoc)
 
