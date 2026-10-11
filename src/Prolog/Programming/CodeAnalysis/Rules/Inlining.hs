@@ -50,7 +50,7 @@ collectInformation
   -> Map String Int
   -- ^ Number of occurrences of each variable in the goals visited so far.
   -> [Term]
-  -- ^ Goals visited so far.
+  -- ^ Goals visited so far (in reversed order).
   -> [(Term, Map String Int, Map String Int, [Term])]
   {- ^ Candidate unifications collected so far.  Each tuple contains the
   unification, the variable counts in its prefix and suffix, and the goals
