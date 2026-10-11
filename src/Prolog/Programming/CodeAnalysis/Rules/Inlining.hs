@@ -10,7 +10,6 @@ import qualified Data.Map as Map (
   notMember,
   unionWith,
  )
-import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -25,10 +24,10 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker c@(Clause clauseHead goals) =
   map
-    ( \((_, l, r), replacement, _, goals') ->
+    ( \((_, l, r), replacement, goals') ->
         toProblem c (Struct "=" [l, r]) $ fixedClause goals' replacement
     )
-    $ collectUnifications totalVars headVars goals Map.empty [] []
+    $ collectUnifications totalVars headVars goals
   where
     totalVars = countVariables c
     headVars = countVariables clauseHead
@@ -44,8 +43,8 @@ data Rule = One | Two deriving Eq
 
 For each unification whose two sides have disjoint variables and which satisfies
 one of the inlining rules, the result records the rule matched, left and right
-side of the unification, the variable-occurrence counts in the goals after it,
-and the goals besides it (in reversed order).
+side of the unification, the selected variable and replacement, and the goals
+besides it (in reversed order).
 -}
 collectUnifications
   :: Map String Int
@@ -54,57 +53,57 @@ collectUnifications
   -- ^ Number of occurrences of each variable in the clause head.
   -> [Term]
   -- ^ Goals that have not been visited yet.
-  -> Map String Int
-  -- ^ Number of occurrences of each variable in the goals visited so far.
-  -> [Term]
-  -- ^ Goals visited so far (in reversed).
-  -> [((Rule, Term, Term), (String, Term), Map String Int, [Term])]
-  {- ^ Candidate unifications collected so far.  Each tuple contains the candidate rule, the
-  left and right side of the unification, the selected variable and replacement, the variable
-  counts in its suffix, and the goals besides the unification (in reversed order).
-  -}
-  -> [((Rule, Term, Term), (String, Term), Map String Int, [Term])]
-  {- ^ Unifications together with their prefix and suffix
-  information.
-  -}
-collectUnifications _ _ [] _ _ us = mapMaybe discardOrUpdate us
+  -> [((Rule, Term, Term), (String, Term), [Term])]
+  -- ^ Unifications together with the goals besides them, in reversed order.
+collectUnifications totalVars headVars goals =
+  validate (reverse $ collectCandidates goals Map.empty []) Map.empty id
   where
-    discardOrUpdate i@((rule, _, _), (uv, _), suffixVars, _) = do
-      let uvCountInSuffix = Map.findWithDefault 0 uv suffixVars
+    collectCandidates [] _ _ = []
+    collectCandidates (t : ts) vs prefix =
+      (t, tVars, candidate) : collectCandidates ts (Map.unionWith (+) tVars vs) (t : prefix)
+      where
+        tVars = countVariables t
+        candidate =
+          case t of
+            Struct "=" [l, r] -> do
+              (rule, replacement) <- satisfiesRuleAtOccurrence l r
+              pure ((rule, l, r), replacement, prefix)
+            _ -> Nothing
 
-      guard $ (if rule == One then 0 else 1) == uvCountInSuffix
+        satisfiesRuleAtOccurrence l r = do
+          let
+            lVars = countVariables l
+            rVars = countVariables r
+          replacement@(uv, _ut) <- unification totalVars l r
+          guard $ Map.disjoint lVars rVars
 
-      Just i
-collectUnifications totalVars headVars (t : ts) vs goals us =
-  collectUnifications totalVars headVars ts (addVarsFromT vs) (t : goals) newUs'
-  where
-    addVarsFromT = Map.unionWith (+) (countVariables t)
-    newUs =
-      case t of
-        Struct "=" [l, r] -> case satisfiesRuleAtOccurrence l r of
-          Just (rule, replacement) -> [((rule, l, r), replacement, Map.empty, goals)]
-          Nothing -> []
-        _ -> []
-    newUs' = newUs ++ map (\(t', replacement, s, goals') -> (t', replacement, addVarsFromT s, t : goals')) us
+          case Map.disjoint tVars headVars of
+            True -> do
+              guard $ Map.notMember uv vs
+              Just (Two, replacement)
+            False ->
+              if Map.lookup uv headVars == Just 1
+                then do
+                  guard $ Map.disjoint tVars vs
+                  Just (One, replacement)
+                else Nothing
 
-    satisfiesRuleAtOccurrence l r = do
+    validate [] _ _ = []
+    validate ((t, tVars, candidate) : rest) suffix prependGoals =
       let
-        lVars = countVariables l
-        rVars = countVariables r
-        tVars = Map.unionWith (+) lVars rVars
-      replacement@(uv, _ut) <- unification totalVars l r
-      guard $ Map.disjoint lVars rVars
+        valid = do
+          ((rule, l, r), replacement@(uv, _), prefix) <- candidate
+          let uvCountInSuffix = Map.findWithDefault 0 uv suffix
 
-      case Map.disjoint tVars headVars of
-        True -> do
-          guard $ Map.notMember uv vs
-          Just (Two, replacement)
-        False ->
-          if Map.lookup uv headVars == Just 1
-            then do
-              guard $ Map.disjoint tVars vs
-              Just (One, replacement)
-            else Nothing
+          guard $ (if rule == One then 0 else 1) == uvCountInSuffix
+
+          pure ((rule, l, r), replacement, prependGoals prefix)
+        suffix' = Map.unionWith (+) tVars suffix
+        prependGoals' = prependGoals . (t :)
+      in
+        case valid of
+          Just result -> result : validate rest suffix' prependGoals'
+          Nothing -> validate rest suffix' prependGoals'
 
 {- | Choose the variable side of a unification and the term to substitute for
 it.
