@@ -24,17 +24,15 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
 inliningChecker :: ClauseRule
 inliningChecker c@(Clause clauseHead goals) =
-  mapMaybe
-    ( \((_, l, r), _, goals') -> do
-        replacement <- unification totalVars l r
-        pure $ toProblem c (Struct "=" [l, r]) $ fixedClause goals' replacement
+  map
+    ( \((_, l, r), replacement, _, goals') ->
+        toProblem c (Struct "=" [l, r]) $ fixedClause goals' replacement
     )
-    information
+    $ collectUnifications totalVars headVars goals Map.empty [] []
   where
     totalVars = countVariables c
     headVars = countVariables clauseHead
 
-    information = collectUnifications headVars goals Map.empty [] []
     fixedClause rhs (name, replacement) =
       let sub = (VariableName 0 name, replacement)
       in Clause (apply [sub] clauseHead) $ map (apply [sub]) $ reverse rhs
@@ -51,6 +49,8 @@ and the goals besides it (in reversed order).
 -}
 collectUnifications
   :: Map String Int
+  -- ^ Number of occurrences of each variable in the whole clause.
+  -> Map String Int
   -- ^ Number of occurrences of each variable in the clause head.
   -> [Term]
   -- ^ Goals that have not been visited yet.
@@ -58,53 +58,52 @@ collectUnifications
   -- ^ Number of occurrences of each variable in the goals visited so far.
   -> [Term]
   -- ^ Goals visited so far (in reversed).
-  -> [((Rule, Term, Term), Map String Int, [Term])]
+  -> [((Rule, Term, Term), (String, Term), Map String Int, [Term])]
   {- ^ Candidate unifications collected so far.  Each tuple contains the candidate rule, the
-  left and right side of the unification, the variable counts in its suffix, and the goals
-  besides the unification (in reversed order).
+  left and right side of the unification, the selected variable and replacement, the variable
+  counts in its suffix, and the goals besides the unification (in reversed order).
   -}
-  -> [((Rule, Term, Term), Map String Int, [Term])]
+  -> [((Rule, Term, Term), (String, Term), Map String Int, [Term])]
   {- ^ Unifications together with their prefix and suffix
   information.
   -}
-collectUnifications _ [] vs _ us = mapMaybe discardOrUpdate us
+collectUnifications _ _ [] _ _ us = mapMaybe discardOrUpdate us
   where
-    discardOrUpdate i@((rule, l, r), suffixVars, _) = do
-      (uv, _) <- unification vs l r
+    discardOrUpdate i@((rule, _, _), (uv, _), suffixVars, _) = do
       let uvCountInSuffix = Map.findWithDefault 0 uv suffixVars
 
       guard $ (if rule == One then 0 else 1) == uvCountInSuffix
 
       Just i
-collectUnifications headVars (t : ts) vs goals us =
-  collectUnifications headVars ts (addVarsFromT vs) (t : goals) newUs'
+collectUnifications totalVars headVars (t : ts) vs goals us =
+  collectUnifications totalVars headVars ts (addVarsFromT vs) (t : goals) newUs'
   where
     addVarsFromT = Map.unionWith (+) (countVariables t)
     newUs =
       case t of
         Struct "=" [l, r] -> case satisfiesRuleAtOccurrence l r of
-          Just rule -> [((rule, l, r), Map.empty, goals)]
+          Just (rule, replacement) -> [((rule, l, r), replacement, Map.empty, goals)]
           Nothing -> []
         _ -> []
-    newUs' = newUs ++ map (\(t', s, goals') -> (t', addVarsFromT s, t : goals')) us
+    newUs' = newUs ++ map (\(t', replacement, s, goals') -> (t', replacement, addVarsFromT s, t : goals')) us
 
     satisfiesRuleAtOccurrence l r = do
       let
         lVars = countVariables l
         rVars = countVariables r
         tVars = Map.unionWith (+) lVars rVars
-      (uv, _ut) <- unification vs l r
+      replacement@(uv, _ut) <- unification totalVars l r
       guard $ Map.disjoint lVars rVars
 
       case Map.disjoint tVars headVars of
         True -> do
           guard $ Map.notMember uv vs
-          Just Two
+          Just (Two, replacement)
         False ->
           if Map.lookup uv headVars == Just 1
             then do
               guard $ Map.disjoint tVars vs
-              Just One
+              Just (One, replacement)
             else Nothing
 
 {- | Choose the variable side of a unification and the term to substitute for
