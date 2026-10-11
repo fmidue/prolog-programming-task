@@ -69,6 +69,7 @@ detectionFree =
   , "p(X,X) :- X = f(g(c))." -- X used twice in head
   , "p(Y) :- X = f(Y)." -- Y occurs in head
   , "p(X) :- a = b, q(X)."
+  , "p :- X = a."
   ]
 
 spec :: Spec
