@@ -54,7 +54,7 @@ collectInformation
   -> [(Term, Map String Int, Map String Int, [Term])]
   {- ^ Candidate unifications collected so far.  Each tuple contains the
   unification, the variable counts in its prefix and suffix, and the goals
-  in its prefix (in reversed order).
+  before and after the unification (in reversed order).
   -}
   -> [(Term, Map String Int, Map String Int, [Term])]
   {- ^ Candidate unifications together with their prefix and suffix
