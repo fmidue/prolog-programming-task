@@ -44,9 +44,10 @@ data Rule = One | Two deriving Eq
 
 {- | Collect unifications that can be inlined.
 
-For each unification whose two sides have disjoint variables, the result
-records the rule matched, left and right side of the unification, the variable-occurrence counts
-in the goals after it, and the goals besides it (in reversed order).
+For each unification whose two sides have disjoint variables and which satisfies
+one of the inlining rules, the result records the rule matched, left and right
+side of the unification, the variable-occurrence counts in the goals after it,
+and the goals besides it (in reversed order).
 -}
 collectUnifications
   :: Map String Int
@@ -109,8 +110,9 @@ collectUnifications headVars (t : ts) vs goals us =
 it.
 
 If both sides are variables, the variable with fewer total occurrences is
-selected.  This keeps the substitution as small as possible while
-preserving the unification. Returns 'Nothing' when both sides are not variables.
+selected; if their counts are equal, the right-hand variable is selected.
+This keeps the substitution as small as possible while preserving the
+unification. Returns 'Nothing' when neither side is a variable.
 -}
 unification
   :: Map String Int
