@@ -44,6 +44,7 @@ detectsPatternMatches =
   , ("p(X,Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
   , ("p(X,Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
   , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
+  , ("p(X,Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
   ]
 
 detectionFree :: [String]
