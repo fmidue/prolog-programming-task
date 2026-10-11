@@ -71,9 +71,11 @@ collectUnifications _ [] vs _ us = mapMaybe discardOrUpdate us
       let unificationResult = unification vs l r
       guard $ isJust unificationResult
       let (uv, _) = fromJust unificationResult
-      let maxAllowed = if rule == One then 0 else 1
+      let expected = if rule == One then 0 else 1
 
-      guard $ maxAllowed >= Map.findWithDefault 0 uv suffixVars
+      let uvCountInSuffix = Map.findWithDefault 0 uv suffixVars
+
+      guard $ expected == uvCountInSuffix
 
       Just i
 collectUnifications headVars (t : ts) vs goals us =
