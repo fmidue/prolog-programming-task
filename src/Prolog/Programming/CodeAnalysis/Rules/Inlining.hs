@@ -10,7 +10,7 @@ import qualified Data.Map as Map (
   notMember,
   unionWith,
  )
-import Data.Maybe (fromJust, isJust, mapMaybe)
+import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -24,9 +24,10 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
 inliningChecker :: ClauseRule
 inliningChecker c@(Clause clauseHead goals) =
-  map
-    ( \((_, l, r), _, goals') ->
-        toProblem c (Struct "=" [l, r]) $ fixedClause goals' (fromJust $ unification totalVars l r)
+  mapMaybe
+    ( \((_, l, r), _, goals') -> do
+        replacement <- unification totalVars l r
+        pure $ toProblem c (Struct "=" [l, r]) $ fixedClause goals' replacement
     )
     information
   where
@@ -68,9 +69,7 @@ collectUnifications
 collectUnifications _ [] vs _ us = mapMaybe discardOrUpdate us
   where
     discardOrUpdate i@((rule, l, r), suffixVars, _) = do
-      let unificationResult = unification vs l r
-      guard $ isJust unificationResult
-      let (uv, _) = fromJust unificationResult
+      (uv, _) <- unification vs l r
       let expected = if rule == One then 0 else 1
 
       let uvCountInSuffix = Map.findWithDefault 0 uv suffixVars
@@ -91,12 +90,9 @@ collectUnifications headVars (t : ts) vs goals us =
     newUs' = newUs ++ map (\(t', s, goals') -> (t', addVarsFromT s, t : goals')) us
 
     satisfiesRuleAtOccurrence l r = do
-      let unificationResult = unification vs l r
       let tVars = countVariables t
-      guard $ isJust unificationResult
+      (uv, _ut) <- unification vs l r
       guard $ Map.disjoint (countVariables l) (countVariables r)
-
-      let (uv, _ut) = fromJust unificationResult
 
       case Map.disjoint tVars headVars of
         True -> do
