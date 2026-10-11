@@ -9,7 +9,7 @@ import qualified Data.Map as Map (
   notMember,
   unionWith,
  )
-import Data.Maybe (mapMaybe)
+import Data.Maybe (fromJust, isJust, mapMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -25,8 +25,8 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker c@(Clause clauseHead goals) =
   mapMaybe
-    ( \i@(term, _, _, goals') ->
-        toProblem c term . fixedClause goals' <$> checkApplicable totalVars headVars i
+    ( \i@((l, r), _, _, goals') ->
+        toProblem c (Struct "=" [l, r]) . fixedClause goals' <$> checkApplicable totalVars headVars i
     )
     information
   where
@@ -51,12 +51,12 @@ collectInformation
   -- ^ Number of occurrences of each variable in the goals visited so far.
   -> [Term]
   -- ^ Goals visited so far (in reversed).
-  -> [(Term, Map String Int, Map String Int, [Term])]
+  -> [((Term, Term), Map String Int, Map String Int, [Term])]
   {- ^ Candidate unifications collected so far.  Each tuple contains the
-  unification, the variable counts in its prefix and suffix, and the goals
+  left and right side of the unification, the variable counts in its prefix and suffix, and the goals
   before and after the unification (in reversed order).
   -}
-  -> [(Term, Map String Int, Map String Int, [Term])]
+  -> [((Term, Term), Map String Int, Map String Int, [Term])]
   {- ^ Candidate unifications together with their prefix and suffix
   information.
   -}
@@ -68,8 +68,8 @@ collectInformation (t : ts) vs goals us =
     newUs =
       case t of
         Struct "=" [l, r]
-          | Map.disjoint (countVariables l) (countVariables r) ->
-              [(t, vs, Map.empty, goals)]
+          | Map.disjoint (countVariables l) (countVariables r) && isJust (unification vs l r) ->
+              [((l, r), vs, Map.empty, goals)]
         _ -> []
     newUs' = newUs ++ map (\(t', p, s, goals') -> (t', p, addVarsFromT s, t : goals')) us
 
@@ -78,26 +78,27 @@ it.
 
 If both sides are variables, the variable with fewer total occurrences is
 selected.  This keeps the substitution as small as possible while
-preserving the unification.
+preserving the unification. Returns 'Nothing' when both sides are not variables.
 -}
 unification
   :: Map String Int
   -- ^ Number of occurrences of each variable in the whole clause.
   -> Term
-  -- ^ Unification from which to select a variable and replacement term.
-  -> (String, Term)
+  -- ^ Left side of unification to select from
+  -> Term
+  -- ^ Right side of unification to select from
+  -> Maybe (String, Term)
   -- ^ The selected variable name and the term that replaces it.
-unification totalVars (Struct "=" [left, right]) = pick (var left) (var right)
+unification totalVars left right = pick (var left) (var right)
   where
     var (Var (VariableName _ name)) = Just name
     var _ = Nothing
 
-    pick :: Maybe String -> Maybe String -> (String, Term)
-    pick (Just l) (Just r) = if Map.lookup l totalVars < Map.lookup r totalVars then (l, right) else (r, left)
-    pick (Just l) Nothing = (l, right)
-    pick Nothing (Just r) = (r, left)
-    pick Nothing Nothing = error "Unification has no variable side"
-unification _ _ = error "Only works on unification"
+    pick :: Maybe String -> Maybe String -> Maybe (String, Term)
+    pick (Just l) (Just r) = Just $ if Map.lookup l totalVars < Map.lookup r totalVars then (l, right) else (r, left)
+    pick (Just l) Nothing = Just (l, right)
+    pick Nothing (Just r) = Just (r, left)
+    pick Nothing Nothing = Nothing
 
 {- | Check whether a candidate unification satisfies one of the inlining
 conditions and, if so, build its substitution.
@@ -107,7 +108,7 @@ checkApplicable
   -- ^ Number of occurrences of each variable in the whole clause.
   -> Map String Int
   -- ^ Number of occurrences of each variable in the clause head.
-  -> (Term, Map String Int, Map String Int, [Term])
+  -> ((Term, Term), Map String Int, Map String Int, [Term])
   {- ^ Candidate unification and the variable-occurrence counts in its
   prefix and suffix.
   -}
@@ -115,7 +116,7 @@ checkApplicable
   {- ^ A substitution when the unification can be inlined; otherwise
   'Nothing'.
   -}
-checkApplicable totalVars headVars (t, prefixVars, suffixVars, _)
+checkApplicable totalVars headVars ((lt, rt), prefixVars, suffixVars, _)
   | Map.lookup uv headVars == Just 1 =
       -- rule 1
       if Map.disjoint tVars prefixVars && Map.notMember uv suffixVars
@@ -128,8 +129,8 @@ checkApplicable totalVars headVars (t, prefixVars, suffixVars, _)
         else Nothing
   | otherwise = Nothing
   where
-    (uv, ut) = unification totalVars t
-    tVars = countVariables t
+    (uv, ut) = fromJust $ unification totalVars lt rt
+    tVars = Map.unionWith (+) (countVariables lt) (countVariables rt)
 
 toProblem :: Clause -> Term -> Clause -> Problem
 toProblem originalClause term fixedClause =
