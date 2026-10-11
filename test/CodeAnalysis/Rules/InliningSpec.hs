@@ -43,6 +43,7 @@ detectsPatternMatches =
   , ("p(X,Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."]) -- Fulfills rule 1
   , ("p(X,Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
   , ("p(X,Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
+  , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
   ]
 
 detectionFree :: [String]
@@ -66,6 +67,7 @@ detectionFree =
   , "p :- r, X = a, q(X), d(X)." -- X used twice after unification
   , "p(X,X) :- X = f(g(c))." -- X used twice in head
   , "p(Y) :- X = f(Y)." -- Y occurs in head
+  , "p(X) :- a = b, q(X)."
   ]
 
 spec :: Spec
