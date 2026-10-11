@@ -122,9 +122,9 @@ checkApplicable totalVars headVars ((lt, rt), prefixVars, suffixVars, _)
       if Map.disjoint tVars prefixVars && Map.notMember uv suffixVars
         then Just (VariableName 0 uv, ut)
         else Nothing
-  | Map.notMember uv headVars =
+  | Map.disjoint tVars headVars =
       -- rule 2
-      if Map.notMember uv prefixVars && 1 >= Map.findWithDefault 0 uv suffixVars && Map.disjoint tVars headVars
+      if Map.notMember uv prefixVars && 1 >= Map.findWithDefault 0 uv suffixVars
         then Just (VariableName 0 uv, ut)
         else Nothing
   | otherwise = Nothing
