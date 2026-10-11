@@ -50,7 +50,7 @@ collectInformation
   -> Map String Int
   -- ^ Number of occurrences of each variable in the goals visited so far.
   -> [Term]
-  -- ^ Goals visited so far (in reversed order).
+  -- ^ Goals visited so far (in reversed).
   -> [(Term, Map String Int, Map String Int, [Term])]
   {- ^ Candidate unifications collected so far.  Each tuple contains the
   unification, the variable counts in its prefix and suffix, and the goals
@@ -62,15 +62,16 @@ collectInformation
   -}
 collectInformation [] _ _ us = us
 collectInformation (t : ts) vs goals us =
-  collectInformation ts (addVarsFromT vs) (t : goals) newUs
+  collectInformation ts (addVarsFromT vs) (t : goals) newUs'
   where
     addVarsFromT = Map.unionWith (+) (countVariables t)
     newUs =
-      map (\(t', p, s, goals') -> (t', p, addVarsFromT s, t : goals')) us ++ case t of
+      case t of
         Struct "=" [l, r]
           | Map.disjoint (countVariables l) (countVariables r) ->
               [(t, vs, Map.empty, goals)]
         _ -> []
+    newUs' = newUs ++ map (\(t', p, s, goals') -> (t', p, addVarsFromT s, t : goals')) us
 
 {- | Choose the variable side of a unification and the term to substitute for
 it.
