@@ -71,11 +71,9 @@ collectUnifications _ [] vs _ us = mapMaybe discardOrUpdate us
   where
     discardOrUpdate i@((rule, l, r), suffixVars, _) = do
       (uv, _) <- unification vs l r
-      let expected = if rule == One then 0 else 1
-
       let uvCountInSuffix = Map.findWithDefault 0 uv suffixVars
 
-      guard $ expected == uvCountInSuffix
+      guard $ (if rule == One then 0 else 1) == uvCountInSuffix
 
       Just i
 collectUnifications headVars (t : ts) vs goals us =
@@ -91,9 +89,12 @@ collectUnifications headVars (t : ts) vs goals us =
     newUs' = newUs ++ map (\(t', s, goals') -> (t', addVarsFromT s, t : goals')) us
 
     satisfiesRuleAtOccurrence l r = do
-      let tVars = countVariables t
+      let
+        lVars = countVariables l
+        rVars = countVariables r
+        tVars = Map.unionWith (+) lVars rVars
       (uv, _ut) <- unification vs l r
-      guard $ Map.disjoint (countVariables l) (countVariables r)
+      guard $ Map.disjoint lVars rVars
 
       case Map.disjoint tVars headVars of
         True -> do
