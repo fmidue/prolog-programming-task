@@ -45,6 +45,8 @@ detectsPatternMatches =
   , ("p(X,Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
   , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
   , ("p(X,Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
+  , ("p(X,Y) :- Y = X.", ["p(Y, Y)."])
+  , ("p :- A = b, r, X = c, q(X).", ["p :- A = b, r, q(c)."])
   ]
 
 detectionFree :: [String]
@@ -71,6 +73,7 @@ detectionFree =
   , "p(X) :- a = b, q(X)."
   , "p :- X = a."
   , "p(X,Y) :- Z = f(X), X = f(Y)."
+  , "p :- Z = f(X), X = a, q(X)."
   ]
 
 spec :: Spec
