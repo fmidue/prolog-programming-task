@@ -17,7 +17,7 @@ import Language.Prolog (
   Clause (..),
   Term (..),
   VariableName (VariableName),
-  apply,
+  substitute
  )
 import Prolog.Programming.CodeAnalysis.Helper (countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
@@ -36,7 +36,7 @@ inliningChecker c@(Clause clauseHead goals) =
 
     fixedClause rhs (name, replacement) =
       let sub = (VariableName 0 name, replacement)
-      in Clause (apply [sub] clauseHead) $ map (apply [sub]) $ reverse rhs
+      in Clause (substitute sub clauseHead) $ map (substitute sub) $ reverse rhs
 inliningChecker _ = []
 
 data Rule = One | Two deriving Eq
