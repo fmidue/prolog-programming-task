@@ -56,21 +56,30 @@ collectUnifications
   -> [((Rule, Term, Term), (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them, in reversed order.
 collectUnifications totalVars headVars goals =
-  validate (reverse $ collectCandidates goals Map.empty []) Map.empty id
+  validate (reverse $ collectCandidates goals Map.empty Map.empty Map.empty []) Map.empty id
   where
-    collectCandidates [] _ _ = []
-    collectCandidates (t : ts) vs prefix =
-      (t, tVars, candidate) : collectCandidates ts (Map.unionWith (+) tVars vs) (t : prefix)
+    collectCandidates [] _ _ _ _ = []
+    collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix =
+      (t, tVars, candidate)
+        : collectCandidates
+            ts
+            (Map.unionWith (+) tVars vs)
+            (if isUnification t then nonUnificationVars else Map.unionWith (+) tVars nonUnificationVars)
+            (if isUnification t then Map.unionWith (+) tVars unificationVars else unificationVars)
+            (t : prefix)
       where
         tVars = countVariables t
         candidate =
           case t of
             Struct "=" [l, r] -> do
-              (rule, replacement) <- satisfiesRuleAtOccurrence l r
+              (rule, replacement) <- satisfiesRuleAtOccurrence l r nonUnificationVars unificationVars
               pure ((rule, l, r), replacement, prefix)
             _ -> Nothing
 
-        satisfiesRuleAtOccurrence l r = do
+        isUnification (Struct "=" [_l, _r]) = True
+        isUnification _ = False
+
+        satisfiesRuleAtOccurrence l r previousNonUnificationVars previousUnificationVars = do
           let
             lVars = countVariables l
             rVars = countVariables r
@@ -84,7 +93,8 @@ collectUnifications totalVars headVars goals =
             False ->
               if Map.lookup uv headVars == Just 1
                 then do
-                  guard $ Map.disjoint tVars vs
+                  guard $ Map.disjoint tVars previousNonUnificationVars
+                  guard $ Map.notMember uv previousUnificationVars
                   Just (One, replacement)
                 else Nothing
 

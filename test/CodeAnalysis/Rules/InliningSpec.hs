@@ -70,6 +70,7 @@ detectionFree =
   , "p(Y) :- X = f(Y)." -- Y occurs in head
   , "p(X) :- a = b, q(X)."
   , "p :- X = a."
+  , "p(X,Y) :- Z = f(X), X = f(Y)."
   ]
 
 spec :: Spec
