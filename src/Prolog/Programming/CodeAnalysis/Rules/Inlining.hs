@@ -6,10 +6,12 @@ import qualified Data.Map as Map (
   disjoint,
   empty,
   findWithDefault,
+  keysSet,
   lookup,
   notMember,
   unionWith,
  )
+import qualified Data.Set as Set (empty, member, union)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -56,17 +58,17 @@ collectUnifications
   -> [((Rule, Term, Term), (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them, in reversed order.
 collectUnifications totalVars headVars goals =
-  validate (reverse $ collectCandidates goals Map.empty Map.empty Map.empty []) Map.empty id
+  validate (reverse $ collectCandidates goals Map.empty Map.empty Set.empty []) Map.empty id
   where
     collectCandidates [] _ _ _ _ = []
     collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix =
       (t, tVars, candidate)
         : collectCandidates
-            ts
-            (Map.unionWith (+) tVars vs)
-            (if isUnification t then nonUnificationVars else Map.unionWith (+) tVars nonUnificationVars)
-            (if isUnification t then Map.unionWith (+) tVars unificationVars else unificationVars)
-            (t : prefix)
+          ts
+          (addVariables tVars vs)
+          (if isUnification t then nonUnificationVars else addVariables tVars nonUnificationVars)
+          (if isUnification t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
+          (t : prefix)
       where
         tVars = countVariables t
         candidate =
@@ -94,9 +96,11 @@ collectUnifications totalVars headVars goals =
               if Map.lookup uv headVars == Just 1
                 then do
                   guard $ Map.disjoint tVars previousNonUnificationVars
-                  guard $ Map.notMember uv previousUnificationVars
+                  guard $ not (Set.member uv previousUnificationVars)
                   Just (One, replacement)
                 else Nothing
+
+    addVariables = Map.unionWith (+)
 
     validate [] _ _ = []
     validate ((t, tVars, candidate) : rest) suffix prependGoals =
