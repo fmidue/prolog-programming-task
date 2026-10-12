@@ -17,7 +17,7 @@ import Language.Prolog (
   Clause (..),
   Term (..),
   VariableName (VariableName),
-  substitute
+  substitute,
  )
 import Prolog.Programming.CodeAnalysis.Helper (countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
