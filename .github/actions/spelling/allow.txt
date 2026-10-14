@@ -8,6 +8,8 @@ bimap
 concat
 Concat
 dcg
+deduped
+elems
 fmap
 foldl
 foldr
