@@ -10,6 +10,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   ProgramRule,
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig,
+  AliasConfig (..),
   SingletonVariablesConfig (..),
   AdditionalMessage (..),
   CutUsageConfig (..),
@@ -85,6 +86,9 @@ newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMess
 newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Predicate}
   deriving (Data, Generic, Reader, Show, ToDoc)
 
+newtype AliasConfig = AliasConfig (CodeAnalysisRuleConfig ())
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -100,6 +104,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , recursion :: RecursionConfig
   -- | Configuration for forbiddenPredicates rule
   , forbiddenPredicates :: ForbiddenPredicatesConfig
+  -- | Configuration for alias rule
+  , alias :: AliasConfig
   }
   deriving (Data, Generic, Show, Reader, ToDoc)
 

@@ -34,6 +34,7 @@ import Prolog.Programming.CodeAnalysis.Config (
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
+  AliasConfig (..),
   CodeAnalysisConfig (CodeAnalysisConfig),
   CodeAnalysisRuleConfig,
   CutUsageConfig (..),
@@ -162,6 +163,9 @@ instance FromJSON ForbiddenPredicatesConfig where
   parseJSON = withArray "ForbiddenPredicatesConfig" $ \v ->
     ForbiddenPredicatesConfig . Set.fromList <$> traverse parseJSON (toList v)
 
+instance FromJSON AliasConfig where
+  parseJSON = withRuleParser AliasConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -173,6 +177,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "ungroupedDefinitions" .!= UngroupedDefinitionsConfig Nothing
       <*> v .:? "recursion" .!= RecursionConfig Nothing
       <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
+      <*> v .:? "alias" .!= AliasConfig Nothing
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

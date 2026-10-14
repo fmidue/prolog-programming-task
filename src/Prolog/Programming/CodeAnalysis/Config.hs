@@ -6,6 +6,7 @@ where
 
 import Data.Maybe (catMaybes)
 import qualified Data.Set as Set (empty, null)
+import Prolog.Programming.CodeAnalysis.Rules.Alias (aliasChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
@@ -13,6 +14,7 @@ import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
+  AliasConfig (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig,
   Context,
@@ -36,6 +38,7 @@ configuredRules
     , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     , recursion = RecursionConfig recursionCfg
     , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
+    , alias = AliasConfig aliasCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -45,6 +48,7 @@ configuredRules
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
       , configuredForbiddenPredicates
+      , toConfigured aliasCfg (const aliasChecker)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -64,4 +68,5 @@ emptyCodeAnalysisConfig =
     , ungroupedDefinitions = UngroupedDefinitionsConfig Nothing
     , recursion = RecursionConfig Nothing
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
+    , alias = AliasConfig Nothing
     }

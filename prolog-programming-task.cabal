@@ -33,6 +33,7 @@ library
       Prolog.Programming.CodeAnalysis.Config
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
+      Prolog.Programming.CodeAnalysis.Rules.Alias
       Prolog.Programming.CodeAnalysis.Rules.Cuts
       Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates
       Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
@@ -108,6 +109,7 @@ test-suite prolog-programming-task-test
   main-is: Spec.hs
   other-modules:
       CodeAnalysis.Helper
+      CodeAnalysis.Rules.AliasSpec
       CodeAnalysis.Rules.CutsSpec
       CodeAnalysis.Rules.ForbiddenPredicatesSpec
       CodeAnalysis.Rules.InconsistentAritiesSpec

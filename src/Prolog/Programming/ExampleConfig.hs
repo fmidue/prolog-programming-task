@@ -94,6 +94,10 @@ codeAnalysis:
    - \==/2
   # This field is optional and otherwise takes a list of predicate identities.
 
+  alias:
+    # what to do concerning detection of predicate aliases
+    status: ignore
+
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.
