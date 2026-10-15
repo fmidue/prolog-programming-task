@@ -205,9 +205,11 @@ configuration = do
         when (length optionalLs > 1) $
           fail "There is only one optional section allowed but multiple provided."
 
-        let hiddenPredicateCode = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
+        let
+          hiddenPredicateCode = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
+          taskCode = unlines taskLs
 
-        (visibleDefs', hiddenDefs') <- case consultString (unlines taskLs) of
+        (visibleDefs', hiddenDefs') <- case consultString taskCode of
           Left err -> fail $ "Failed to load task definitions: " ++ show err
           Right visibleDefs -> case consultString hiddenPredicateCode of
             Left err -> fail $ "Failed to load hidden definitions: " ++ show err
@@ -217,7 +219,7 @@ configuration = do
           TaskInstance {
             taskConfig = taskCfg
             , sampleSolution = unlines solutionLs
-            , taskDescription = unlines taskLs
+            , taskDescription = taskCode
             , visiblePredicates = visibleDefs'
             , hiddenPredicates = hiddenDefs'
             }
