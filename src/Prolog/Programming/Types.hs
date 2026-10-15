@@ -50,8 +50,9 @@ data TaskConfig = TaskConfig {
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
   , sampleSolution :: Code
-  , visiblePredicates :: Code
-  , hiddenPredicates :: Code
+  , taskDescription :: Code
+  , visiblePredicates :: [Clause]
+  , hiddenPredicates :: [Clause]
   }
   deriving (Generic, Reader, Show, ToDoc)
 

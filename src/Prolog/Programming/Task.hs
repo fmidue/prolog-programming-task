@@ -50,6 +50,7 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.List.Extra (notNull)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.Types (
   Expection (..),
@@ -63,7 +64,6 @@ import Prolog.Programming.Types (
   TreeStyle (..),
   Visibility (..),
  )
-import Text.Parsec (ParseError)
 import Text.PrettyPrint.Leijen.Text (
   Doc,
   align,
@@ -86,12 +86,8 @@ verifyConfig cfg = case parseInstance cfg of
   Right inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} ->
     let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
     in do
-         when (includeHiddenDefinitions == Yes && showSWISHButton) $
-           case consultString hiddenPredicates of
-             Left err -> fail $ show err
-             Right (_ : _) ->
-               fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
-             Right [] -> pure ()
+         when (includeHiddenDefinitions == Yes && showSWISHButton && notNull hiddenPredicates) $
+           fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
          when rigorousValidation $
            checkTask
@@ -105,8 +101,8 @@ toInstance :: Config -> TaskInstance
 toInstance = fromRight (error "config should have been validated before") . parseInstance
 
 describeTask :: TaskInstance -> Doc
-describeTask TaskInstance {visiblePredicates} =
-  text . pack $ visiblePredicates
+describeTask TaskInstance {taskDescription} =
+  text $ pack taskDescription
 
 initialTask :: TaskInstance -> Code
 initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
@@ -128,8 +124,8 @@ initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
     newPredDesc StatementToCheck {} = Nothing
     newPredDesc QueryWithAnswers {} = Nothing
 
-taskDefinitions :: TaskInstance -> Either ParseError [Clause]
-taskDefinitions TaskInstance {visiblePredicates} = consultString visiblePredicates
+taskDefinitions :: TaskInstance -> [Clause]
+taskDefinitions TaskInstance {visiblePredicates} = visiblePredicates
 
 taskDefinitionsIncluded :: TaskInstance -> Bool
 taskDefinitionsIncluded TaskInstance {taskConfig = TaskConfig {..}} = case includeTaskDefinitions of
@@ -185,66 +181,65 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
               <$$> matchReport
           pure newDefs
 
-      case consultStringsAndFilter
-        visiblePredicates
-        (taskFilter includeTaskDefinitions inProg)
-        hiddenPredicates
-        (hiddenFilter includeHiddenDefinitions inProg) of
-        Left err -> reject . text . pack $ show err
-        Right factProg -> do
-          testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
-          case testResult of
-            (Finished AllOk, (passed, _)) ->
-              inform $
-                vcat
-                  [ text "Ok"
-                  , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
-                  ]
-            (Finished (SomeTimeouts (t :| ts)), (passed, _)) -> do
-              let testsRun = passed + 1 + length ts
-              reject $
-                vcat
-                  [ text "No."
-                  , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
-                  ]
-                  <> nested
-                    ( line
-                        <> describeSpec t
-                        <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
-                        <> line
-                        <> if not (null ts)
-                          then
-                            text
-                              ( pack $
-                                  show (length ts)
-                                    ++ " additional test "
-                                    ++ plural (length ts) "case" "cases"
-                                    ++ " also timed out"
-                              )
-                          else empty
-                    )
-            (Aborted reason, (passed, notRun)) -> do
-              let (reasonDoc, mTree) = explainReason reason
-              inform $
-                vcat
-                  [ text "No."
-                  , text (pack $ unwords [show (passed + 1), plural (passed + 1) "test was" "tests were", "run"])
-                  , text "The following test case failed:"
-                  ]
-                  <> reasonDoc
-              maybe (pure ()) drawTree mTree
-              reject
-                ( text . pack $
-                    "tests passed: "
-                      ++ show passed
-                      ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
-                        then ", tests not run: " ++ show notRun
-                        else ""
+      let factProg =
+            consultStringsAndFilter
+              visiblePredicates
+              (taskFilter includeTaskDefinitions inProg)
+              hiddenPredicates
+              (hiddenFilter includeHiddenDefinitions inProg)
+      testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
+      case testResult of
+        (Finished AllOk, (passed, _)) ->
+          inform $
+            vcat
+              [ text "Ok"
+              , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
+              ]
+        (Finished (SomeTimeouts (t :| ts)), (passed, _)) -> do
+          let testsRun = passed + 1 + length ts
+          reject $
+            vcat
+              [ text "No."
+              , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
+              ]
+              <> nested
+                ( line
+                    <> describeSpec t
+                    <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
+                    <> line
+                    <> if not (null ts)
+                      then
+                        text
+                          ( pack $
+                              show (length ts)
+                                ++ " additional test "
+                                ++ plural (length ts) "case" "cases"
+                                ++ " also timed out"
+                          )
+                      else empty
                 )
+        (Aborted reason, (passed, notRun)) -> do
+          let (reasonDoc, mTree) = explainReason reason
+          inform $
+            vcat
+              [ text "No."
+              , text (pack $ unwords [show (passed + 1), plural (passed + 1) "test was" "tests were", "run"])
+              , text "The following test case failed:"
+              ]
+              <> reasonDoc
+          maybe (pure ()) drawTree mTree
+          reject
+            ( text . pack $
+                "tests passed: "
+                  ++ show passed
+                  ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
+                    then ", tests not run: " ++ show notRun
+                    else ""
+            )
 
-          case checkForProblems codeAnalysis inProg factProg of
-            [] -> pure ()
-            pbs -> either reject inform $ displayProblems pbs
+      case checkForProblems codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject inform $ displayProblems pbs
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
@@ -258,11 +253,9 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-consultStringsAndFilter :: Code -> (Clause -> Bool) -> Code -> (Clause -> Bool) -> Either ParseError [Clause]
-consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do
-  vs <- consultString visibleDefs
-  hs <- consultString hiddenDefs
-  pure $ filter keepVisible vs ++ filter keepHidden hs
+consultStringsAndFilter :: [Clause] -> (Clause -> Bool) -> [Clause] -> (Clause -> Bool) -> [Clause]
+consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden =
+  filter keepVisible visibleDefs ++ filter keepHidden hiddenDefs
 
 taskFilter :: IncludeTask -> Program -> Clause -> Bool
 taskFilter Yes _ = const True
