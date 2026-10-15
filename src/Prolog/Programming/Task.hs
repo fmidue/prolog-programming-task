@@ -182,11 +182,8 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
           pure newDefs
 
       let factProg =
-            consultStringsAndFilter
-              visiblePredicates
-              (taskFilter includeTaskDefinitions inProg)
-              hiddenPredicates
-              (hiddenFilter includeHiddenDefinitions inProg)
+            filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
+              ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
       testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
@@ -253,10 +250,6 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-consultStringsAndFilter :: [Clause] -> (Clause -> Bool) -> [Clause] -> (Clause -> Bool) -> [Clause]
-consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden =
-  filter keepVisible visibleDefs ++ filter keepHidden hiddenDefs
-
 taskFilter :: IncludeTask -> Program -> Clause -> Bool
 taskFilter Yes _ = const True
 taskFilter No {} _ = const False
@@ -304,8 +297,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-            <$$> resultMsg mActual
-              <> treeMsg mTree
+              <$$> resultMsg mActual
+            <> treeMsg mTree
       , mTree
       )
 
