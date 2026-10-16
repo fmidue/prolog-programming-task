@@ -36,7 +36,7 @@ inliningChecker c@(Clause clauseHead goals) =
 
     fixedClause rhs (name, replacement) =
       let sub = (VariableName 0 name, replacement)
-      in Clause (substitute sub clauseHead) $ map (substitute sub) $ reverse rhs
+      in Clause (substitute sub clauseHead) $ map (substitute sub) rhs
 inliningChecker _ = []
 
 data Rule = One | Two deriving Eq
@@ -111,7 +111,7 @@ collectUnifications totalVars headVars goals =
 
           guard $ (if rule == One then 0 else 1) == uvCountInSuffix
 
-          pure ((rule, l, r), replacement, prependGoals prefix)
+          pure ((rule, l, r), replacement, reverse $ prependGoals prefix)
         suffix' = Map.unionWith (+) tVars suffix
         prependGoals' = prependGoals . (t :)
       in
