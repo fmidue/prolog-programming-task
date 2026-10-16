@@ -26,8 +26,8 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker c@(Clause clauseHead goals) =
   map
-    ( \((_, l, r), replacement, goals') ->
-        toProblem c (Struct "=" [l, r]) $ fixedClause goals' replacement
+    ( \((_, l, r), nameReplacement, goals') ->
+        toProblem c (Struct "=" [l, r]) $ fixedClause goals' nameReplacement
     )
     $ collectUnifications totalVars headVars goals
   where
@@ -74,8 +74,8 @@ collectUnifications totalVars headVars goals =
         candidate =
           case t of
             Struct "=" [l, r] -> do
-              (rule, replacement) <- satisfiesRuleAtOccurrence l r nonUnificationVars unificationVars
-              pure ((rule, l, r), replacement, prefix)
+              (rule, nameReplacement) <- satisfiesRuleAtOccurrence l r nonUnificationVars unificationVars
+              pure ((rule, l, r), nameReplacement, prefix)
             _ -> Nothing
 
         isUnification (Struct "=" [_l, _r]) = True
@@ -85,19 +85,19 @@ collectUnifications totalVars headVars goals =
           let
             lVars = countVariables l
             rVars = countVariables r
-          replacement@(uv, _ut) <- unification totalVars l r
+          nameReplacement@(x, _term) <- unification totalVars l r
           guard $ Map.disjoint lVars rVars
 
           case Map.disjoint tVars headVars of
             True -> do
-              guard $ Map.notMember uv vs
-              Just (Two, replacement)
+              guard $ Map.notMember x vs
+              Just (Two, nameReplacement)
             False ->
-              if Map.lookup uv headVars == Just 1
+              if Map.lookup x headVars == Just 1
                 then do
                   guard $ Map.disjoint tVars previousNonUnificationVars
-                  guard $ not (Set.member uv previousUnificationVars)
-                  Just (One, replacement)
+                  guard $ not (Set.member x previousUnificationVars)
+                  Just (One, nameReplacement)
                 else Nothing
 
     addVariables = Map.unionWith (+)
@@ -106,12 +106,12 @@ collectUnifications totalVars headVars goals =
     validate ((t, tVars, candidate) : rest) suffix prependGoals =
       let
         valid = do
-          ((rule, l, r), replacement@(uv, _), prefix) <- candidate
-          let uvCountInSuffix = Map.findWithDefault 0 uv suffix
+          ((rule, l, r), nameReplacement@(x, _), prefix) <- candidate
+          let xCountInSuffix = Map.findWithDefault 0 x suffix
 
-          guard $ (if rule == One then 0 else 1) == uvCountInSuffix
+          guard $ (if rule == One then 0 else 1) == xCountInSuffix
 
-          pure ((rule, l, r), replacement, reverse $ prependGoals prefix)
+          pure ((rule, l, r), nameReplacement, reverse $ prependGoals prefix)
         suffix' = Map.unionWith (+) tVars suffix
         prependGoals' = prependGoals . (t :)
       in
@@ -148,14 +148,14 @@ unification totalVars left right = pick (var left) (var right)
     pick Nothing Nothing = Nothing
 
 toProblem :: Clause -> Term -> Clause -> Problem
-toProblem originalClause term fixedClause =
+toProblem originalClause equality fixedClause =
   Problem {
     problemDisplay =
       vsep
         [ string $ pack "Your clause"
         , indent 2 $ string $ pack $ show originalClause
         , string $ pack "uses the unification"
-        , indent 2 $ string $ pack $ show term
+        , indent 2 $ string $ pack $ show equality
         , string $ pack "as a goal that can also directly be applied to the clause."
         , string $ pack "Doing that would result in:"
         , indent 2 $ string $ pack $ show fixedClause
