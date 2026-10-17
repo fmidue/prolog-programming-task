@@ -58,17 +58,17 @@ collectUnifications
   -> [((Rule, Term, Term), (String, Term), [Term])]
   -- ^ Unifications (in reversed order) together with the goals besides them.
 collectUnifications totalVars headVars goals =
-  validate (reverse $ collectCandidates goals Map.empty Map.empty Set.empty id) Map.empty []
+  validate (collectCandidates goals Map.empty Map.empty Set.empty id []) Map.empty []
   where
-    collectCandidates [] _ _ _ _ = []
-    collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix =
-      (t, tVars, candidate)
-        : collectCandidates
-          ts
-          (addVariables tVars vs)
-          (if isUnification t then nonUnificationVars else addVariables tVars nonUnificationVars)
-          (if isUnification t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
-          (prefix . (t :))
+    collectCandidates [] _ _ _ _ candidates = candidates
+    collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix candidates =
+      collectCandidates
+        ts
+        (addVariables tVars vs)
+        (if isUnification t then nonUnificationVars else addVariables tVars nonUnificationVars)
+        (if isUnification t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
+        (prefix . (t :))
+        ((t, tVars, candidate) : candidates)
       where
         tVars = countVariables t
         candidate =
