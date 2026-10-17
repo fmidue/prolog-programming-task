@@ -257,7 +257,8 @@ taskFilter Filtered prog = (`notElem` prog)
 hiddenFilter :: IncludeHidden -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
 hiddenFilter Yes _ = const True
 hiddenFilter (No x) _ = absurd x
-hiddenFilter Filtered prog = \(name, args, _) -> all (\(name', args', _) -> name /= name' || args /= args') prog
+hiddenFilter Filtered prog = \(name, args, _) ->
+  all (\(name', args', _) -> name /= name' || length args /= length args') prog
 
 plural :: (Eq a, Num a) => a -> b -> b -> b
 plural 1 x _ = x
