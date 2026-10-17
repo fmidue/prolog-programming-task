@@ -58,7 +58,7 @@ collectUnifications
   -> [((Rule, Term, Term), (String, Term), [Term])]
   -- ^ Unifications (in reversed order) together with the goals besides them.
 collectUnifications totalVars headVars goals =
-  validate (reverse $ collectCandidates goals Map.empty Map.empty Set.empty []) Map.empty id
+  validate (reverse $ collectCandidates goals Map.empty Map.empty Set.empty id) Map.empty []
   where
     collectCandidates [] _ _ _ _ = []
     collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix =
@@ -68,7 +68,7 @@ collectUnifications totalVars headVars goals =
           (addVariables tVars vs)
           (if isUnification t then nonUnificationVars else addVariables tVars nonUnificationVars)
           (if isUnification t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
-          (t : prefix)
+          (prefix . (t :))
       where
         tVars = countVariables t
         candidate =
@@ -111,9 +111,9 @@ collectUnifications totalVars headVars goals =
 
           guard $ (if rule == One then 0 else 1) == xCountInSuffix
 
-          pure ((rule, l, r), nameReplacement, reverse $ prependGoals prefix)
+          pure ((rule, l, r), nameReplacement, prefix prependGoals)
         suffix' = Map.unionWith (+) tVars suffix
-        prependGoals' = prependGoals . (t :)
+        prependGoals' = t : prependGoals
       in
         case valid of
           Just result -> result : validate rest suffix' prependGoals'
