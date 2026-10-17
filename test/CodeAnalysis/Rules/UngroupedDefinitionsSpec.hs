@@ -33,7 +33,7 @@ a.
 a(X) :- b(X).
 b(X, Y) :- X > Y.
       |]
-          `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
+        `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
   describe "UngroupedDefinitions" $ do
     it "Should detect ungrouped definitions" $
       shouldDetectProblemsStrict

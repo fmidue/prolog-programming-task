@@ -281,8 +281,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-              <$$> resultMsg mActual
-            <> treeMsg mTree
+            <$$> resultMsg mActual
+              <> treeMsg mTree
       , mTree
       )
 
