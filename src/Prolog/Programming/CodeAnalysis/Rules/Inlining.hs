@@ -41,12 +41,12 @@ inliningChecker _ = []
 
 data Rule = One | Two deriving Eq
 
-{- | Collect unifications that can be inlined.
+{- | Collect unifications that can be inlined (in reverse order).
 
 For each unification whose two sides have disjoint variables and which satisfies
 one of the inlining rules, the result records the rule matched, left and right
 side of the unification, the selected variable and replacement, and the goals
-besides it (in reversed order).
+besides it.
 -}
 collectUnifications
   :: Map String Int
@@ -56,7 +56,7 @@ collectUnifications
   -> [Term]
   -- ^ Goals that have not been visited yet.
   -> [((Rule, Term, Term), (String, Term), [Term])]
-  -- ^ Unifications together with the goals besides them, in reversed order.
+  -- ^ Unifications (in reversed order) together with the goals besides them.
 collectUnifications totalVars headVars goals =
   validate (reverse $ collectCandidates goals Map.empty Map.empty Set.empty []) Map.empty id
   where
