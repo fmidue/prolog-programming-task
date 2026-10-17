@@ -39,7 +39,7 @@ import Data.Void (absurd)
 
 import Language.Prolog (
   Atom,
-  Clause (Clause),
+  Clause (..),
   Goal,
   Term (..),
   Unifier,
