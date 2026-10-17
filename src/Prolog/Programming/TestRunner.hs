@@ -11,7 +11,7 @@ import Prolog.Programming.Helper (termHead)
 import Control.Exception (evaluate)
 import Control.Monad.Random.Class (MonadRandom)
 
-import Data.List (find, isPrefixOf, nub, (\\))
+import Data.List (isPrefixOf, nub, (\\))
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
 import Data.Maybe (fromMaybe, isNothing)
@@ -61,11 +61,12 @@ useFoundDefsInProgram :: [(Term, Atom)] -> [(Atom, [Term], [Goal])] -> [(Atom, [
 useFoundDefsInProgram ds clauses = updateClause <$> clauses
   where
     replace = replaceHeads ds
-    substitutions = map (\(tl, tr) -> (fst $ termHead tl, tr)) ds
-    rename n = maybe n snd $ find ((== n) . fst) substitutions
 
     updateClause :: (Atom, [Term], [Goal]) -> (Atom, [Term], [Goal])
-    updateClause (name, args, gs) = (rename name, map replace args, map replace gs)
+    updateClause (name, args, gs) =
+      case replace (Struct name args) of
+        Struct newName newArgs -> (newName, newArgs, map replace gs)
+        _ -> error "should not happen"
 
 useFoundDefsInSpecs :: [(Term, Atom)] -> [Spec] -> [Spec]
 useFoundDefsInSpecs ds specs = updateSpec <$> specs
