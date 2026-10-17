@@ -12,14 +12,8 @@ import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
 cutsChecker :: AdditionalMessage -> ClauseRule
 cutsChecker (AdditionalMessage cMsg) (name, args, goals)
-  | cutExistsInClause clause = [toProblem cMsg clause]
+  | any containsCut goals = [toProblem cMsg $ Clause name args goals]
   | otherwise = []
-  where
-    clause = Clause name args goals
-
-cutExistsInClause :: Clause -> Bool
-cutExistsInClause (Clause _ _ rhs) = any containsCut rhs
-cutExistsInClause _ = False
 
 containsCut :: Data a => a -> Bool
 containsCut = everything (||) $ mkQ False $ \case
