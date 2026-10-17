@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# HLINT ignore "Use unless" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -22,7 +21,7 @@ module Prolog.Programming.Task (
 
 import Prolog.Programming.Data
 import Prolog.Programming.ExampleConfig
-import Prolog.Programming.Helper (Arity, escalateSeverity, termHead)
+import Prolog.Programming.Helper (Arity, escalateSeverity)
 import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.TestRunner
 
@@ -32,7 +31,7 @@ import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
 import Data.Either (fromRight)
-import Data.List (intercalate, nub)
+import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
@@ -40,17 +39,17 @@ import Data.Void (absurd)
 
 import Language.Prolog (
   Atom,
-  Clause (..),
-  Program,
+  Clause (Clause),
+  Goal,
   Term (..),
   Unifier,
   consultString,
-  lhs,
  )
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
-import Data.List.Extra (notNull)
+import Data.List.Extra (notNull, nubOrd)
+import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.Types (
   Expection (..),
@@ -125,7 +124,7 @@ initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
     newPredDesc QueryWithAnswers {} = Nothing
 
 taskDefinitions :: TaskInstance -> [Clause]
-taskDefinitions TaskInstance {visiblePredicates} = visiblePredicates
+taskDefinitions TaskInstance {visiblePredicates} = map (uncurry3 Clause) visiblePredicates
 
 taskDefinitionsIncluded :: TaskInstance -> Bool
 taskDefinitionsIncluded TaskInstance {taskConfig = TaskConfig {..}} = case includeTaskDefinitions of
@@ -250,30 +249,15 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-taskFilter :: IncludeTask -> Program -> Clause -> Bool
+taskFilter :: IncludeTask -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
 taskFilter Yes _ = const True
 taskFilter No {} _ = const False
-taskFilter Filtered prog = \clause -> not $ any ((Just True ==) . compareClause clause) prog
-  where
-    compareClause :: Clause -> Clause -> Maybe Bool
-    compareClause (Clause p xs) (Clause q ys) = Just $ p == q && xs == ys
-    compareClause _ _ = Nothing
+taskFilter Filtered prog = (`notElem` prog)
 
-hiddenFilter :: IncludeHidden -> Program -> Clause -> Bool
+hiddenFilter :: IncludeHidden -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
 hiddenFilter Yes _ = const True
 hiddenFilter (No x) _ = absurd x
-hiddenFilter Filtered prog = notDefinedByProg
-  where
-    notDefinedByProg :: Clause -> Bool
-    notDefinedByProg x = case extractPredicate $ lhs x of
-      Just (p, k) -> (p, k) `notElem` inputDefs
-      Nothing -> error "impossible"
-    inputDefs :: [(Atom, Int)]
-    inputDefs = mapMaybe (extractPredicate . lhs) prog
-    extractPredicate :: Term -> Maybe (Atom, Int)
-    extractPredicate (Struct p (length -> k)) = Just (p, k)
-    extractPredicate (Var _) = Nothing
-    extractPredicate (Cut _) = Nothing
+hiddenFilter Filtered prog = \(name, args, _) -> all (\(name', args', _) -> name /= name' || args /= args') prog
 
 plural :: (Eq a, Num a) => a -> b -> b -> b
 plural 1 x _ = x
@@ -358,7 +342,7 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [Clause] -> (Doc, Maybe [(Term, Atom)])
+findNewPredicateDefs :: [Spec] -> [(Atom, [Term], [Goal])] -> (Doc, Maybe [(Term, Atom)])
 findNewPredicateDefs specs clauses = (report, result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
@@ -366,7 +350,7 @@ findNewPredicateDefs specs clauses = (report, result)
     extractNewDeclArgs (Spec _ _ _ _ QueryWithAnswers {}) = Nothing
     extractNewDeclArgs (Spec _ _ _ _ StatementToCheck {}) = Nothing
 
-    clauseHeads = nub $ termHead . lhs <$> clauses
+    clauseHeads = nubOrd $ map (\(name, args, _) -> (name, length args)) clauses
 
     matching = zipWith match newDecls (map Just clauseHeads ++ repeat Nothing)
     report = vcat $ map reportMatch matching
@@ -420,13 +404,12 @@ grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle
 grabFormatting ResolutionStyle = resolutionStyle
 
-containsHeadTailPattern :: Program -> Maybe Clause
+containsHeadTailPattern :: [(Atom, [Term], [Goal])] -> Maybe (Atom, [Term], [Goal])
 containsHeadTailPattern [] = Nothing
-containsHeadTailPattern (clause@(Clause hd gs) : clauses) =
-  case hasHeadTailPattern hd <> mconcat (map hasHeadTailPattern gs) of
-    PatternFound -> Just clause
+containsHeadTailPattern (c@(name, args, goals) : clauses) =
+  case hasHeadTailPattern (Struct name args) <> mconcat (map hasHeadTailPattern goals) of
+    PatternFound -> Just c
     DontKnow -> containsHeadTailPattern clauses
-containsHeadTailPattern (ClauseFn {} : clauses) = containsHeadTailPattern clauses
 
 hasHeadTailPattern :: Term -> HasHeadTailPattern
 hasHeadTailPattern (Struct "." [_, Var _]) = PatternFound

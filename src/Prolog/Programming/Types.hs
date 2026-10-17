@@ -8,13 +8,12 @@
 
 module Prolog.Programming.Types where
 
-import Autolib.Reader (Reader (..), my_braces, my_comma, my_equals, my_reserved)
-import Autolib.ToDoc (ToDoc (..), docParen, fcp, named_dutch_record, text, (<+>))
-import Control.Monad (void)
+import Autolib.Reader (Reader)
+import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Void (Void)
 import GHC.Generics (Generic)
-import Language.Prolog (Clause (..), Term (..), VariableName (..))
+import Language.Prolog (Atom, Goal, Term (..), VariableName (..))
 import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
 import Prolog.Programming.Data (Code)
 
@@ -51,8 +50,8 @@ data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
   , sampleSolution :: Code
   , taskDescription :: Code
-  , visiblePredicates :: [Clause]
-  , hiddenPredicates :: [Clause]
+  , visiblePredicates :: [(Atom, [Term], [Goal])]
+  , hiddenPredicates :: [(Atom, [Term], [Goal])]
   }
   deriving (Generic, Reader, Show, ToDoc)
 
@@ -88,23 +87,3 @@ deriving instance ToDoc VariableName
 
 deriving instance Reader Term
 deriving instance ToDoc Term
-
-instance ToDoc Clause where
-  toDocPrec p x =
-    docParen (p >= fcp) $ case x of
-      Clause lhs' rhs' ->
-        named_dutch_record
-          (text "Clause")
-          [ text "lhs" <+> text "=" <+> toDocPrec p lhs'
-          , text "rhs_" <+> text "=" <+> toDocPrec p rhs'
-          ]
-      ClauseFn _ _ -> error "Cannot encode ClauseFn into document"
-
-instance Reader Clause where
-  atomic_readerPrec _ = do
-    my_reserved "Clause"
-    my_braces $ do
-      lhs' <- my_reserved "lhs" *> my_equals *> reader
-      void my_comma
-      rhs' <- my_reserved "rhs_" *> my_equals *> reader
-      return $ Clause lhs' rhs'
