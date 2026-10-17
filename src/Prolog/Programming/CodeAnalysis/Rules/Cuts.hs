@@ -11,12 +11,14 @@ import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), ClauseRule
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
 
 cutsChecker :: AdditionalMessage -> ClauseRule
-cutsChecker (AdditionalMessage cMsg) clause
+cutsChecker (AdditionalMessage cMsg) (name, args, goals)
   | cutExistsInClause clause = [toProblem cMsg clause]
   | otherwise = []
+  where
+    clause = Clause name args goals
 
 cutExistsInClause :: Clause -> Bool
-cutExistsInClause (Clause _ rhs) = any containsCut rhs
+cutExistsInClause (Clause _ _ rhs) = any containsCut rhs
 cutExistsInClause _ = False
 
 containsCut :: Data a => a -> Bool

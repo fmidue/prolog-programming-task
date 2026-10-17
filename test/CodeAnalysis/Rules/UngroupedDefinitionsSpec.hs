@@ -12,7 +12,8 @@ import Prolog.Programming.CodeAnalysis.Types (
  )
 import Test.Hspec (Spec, describe, it, shouldBe)
 
-import Language.Prolog (consultString)
+import Data.Tuple.Extra (uncurry3)
+import Language.Prolog (Clause (Clause), consultString)
 import qualified Text.RawString.QQ as RS (r)
 
 caConfig :: CodeAnalysisConfig
@@ -25,14 +26,14 @@ spec :: Spec
 spec = do
   describe "Prolog Parser" $ do
     it "parses the clauses in order of definition" $
-      map show
+      map (show . uncurry3 Clause)
         <$> consultString
           [RS.r|
 a.
 a(X) :- b(X).
 b(X, Y) :- X > Y.
       |]
-        `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
+          `shouldBe` Right ["a.", "a(X) :- b(X).", "b(X, Y) :- X > Y."]
   describe "UngroupedDefinitions" $ do
     it "Should detect ungrouped definitions" $
       shouldDetectProblemsStrict
