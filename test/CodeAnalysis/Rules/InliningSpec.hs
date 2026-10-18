@@ -75,6 +75,7 @@ detectionFree =
   , "p :- X = a."
   , "p(X, Y) :- Z = f(X), X = f(Y)."
   , "p :- Z = f(X), X = a, q(X)."
+  , "p(X) :- Y = U, not(q(Y)), X = f(U), p(Y, U)." -- should not inline X because for a call p(f(a)) the instantiation status of Y would change
   ]
 
 spec :: Spec
