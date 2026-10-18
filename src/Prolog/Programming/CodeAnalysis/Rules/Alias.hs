@@ -5,7 +5,7 @@ module Prolog.Programming.CodeAnalysis.Rules.Alias (aliasChecker) where
 import Data.List.Extra (nubOrdOn)
 import qualified Data.Map as Map (elems, fromListWith)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..))
+import Language.Prolog (Atom, Goal, Term (..))
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
@@ -22,8 +22,8 @@ aliasChecker clauses = concatMap checkGroup partitionedByName
         $ Map.fromListWith (++)
         $ map (\c -> (fst $ clauseIdentities False c, [c])) deduped
 
-checkGroup :: [Clause] -> [Problem]
-checkGroup [Clause (Struct alias args1) [Struct aliased args2]] =
+checkGroup :: [(Atom, [Term], [Goal])] -> [Problem]
+checkGroup [(alias, args1, [Struct aliased args2])] =
   [toProblem alias aliased | alias /= aliased, args1 == args2]
 checkGroup _ = []
 
