@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -15,7 +14,7 @@ import Control.Monad (unless, void, when)
 
 import Data.List (intercalate, isPrefixOf)
 
-import Language.Prolog (Term, term, terms)
+import Language.Prolog (Term, consultString, term, terms)
 
 import Data.Aeson (Result (..), fromJSON)
 import Data.Aeson.Key (toString)
@@ -211,14 +210,23 @@ configuration = do
         when (length optionalLs > 1) $
           fail "There is only one optional section allowed but multiple provided."
 
-        let hiddenPredicates = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
+        let
+          hiddenPredicateCode = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
+          taskCode = unlines taskLs
+
+        (visibleDefs', hiddenDefs') <- case consultString taskCode of
+          Left err -> fail $ "Failed to load task definitions: " ++ show err
+          Right visibleDefs -> case consultString hiddenPredicateCode of
+            Left err -> fail $ "Failed to load hidden definitions: " ++ show err
+            Right hiddenDefs -> pure (visibleDefs, hiddenDefs)
 
         pure $
           TaskInstance {
             taskConfig = taskCfg
             , sampleSolution = unlines solutionLs
-            , visiblePredicates = unlines taskLs
-            , hiddenPredicates
+            , taskDescription = taskCode
+            , visiblePredicates = visibleDefs'
+            , hiddenPredicates = hiddenDefs'
             }
     _ -> fail "Config does not include the required sections: config, task, sample solution"
 
