@@ -406,11 +406,11 @@ grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle
 grabFormatting ResolutionStyle = resolutionStyle
 
-containsHeadTailPattern :: [(Atom, [Term], [Goal])] -> Maybe (Atom, [Term], [Goal])
+containsHeadTailPattern :: [(Atom, [Term], [Goal])] -> Maybe Clause
 containsHeadTailPattern [] = Nothing
-containsHeadTailPattern (c@(name, args, goals) : clauses) =
+containsHeadTailPattern ((name, args, goals) : clauses) =
   case hasHeadTailPattern (Struct name args) <> mconcat (map hasHeadTailPattern goals) of
-    PatternFound -> Just c
+    PatternFound -> Just $ Clause name args goals
     DontKnow -> containsHeadTailPattern clauses
 
 hasHeadTailPattern :: Term -> HasHeadTailPattern
