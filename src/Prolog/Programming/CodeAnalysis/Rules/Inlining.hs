@@ -137,9 +137,9 @@ unification
   :: Map String Int
   -- ^ Number of occurrences of each variable in the whole clause.
   -> Term
-  -- ^ Left side of unification to select from
+  -- ^ Left side of unification to select from.
   -> Term
-  -- ^ Right side of unification to select from
+  -- ^ Right side of unification to select from.
   -> Maybe (String, Term)
   -- ^ The selected variable name and the term that replaces it.
 unification totalVars left right = pick (var left) (var right)
