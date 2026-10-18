@@ -21,42 +21,42 @@ caConfig =
 
 detectsPatternMatches :: [(String, [String])]
 detectsPatternMatches =
-  [ ("p(Xs,X) :- Xs = [X,_].", ["p([X,_], X)."]) -- Fulfills rule 1
+  [ ("p(Xs, X) :- Xs = [X,_].", ["p([X,_], X)."]) -- Fulfills rule 1
   , ("p([X]) :- X = a.", ["p([a])."]) -- Fulfills rule 1
   , ("p(X) :- X = leaf.", ["p(leaf)."]) -- Fulfills rule 1
   , ("p(X) :- leaf = X.", ["p(leaf)."]) -- Fulfills rule 1
   ,
-    ( "p(X) :- X = node(L,V,R), q(V), p(L), p(R)." -- Fulfills rule 1
+    ( "p(X) :- X = node(L, V, R), q(V), p(L), p(R)." -- Fulfills rule 1
     , ["p(node(L, V, R)) :- q(V), p(L), p(R)."]
     )
   , ("p(X) :- X = a, !.", ["p(a) :- !."]) -- Fulfills rule 1
-  , ("p(X,Y) :- X = Y.", ["p(X, X)."]) -- Fulfills rule 1
+  , ("p(X, Y) :- X = Y.", ["p(X, X)."]) -- Fulfills rule 1
   , ("p(X) :- q(a), X = b.", ["p(b) :- q(a)."]) -- Fulfills rule 1
   , ("p(X) :- !, X = a.", ["p(a) :- !."]) -- Fulfills rule 1
   , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", ["p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs)."]) -- Fulfills rule 1
   , ("p(X) :- X = b, q(a).", ["p(b) :- q(a)."]) -- Fulfills rule 1
   , ("p(X) :- X = [Y|Ys], q(Y), qs(Ys).", ["p([Y|Ys]) :- q(Y), qs(Ys)."]) -- Fulfills rule 1
-  , ("p(X,X,Y) :- X = Y.", ["p(X, X, X)."]) -- Fulfills rule 1
+  , ("p(X, X, Y) :- X = Y.", ["p(X, X, X)."]) -- Fulfills rule 1
   , ("p :- r, X = a, q(X, b).", ["p :- r, q(a, b)."]) -- Fulfills rule 2
   , ("p :- r, a = X, q(X, b).", ["p :- r, q(a, b)."]) -- Fulfills rule 2
   , ("p(X) :- X = aVeryLongAtomName.", ["p(aVeryLongAtomName)."]) -- Fulfills rule 1
-  , ("p(X,Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."]) -- Fulfills rule 1
-  , ("p(X,Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
-  , ("p(X,Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
+  , ("p(X, Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."]) -- Fulfills rule 1
+  , ("p(X, Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
+  , ("p(X, Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
   , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
-  , ("p(X,Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
-  , ("p(X,Y) :- Y = X.", ["p(Y, Y)."])
+  , ("p(X, Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
+  , ("p(X, Y) :- Y = X.", ["p(Y, Y)."])
   , ("p :- A = b, r, X = c, q(X).", ["p :- A = b, r, q(c)."])
   , ("p(Y) :- X = f(Y), q(X).", ["p(Y) :- q(f(Y))."])
   ]
 
 detectionFree :: [String]
 detectionFree =
-  [ "p(Xs,X) :- Xs = [X,_], q(Xs)." -- Xs used after unification
+  [ "p(Xs, X) :- Xs = [X,_], q(Xs)." -- Xs used after unification
   , "p(X) :- q(X), X = [a]." -- first predicate contains variable in unification
-  , "p(X,Y) :- q(Y), X = [Y]." -- first predicate contains variable in unification
-  , "p(X,Y) :- not(q(Y)), X = [Y]." -- first predicate contains variable in unification
-  , "p(X,Y) :- q(X,Y), X = f(Y)." -- first predicate contains variable in unification
+  , "p(X, Y) :- q(Y), X = [Y]." -- first predicate contains variable in unification
+  , "p(X, Y) :- not(q(Y)), X = [Y]." -- first predicate contains variable in unification
+  , "p(X, Y) :- q(X, Y), X = f(Y)." -- first predicate contains variable in unification
   , "p(X) :- (q(X) ; r(X)), X = a." -- first predicate contains variable in unification
   , "p(X) :- q(X), X = a, r(X)." -- first predicate contains variable in unification
   , "p(X) :- q(X), !, X = a. p(b)." -- first predicate contains variable in unification
@@ -64,22 +64,22 @@ detectionFree =
   , "p(X) :- X = [X]." -- term includes X
   , "p(X) :- X =:= a." -- =:= operator not tracked
   , "p(X) :- q(X)." -- no unification
-  , "p(X,Y) :- b(X,Y), X = Y, q(X,Y)." -- X used in head and in first predicate
-  , "p(X, Y) :- X = f(A,B), q(X,Y)." -- X used after unification
+  , "p(X, Y) :- b(X, Y), X = Y, q(X, Y)." -- X used in head and in first predicate
+  , "p(X, Y) :- X = f(A, B), q(X, Y)." -- X used after unification
   , "p(X, Y) :- X = f(X), q(X,Y)." -- term includes X
-  , "p(X, Y) :- X = a, q(X,Y)." -- X used after unification
+  , "p(X, Y) :- X = a, q(X, Y)." -- X used after unification
   , "p :- r, X = a, q(X), d(X)." -- X used twice after unification
-  , "p(X,X) :- X = f(g(c))." -- X used twice in head
+  , "p(X, X) :- X = f(g(c))." -- X used twice in head
   , "p(Y) :- X = f(Y)." -- Y occurs in head
   , "p(X) :- a = b, q(X)."
   , "p :- X = a."
-  , "p(X,Y) :- Z = f(X), X = f(Y)."
+  , "p(X, Y) :- Z = f(X), X = f(Y)."
   , "p :- Z = f(X), X = a, q(X)."
   ]
 
 spec :: Spec
 spec = describe "Inlining" $ do
-  describe "Should detect terms that can be inlined into the clause head" $
+  describe "Should detect terms that can be inlined" $
     forM_ detectsPatternMatches $ \(programCode, expectedFixedClauses) ->
       it programCode $
         shouldDetectProblemsStrict
