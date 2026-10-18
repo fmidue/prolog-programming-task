@@ -117,7 +117,7 @@ collectUnifications totalVars headVars goals =
           guard $ (if rule == One then 0 else 1) == xCountInSuffix
 
           pure ((rule, l, r), replacement, prefix prependGoals)
-        suffix' = Map.unionWith (+) tVars suffix
+        suffix' = addVariables tVars suffix
         prependGoals' = t : prependGoals
       in
         case valid of
