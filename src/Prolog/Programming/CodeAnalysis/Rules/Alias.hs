@@ -20,7 +20,7 @@ aliasChecker clauses = concatMap checkGroup partitionedByName
     partitionedByName =
       Map.elems
         $ Map.fromListWith (++)
-        $ map (\c -> (fst $ clauseIdentities False c, [c])) deduped
+        $ map (\c -> (fst $ clauseIdentities undefined c, [c])) deduped
 
 checkGroup :: [(Atom, [Term], [Goal])] -> [Problem]
 checkGroup [(alias, args1, [Struct aliased args2])] =
