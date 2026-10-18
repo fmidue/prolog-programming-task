@@ -42,7 +42,7 @@ detectsPatternMatches =
   , ("p(X) :- X = aVeryLongAtomName.", ["p(aVeryLongAtomName)."]) -- Fulfills rule 1
   , ("p(X, Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."]) -- Fulfills rule 1
   , ("p(X, Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."]) -- Fulfills rule 1 twice
-  , ("p(X, Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z)."])
+  , ("p(X, Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z).", "p(X, Y) :- X = a, q(Y), r(Y)."])
   , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
   , ("p(X, Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
   , ("p(X, Y) :- Y = X.", ["p(Y, Y)."])
