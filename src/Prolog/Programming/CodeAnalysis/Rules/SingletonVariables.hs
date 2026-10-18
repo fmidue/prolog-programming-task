@@ -8,8 +8,9 @@ import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
 singletonVariablesChecker :: ClauseRule
-singletonVariablesChecker clause = map (toProblem clause) singletonVariables
+singletonVariablesChecker (name, args, goals) = map (toProblem clause) singletonVariables
   where
+    clause = Clause name args goals
     singletonVariables = Map.keys . Map.filter (== 1) $ countVariables clause
 
 toProblem :: Clause -> String -> Problem

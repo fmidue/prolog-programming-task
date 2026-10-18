@@ -24,20 +24,26 @@ import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
 inliningChecker :: ClauseRule
-inliningChecker c@(Clause clauseHead goals) =
+inliningChecker (name, args, goals) =
   map
     ( \((_, l, r), nameReplacement, goals') ->
-        toProblem c (Struct "=" [l, r]) $ fixedClause goals' nameReplacement
+        toProblem clause (Struct "=" [l, r]) $ fixedClause goals' nameReplacement
     )
     $ collectUnifications totalVars headVars goals
   where
-    totalVars = countVariables c
+    clause = Clause name args goals
+    clauseHead = Struct name args
+    totalVars = countVariables clause
     headVars = countVariables clauseHead
 
-    fixedClause rhs (name, replacement) =
-      let sub = (VariableName 0 name, replacement)
-      in Clause (substitute sub clauseHead) $ map (substitute sub) rhs
-inliningChecker _ = []
+    fixedClause rhs (name', replacement) =
+      let
+        sub = (VariableName 0 name', replacement)
+        substitutedHead = substitute sub clauseHead
+      in
+        case substitutedHead of
+          Struct newName newArgs -> Clause newName newArgs $ map (substitute sub) rhs
+          _ -> error "should not happen"
 
 data Rule = One | Two deriving Eq
 

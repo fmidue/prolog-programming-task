@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# HLINT ignore "Use unless" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -22,7 +21,7 @@ module Prolog.Programming.Task (
 
 import Prolog.Programming.Data
 import Prolog.Programming.ExampleConfig
-import Prolog.Programming.Helper (Arity, escalateSeverity, termHead)
+import Prolog.Programming.Helper (Arity, escalateSeverity)
 import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.TestRunner
 
@@ -32,7 +31,7 @@ import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
 import Data.Either (fromRight)
-import Data.List (intercalate, nub)
+import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
@@ -41,15 +40,16 @@ import Data.Void (absurd)
 import Language.Prolog (
   Atom,
   Clause (..),
-  Program,
+  Goal,
   Term (..),
   Unifier,
   consultString,
-  lhs,
  )
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.List.Extra (notNull, nubOrd)
+import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.Types (
   Expection (..),
@@ -63,7 +63,6 @@ import Prolog.Programming.Types (
   TreeStyle (..),
   Visibility (..),
  )
-import Text.Parsec (ParseError)
 import Text.PrettyPrint.Leijen.Text (
   Doc,
   align,
@@ -86,12 +85,8 @@ verifyConfig cfg = case parseInstance cfg of
   Right inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} ->
     let solutionErrorDisplay err = fail $ "Failure during check of sample solution:\n" ++ show err
     in do
-         when (includeHiddenDefinitions == Yes && showSWISHButton) $
-           case consultString hiddenPredicates of
-             Left err -> fail $ show err
-             Right (_ : _) ->
-               fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
-             Right [] -> pure ()
+         when (includeHiddenDefinitions == Yes && showSWISHButton && notNull hiddenPredicates) $
+           fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
          when rigorousValidation $
            checkTask
@@ -105,8 +100,8 @@ toInstance :: Config -> TaskInstance
 toInstance = fromRight (error "config should have been validated before") . parseInstance
 
 describeTask :: TaskInstance -> Doc
-describeTask TaskInstance {visiblePredicates} =
-  text . pack $ visiblePredicates
+describeTask TaskInstance {taskDescription} =
+  text $ pack taskDescription
 
 initialTask :: TaskInstance -> Code
 initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
@@ -128,8 +123,8 @@ initialTask TaskInstance {taskConfig = TaskConfig {specifications}} =
     newPredDesc StatementToCheck {} = Nothing
     newPredDesc QueryWithAnswers {} = Nothing
 
-taskDefinitions :: TaskInstance -> Either ParseError [Clause]
-taskDefinitions TaskInstance {visiblePredicates} = consultString visiblePredicates
+taskDefinitions :: TaskInstance -> [Clause]
+taskDefinitions TaskInstance {visiblePredicates} = map (uncurry3 Clause) visiblePredicates
 
 taskDefinitionsIncluded :: TaskInstance -> Bool
 taskDefinitionsIncluded TaskInstance {taskConfig = TaskConfig {..}} = case includeTaskDefinitions of
@@ -185,66 +180,62 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
               <$$> matchReport
           pure newDefs
 
-      case consultStringsAndFilter
-        visiblePredicates
-        (taskFilter includeTaskDefinitions inProg)
-        hiddenPredicates
-        (hiddenFilter includeHiddenDefinitions inProg) of
-        Left err -> reject . text . pack $ show err
-        Right factProg -> do
-          testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
-          case testResult of
-            (Finished AllOk, (passed, _)) ->
-              inform $
-                vcat
-                  [ text "Ok"
-                  , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
-                  ]
-            (Finished (SomeTimeouts (t :| ts)), (passed, _)) -> do
-              let testsRun = passed + 1 + length ts
-              reject $
-                vcat
-                  [ text "No."
-                  , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
-                  ]
-                  <> nested
-                    ( line
-                        <> describeSpec t
-                        <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
-                        <> line
-                        <> if not (null ts)
-                          then
-                            text
-                              ( pack $
-                                  show (length ts)
-                                    ++ " additional test "
-                                    ++ plural (length ts) "case" "cases"
-                                    ++ " also timed out"
-                              )
-                          else empty
-                    )
-            (Aborted reason, (passed, notRun)) -> do
-              let (reasonDoc, mTree) = explainReason reason
-              inform $
-                vcat
-                  [ text "No."
-                  , text (pack $ unwords [show (passed + 1), plural (passed + 1) "test was" "tests were", "run"])
-                  , text "The following test case failed:"
-                  ]
-                  <> reasonDoc
-              maybe (pure ()) drawTree mTree
-              reject
-                ( text . pack $
-                    "tests passed: "
-                      ++ show passed
-                      ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
-                        then ", tests not run: " ++ show notRun
-                        else ""
+      let factProg =
+            filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
+              ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
+      testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
+      case testResult of
+        (Finished AllOk, (passed, _)) ->
+          inform $
+            vcat
+              [ text "Ok"
+              , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
+              ]
+        (Finished (SomeTimeouts (t :| ts)), (passed, _)) -> do
+          let testsRun = passed + 1 + length ts
+          reject $
+            vcat
+              [ text "No."
+              , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
+              ]
+              <> nested
+                ( line
+                    <> describeSpec t
+                    <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
+                    <> line
+                    <> if not (null ts)
+                      then
+                        text
+                          ( pack $
+                              show (length ts)
+                                ++ " additional test "
+                                ++ plural (length ts) "case" "cases"
+                                ++ " also timed out"
+                          )
+                      else empty
                 )
+        (Aborted reason, (passed, notRun)) -> do
+          let (reasonDoc, mTree) = explainReason reason
+          inform $
+            vcat
+              [ text "No."
+              , text (pack $ unwords [show (passed + 1), plural (passed + 1) "test was" "tests were", "run"])
+              , text "The following test case failed:"
+              ]
+              <> reasonDoc
+          maybe (pure ()) drawTree mTree
+          reject
+            ( text . pack $
+                "tests passed: "
+                  ++ show passed
+                  ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
+                    then ", tests not run: " ++ show notRun
+                    else ""
+            )
 
-          case checkForProblems codeAnalysis inProg factProg of
-            [] -> pure ()
-            pbs -> either reject inform $ displayProblems pbs
+      case checkForProblems codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject inform $ displayProblems pbs
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
@@ -258,36 +249,17 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-consultStringsAndFilter :: Code -> (Clause -> Bool) -> Code -> (Clause -> Bool) -> Either ParseError [Clause]
-consultStringsAndFilter visibleDefs keepVisible hiddenDefs keepHidden = do
-  vs <- consultString visibleDefs
-  hs <- consultString hiddenDefs
-  pure $ filter keepVisible vs ++ filter keepHidden hs
-
-taskFilter :: IncludeTask -> Program -> Clause -> Bool
+taskFilter :: IncludeTask -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
 taskFilter Yes _ = const True
 taskFilter No {} _ = const False
-taskFilter Filtered prog = \clause -> not $ any ((Just True ==) . compareClause clause) prog
-  where
-    compareClause :: Clause -> Clause -> Maybe Bool
-    compareClause (Clause p xs) (Clause q ys) = Just $ p == q && xs == ys
-    compareClause _ _ = Nothing
+taskFilter Filtered prog = (`notElem` prog)
 
-hiddenFilter :: IncludeHidden -> Program -> Clause -> Bool
+hiddenFilter :: IncludeHidden -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
 hiddenFilter Yes _ = const True
 hiddenFilter (No x) _ = absurd x
-hiddenFilter Filtered prog = notDefinedByProg
-  where
-    notDefinedByProg :: Clause -> Bool
-    notDefinedByProg x = case extractPredicate $ lhs x of
-      Just (p, k) -> (p, k) `notElem` inputDefs
-      Nothing -> error "impossible"
-    inputDefs :: [(Atom, Int)]
-    inputDefs = mapMaybe (extractPredicate . lhs) prog
-    extractPredicate :: Term -> Maybe (Atom, Int)
-    extractPredicate (Struct p (length -> k)) = Just (p, k)
-    extractPredicate (Var _) = Nothing
-    extractPredicate (Cut _) = Nothing
+hiddenFilter Filtered prog = \(name, args, _) ->
+  let lengthArgs = length args
+  in all (\(name', args', _) -> name /= name' || lengthArgs /= length args') prog
 
 plural :: (Eq a, Num a) => a -> b -> b -> b
 plural 1 x _ = x
@@ -372,7 +344,7 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [Clause] -> (Doc, Maybe [(Term, Atom)])
+findNewPredicateDefs :: [Spec] -> [(Atom, [Term], [Goal])] -> (Doc, Maybe [(Term, Atom)])
 findNewPredicateDefs specs clauses = (report, result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
@@ -380,7 +352,7 @@ findNewPredicateDefs specs clauses = (report, result)
     extractNewDeclArgs (Spec _ _ _ _ QueryWithAnswers {}) = Nothing
     extractNewDeclArgs (Spec _ _ _ _ StatementToCheck {}) = Nothing
 
-    clauseHeads = nub $ termHead . lhs <$> clauses
+    clauseHeads = nubOrd $ map (\(name, args, _) -> (name, length args)) clauses
 
     matching = zipWith match newDecls (map Just clauseHeads ++ repeat Nothing)
     report = vcat $ map reportMatch matching
@@ -434,13 +406,12 @@ grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle
 grabFormatting ResolutionStyle = resolutionStyle
 
-containsHeadTailPattern :: Program -> Maybe Clause
+containsHeadTailPattern :: [(Atom, [Term], [Goal])] -> Maybe Clause
 containsHeadTailPattern [] = Nothing
-containsHeadTailPattern (clause@(Clause hd gs) : clauses) =
-  case hasHeadTailPattern hd <> mconcat (map hasHeadTailPattern gs) of
-    PatternFound -> Just clause
+containsHeadTailPattern ((name, args, goals) : clauses) =
+  case hasHeadTailPattern (Struct name args) <> mconcat (map hasHeadTailPattern goals) of
+    PatternFound -> Just $ Clause name args goals
     DontKnow -> containsHeadTailPattern clauses
-containsHeadTailPattern (ClauseFn {} : clauses) = containsHeadTailPattern clauses
 
 hasHeadTailPattern :: Term -> HasHeadTailPattern
 hasHeadTailPattern (Struct "." [_, Var _]) = PatternFound

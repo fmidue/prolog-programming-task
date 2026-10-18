@@ -31,7 +31,7 @@ import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Set (Set)
 import GHC.Generics (Generic)
-import Language.Prolog (Clause (..), Program)
+import Language.Prolog (Atom, Goal, Term)
 import Text.PrettyPrint.Leijen.Text (Doc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
@@ -43,7 +43,7 @@ newtype Problem = Problem {
   deriving Show
 {- FOURMOLU_ENABLE -}
 
-type Context = Program
+type Context = [(Atom, [Term], [Goal])]
 
 data Predicate = Predicate {
   predicateName :: String
@@ -55,10 +55,10 @@ instance Show Predicate where
   show (Predicate name arity) = name ++ "/" ++ show arity
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
-type ClauseRule = Clause -> [Problem]
+type ClauseRule = (Atom, [Term], [Goal]) -> [Problem]
 
 -- | Definition for a code analysis checker that looks for violations in a given program
-type ProgramRule = Program -> [Problem]
+type ProgramRule = [(Atom, [Term], [Goal])] -> [Problem]
 
 type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
 

@@ -16,9 +16,10 @@ import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
 import Data.Maybe (fromMaybe, isNothing)
 
-import Language.Prolog (Atom, Clause (..), Goal, Program, Term (..), Unifier, apply)
+import Language.Prolog (Atom, Clause (Clause), Goal, Program, Term (..), Unifier, apply)
 import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
 
+import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.Types (
   Expection (..),
   Requirement (..),
@@ -33,8 +34,8 @@ import System.Timeout (timeout)
 
 testRunner
   :: TimeoutDuration
-  -> Program
-  -> Program
+  -> [(Atom, [Term], [Goal])]
+  -> [(Atom, [Term], [Goal])]
   -> [Spec]
   -> [(Term, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
@@ -42,7 +43,7 @@ testRunner globalTO factProg inputProg specs newDefs = do
   let
     newProg = useFoundDefsInProgram newDefs factProg
     newSpecs = useFoundDefsInSpecs newDefs specs
-    p = newProg ++ inputProg
+    p = newProg ++ map (uncurry3 Clause) inputProg
 
   testCases <- reorderTests newSpecs
   runTests testCases (checkWithTimeout p)
@@ -56,13 +57,16 @@ testRunner globalTO factProg inputProg specs newDefs = do
       pure $ fromMaybe Timeout res
     millisecond2microSec = (* 1000)
 
-useFoundDefsInProgram :: [(Term, Atom)] -> [Clause] -> [Clause]
-useFoundDefsInProgram ds clauses = updateClause <$> clauses
+useFoundDefsInProgram :: [(Term, Atom)] -> [(Atom, [Term], [Goal])] -> [Clause]
+useFoundDefsInProgram ds = map updateClause
   where
     replace = replaceHeads ds
-    updateClause :: Clause -> Clause
-    updateClause (Clause hd gs) = Clause (replace hd) (map replace gs)
-    updateClause (ClauseFn hd f) = ClauseFn (replace hd) (map replace . f)
+
+    updateClause :: (Atom, [Term], [Goal]) -> Clause
+    updateClause (name, args, gs) =
+      case replace (Struct name args) of
+        Struct newName newArgs -> Clause newName newArgs $ map replace gs
+        _ -> error "should not happen"
 
 useFoundDefsInSpecs :: [(Term, Atom)] -> [Spec] -> [Spec]
 useFoundDefsInSpecs ds specs = updateSpec <$> specs
