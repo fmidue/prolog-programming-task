@@ -94,7 +94,7 @@ collectUnifications totalVars headVars goals =
           replacement@(x, _term) <- unification totalVars l r
           guard $ Map.disjoint lVars rVars
 
-          case Map.disjoint tVars headVars of
+          case Map.notMember x headVars of
             True -> do
               guard $ Map.notMember x vs
               Just (Two, replacement)
