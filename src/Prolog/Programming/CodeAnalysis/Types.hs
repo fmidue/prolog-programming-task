@@ -125,7 +125,5 @@ data WithSeverity a = WithSeverity {
   }
   deriving (Data, Eq, Foldable, Functor, Generic, Reader, Show, ToDoc, Traversable)
 
-deriving instance Data Signature
-deriving instance Generic Signature
 deriving instance Reader Signature
 deriving instance ToDoc Signature
