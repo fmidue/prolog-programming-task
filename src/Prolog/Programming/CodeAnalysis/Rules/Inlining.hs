@@ -26,19 +26,19 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker (name, args, goals) =
   map
-    ( \((_, l, r), nameReplacement, goals') ->
-        toProblem clause (Struct "=" [l, r]) $ fixedClause goals' nameReplacement
+    ( \((_, l, r), replacement, goals') ->
+        toProblem clause (Struct "=" [l, r]) $ fixedClause replacement goals'
     )
     $ collectUnifications totalVars headVars goals
   where
     clause = Clause name args goals
     clauseHead = Struct name args
-    totalVars = countVariables clause
-    headVars = countVariables clauseHead
+    totalVars = Map.unionWith (+) headVars $ countVariables goals
+    headVars = countVariables args
 
-    fixedClause rhs (name', replacement) =
+    fixedClause (x, term) rhs =
       let
-        sub = (VariableName 0 name', replacement)
+        sub = (VariableName 0 x, term)
         substitutedHead = substitute sub clauseHead
       in
         case substitutedHead of
