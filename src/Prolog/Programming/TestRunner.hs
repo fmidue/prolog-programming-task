@@ -43,7 +43,7 @@ testRunner globalTO factProg inputProg specs newDefs = do
   let
     newProg = useFoundDefsInProgram newDefs factProg
     newSpecs = useFoundDefsInSpecs newDefs specs
-    p = map (uncurry3 Clause) $ newProg ++ inputProg
+    p = newProg ++ map (uncurry3 Clause) inputProg
 
   testCases <- reorderTests newSpecs
   runTests testCases (checkWithTimeout p)
@@ -57,15 +57,15 @@ testRunner globalTO factProg inputProg specs newDefs = do
       pure $ fromMaybe Timeout res
     millisecond2microSec = (* 1000)
 
-useFoundDefsInProgram :: [(Term, Atom)] -> [(Atom, [Term], [Goal])] -> [(Atom, [Term], [Goal])]
-useFoundDefsInProgram ds clauses = updateClause <$> clauses
+useFoundDefsInProgram :: [(Term, Atom)] -> [(Atom, [Term], [Goal])] -> [Clause]
+useFoundDefsInProgram ds = map updateClause
   where
     replace = replaceHeads ds
 
-    updateClause :: (Atom, [Term], [Goal]) -> (Atom, [Term], [Goal])
+    updateClause :: (Atom, [Term], [Goal]) -> Clause
     updateClause (name, args, gs) =
       case replace (Struct name args) of
-        Struct newName newArgs -> (newName, newArgs, map replace gs)
+        Struct newName newArgs -> Clause newName newArgs $ map replace gs
         _ -> error "should not happen"
 
 useFoundDefsInSpecs :: [(Term, Atom)] -> [Spec] -> [Spec]
