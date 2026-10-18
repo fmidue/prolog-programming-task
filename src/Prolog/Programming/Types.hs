@@ -8,12 +8,12 @@
 
 module Prolog.Programming.Types where
 
-import Autolib.Reader (Reader (..))
-import Autolib.ToDoc (ToDoc (..))
+import Autolib.Reader (Reader)
+import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Void (Void)
 import GHC.Generics (Generic)
-import Language.Prolog (Term (..), VariableName (..))
+import Language.Prolog (Atom, Goal, Term (..), VariableName (..))
 import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
 import Prolog.Programming.Data (Code)
 
@@ -49,8 +49,9 @@ data TaskConfig = TaskConfig {
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
   , sampleSolution :: Code
-  , visiblePredicates :: Code
-  , hiddenPredicates :: Code
+  , taskDescription :: Code
+  , visiblePredicates :: [(Atom, [Term], [Goal])]
+  , hiddenPredicates :: [(Atom, [Term], [Goal])]
   }
   deriving (Generic, Reader, Show, ToDoc)
 
