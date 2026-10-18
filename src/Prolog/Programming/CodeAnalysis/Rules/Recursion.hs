@@ -5,11 +5,10 @@ import Data.List (intercalate, sort)
 import qualified Data.Map as Map (fromListWith, toList)
 import qualified Data.Set as Set (toList, union)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Atom, Goal, Term)
+import Language.Prolog (Atom, Goal, Signature, Term)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
-  Predicate,
   Problem (..),
   ProgramRule,
  )
@@ -20,7 +19,7 @@ recursionChecker (AdditionalMessage cMsg) clauses = map (toProblem cMsg) foundCy
   where
     foundCycles = [c | CyclicSCC c <- stronglyConnComp $ buildGraph clauses]
 
-buildGraph :: [(Atom, [Term], [Goal])] -> [(Predicate, Predicate, [Predicate])]
+buildGraph :: [(Atom, [Term], [Goal])] -> [(Signature, Signature, [Signature])]
 buildGraph clauses =
   [ (predicate, predicate, Set.toList calls)
   | (predicate, calls) <-
@@ -29,7 +28,7 @@ buildGraph clauses =
         $ map (clauseIdentities False) clauses
   ]
 
-toProblem :: Maybe String -> [Predicate] -> Problem
+toProblem :: Maybe String -> [Signature] -> Problem
 toProblem cMsg recursivePredicates =
   Problem {
     problemDisplay =

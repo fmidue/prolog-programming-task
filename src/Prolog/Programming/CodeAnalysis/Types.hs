@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
@@ -19,7 +21,6 @@ module Prolog.Programming.CodeAnalysis.Types (
   UngroupedDefinitionsConfig (..),
   Severity (..),
   WithSeverity (..),
-  Predicate (..),
   ForbiddenPredicatesConfig (..),
 )
 where
@@ -30,7 +31,7 @@ import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Set (Set)
 import GHC.Generics (Generic)
-import Language.Prolog (Atom, Goal, Term)
+import Language.Prolog (Atom, Goal, Signature (..), Term)
 import Text.PrettyPrint.Leijen.Text (Doc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
@@ -43,15 +44,6 @@ newtype Problem = Problem {
 {- FOURMOLU_ENABLE -}
 
 type Context = [(Atom, [Term], [Goal])]
-
-data Predicate = Predicate {
-  predicateName :: String
-  , predicateArity :: Int
-  }
-  deriving (Data, Eq, Generic, Ord, Reader, ToDoc)
-
-instance Show Predicate where
-  show (Predicate name arity) = name ++ "/" ++ show arity
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
 type ClauseRule = (Atom, [Term], [Goal]) -> [Problem]
@@ -82,7 +74,7 @@ newtype UngroupedDefinitionsConfig = UngroupedDefinitionsConfig (CodeAnalysisRul
 newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving (Data, Generic, Reader, Show, ToDoc)
 
-newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Predicate}
+newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Signature}
   deriving (Data, Generic, Reader, Show, ToDoc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
@@ -132,3 +124,8 @@ data WithSeverity a = WithSeverity {
   , value :: a
   }
   deriving (Data, Eq, Foldable, Functor, Generic, Reader, Show, ToDoc, Traversable)
+
+deriving instance Data Signature
+deriving instance Generic Signature
+deriving instance Reader Signature
+deriving instance ToDoc Signature

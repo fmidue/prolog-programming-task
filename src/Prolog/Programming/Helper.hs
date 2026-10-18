@@ -2,7 +2,7 @@ module Prolog.Programming.Helper where
 
 import Data.Data (Data)
 import Data.Generics (everywhere, mkT)
-import Language.Prolog (Atom, Term (..))
+import Language.Prolog (Atom, Signature (..), Term (..))
 import Prolog.Programming.CodeAnalysis.Types (Severity (..))
 
 type Arity = Int
@@ -15,3 +15,9 @@ escalateSeverity = everywhere $ mkT toError
   where
     toError :: Severity -> Severity
     toError _ = Error
+
+predicateName :: Signature -> Atom
+predicateName (Signature name _) = name
+
+predicateArity :: Signature -> Int
+predicateArity (Signature _ arity) = arity

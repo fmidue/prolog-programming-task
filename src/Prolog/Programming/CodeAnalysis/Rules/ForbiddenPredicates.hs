@@ -6,12 +6,12 @@ import Data.List (intercalate)
 import Data.Set (Set)
 import qualified Data.Set as Set (intersection, toList)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Atom, Clause (..), Goal, Term)
+import Language.Prolog (Atom, Clause (..), Goal, Signature, Term)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
-import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Predicate, Problem (..))
+import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
 
-forbiddenPredicatesChecker :: Set Predicate -> ClauseRule
+forbiddenPredicatesChecker :: Set Signature -> ClauseRule
 forbiddenPredicatesChecker forbidden c@(name, args, goals)
   | null usedForbidden = []
   | otherwise = [toProblem Nothing usedForbidden clause]
@@ -19,10 +19,10 @@ forbiddenPredicatesChecker forbidden c@(name, args, goals)
     clause = Clause name args goals
     usedForbidden = Set.toList $ forbiddenInClause forbidden c
 
-forbiddenInClause :: Set Predicate -> (Atom, [Term], [Goal]) -> Set Predicate
+forbiddenInClause :: Set Signature -> (Atom, [Term], [Goal]) -> Set Signature
 forbiddenInClause forbidden clause = forbidden `Set.intersection` snd (clauseIdentities True clause)
 
-toProblem :: Maybe String -> [Predicate] -> Clause -> Problem
+toProblem :: Maybe String -> [Signature] -> Clause -> Problem
 toProblem msg predicates clause =
   Problem {
     problemDisplay =
