@@ -51,7 +51,7 @@ data Rule = One | Two deriving Eq
 
 For each unification whose two sides have disjoint variables and which satisfies
 one of the inlining rules, the result records the rule matched, left and right
-side of the unification, the selected variable and replacement, and the goals
+side of the unification, the selected variable and replacement term, and the goals
 besides it.
 -}
 collectUnifications
@@ -60,7 +60,7 @@ collectUnifications
   -> Map String Int
   -- ^ Number of occurrences of each variable in the clause head.
   -> [Term]
-  -- ^ Goals that have not been visited yet.
+  -- ^ Goals in the clause's right-hand side.
   -> [((Rule, Term, Term), (String, Term), [Term])]
   -- ^ Unifications (in reversed order) together with the goals besides them.
 collectUnifications totalVars headVars goals =
@@ -80,8 +80,8 @@ collectUnifications totalVars headVars goals =
         candidate =
           case t of
             Struct "=" [l, r] -> do
-              (rule, nameReplacement) <- satisfiesRuleAtOccurrence l r nonUnificationVars unificationVars
-              pure ((rule, l, r), nameReplacement, prefix)
+              (rule, replacement) <- satisfiesRuleAtOccurrence l r nonUnificationVars unificationVars
+              pure ((rule, l, r), replacement, prefix)
             _ -> Nothing
 
         isUnification (Struct "=" [_l, _r]) = True
@@ -91,19 +91,19 @@ collectUnifications totalVars headVars goals =
           let
             lVars = countVariables l
             rVars = countVariables r
-          nameReplacement@(x, _term) <- unification totalVars l r
+          replacement@(x, _term) <- unification totalVars l r
           guard $ Map.disjoint lVars rVars
 
           case Map.disjoint tVars headVars of
             True -> do
               guard $ Map.notMember x vs
-              Just (Two, nameReplacement)
+              Just (Two, replacement)
             False ->
               if Map.lookup x headVars == Just 1
                 then do
                   guard $ Map.disjoint tVars previousNonUnificationVars
                   guard $ not (Set.member x previousUnificationVars)
-                  Just (One, nameReplacement)
+                  Just (One, replacement)
                 else Nothing
 
     addVariables = Map.unionWith (+)
@@ -112,12 +112,12 @@ collectUnifications totalVars headVars goals =
     validate ((t, tVars, candidate) : rest) suffix prependGoals =
       let
         valid = do
-          ((rule, l, r), nameReplacement@(x, _), prefix) <- candidate
+          ((rule, l, r), replacement@(x, _), prefix) <- candidate
           let xCountInSuffix = Map.findWithDefault 0 x suffix
 
           guard $ (if rule == One then 0 else 1) == xCountInSuffix
 
-          pure ((rule, l, r), nameReplacement, prefix prependGoals)
+          pure ((rule, l, r), replacement, prefix prependGoals)
         suffix' = Map.unionWith (+) tVars suffix
         prependGoals' = t : prependGoals
       in
