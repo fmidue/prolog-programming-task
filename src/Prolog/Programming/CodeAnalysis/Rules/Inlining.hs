@@ -94,17 +94,16 @@ collectUnifications totalVars headVars goals =
           replacement@(x, _term) <- unification totalVars l r
           guard $ Map.disjoint lVars rVars
 
-          case Map.notMember x headVars of
-            True -> do
+          case Map.lookup x headVars of
+            Nothing -> do
               guard $ Map.notMember x vs
               Just (Two, replacement)
-            False ->
-              if Map.lookup x headVars == Just 1
-                then do
-                  guard $ Map.disjoint tVars previousNonUnificationVars
-                  guard $ not (Set.member x previousUnificationVars)
-                  Just (One, replacement)
-                else Nothing
+            Just 1 -> do
+              guard $ Map.disjoint tVars previousNonUnificationVars
+              guard $ not (Set.member x previousUnificationVars)
+              Just (One, replacement)
+            _ ->
+              Nothing
 
     addVariables = Map.unionWith (+)
 
