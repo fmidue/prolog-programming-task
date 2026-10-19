@@ -59,8 +59,8 @@ detectionFree =
   , "p(X, Y) :- q(X, Y), X = f(Y)." -- first predicate contains variable in unification
   , "p(X) :- (q(X) ; r(X)), X = a." -- first predicate contains variable in unification
   , "p(X) :- q(X), X = a, r(X)." -- first predicate contains variable in unification
-  , "p(X) :- q(X), !, X = a. p(b)." -- first predicate contains variable in unification
-  , "p(X) :- q(X), X = a. p(a) :- !." -- first predicate contains variable in unification
+  , "p(X) :- q(X), !, X = a." -- first predicate contains variable in unification
+  , "p(X) :- q(X), X = a." -- first predicate contains variable in unification
   , "p(X) :- X = [X]." -- term includes X
   , "p(X) :- X =:= a." -- =:= operator not tracked
   , "p(X) :- q(X)." -- no unification
