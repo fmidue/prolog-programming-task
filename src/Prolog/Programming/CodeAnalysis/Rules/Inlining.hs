@@ -119,7 +119,8 @@ collectUnifications totalVars headVars goals = go goals Map.empty True False id
             varNotInPrefix = Map.notMember v prefixVars
           in
             and
-              [ -- Wenn die rechte Seite ihrerseits nur aus Gleichheiten besteht, in denen X nicht vorkommt
+              [ -- Wenn die rechte Seite ihrerseits bis zur Unifikation nur aus Gleichheiten besteht,
+                -- in denen X nicht vorkommt
                 (prefixHasOnlyUnifications && varNotInPrefix)
                   -- oder wenn nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
                   || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
