@@ -19,7 +19,7 @@ import Language.Prolog (
   VariableName (VariableName),
   substitute,
  )
-import Prolog.Programming.CodeAnalysis.Helper (countVariables)
+import Prolog.Programming.CodeAnalysis.Helper (containsCut, countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 
@@ -64,15 +64,16 @@ collectUnifications
   -> [((Rule, Term, Term), (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
 collectUnifications totalVars headVars goals =
-  validate (collectCandidates goals Map.empty Map.empty Set.empty id []) Map.empty [] []
+  validate (collectCandidates goals Map.empty Map.empty Set.empty False id []) Map.empty [] []
   where
-    collectCandidates [] _ _ _ _ candidates = candidates
-    collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix candidates =
+    collectCandidates [] _ _ _ _ _ candidates = candidates
+    collectCandidates (t : ts) vs nonUnificationVars unificationVars prefixHasDisallowedOperator prefix candidates =
       collectCandidates
         ts
         (addVariables tVars vs)
-        (if isUnification t then nonUnificationVars else addVariables tVars nonUnificationVars)
-        (if isUnification t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
+        (if isStructWithName "=" t then nonUnificationVars else addVariables tVars nonUnificationVars)
+        (if isStructWithName "=" t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
+        (prefixHasDisallowedOperator || isStructWithName ";" t || containsCut t)
         (prefix . (t :))
         ((t, tVars, candidate) : candidates)
       where
@@ -80,30 +81,42 @@ collectUnifications totalVars headVars goals =
         candidate =
           case t of
             Struct "=" [l, r] -> do
-              (rule, replacement) <- satisfiesRuleAtOccurrence l r nonUnificationVars unificationVars
+              (rule, replacement) <-
+                satisfiesRuleAtOccurrence
+                  l
+                  r
+                  nonUnificationVars
+                  unificationVars
+                  prefixHasDisallowedOperator
               pure ((rule, l, r), replacement, prefix)
             _ -> Nothing
 
-        isUnification (Struct "=" [_l, _r]) = True
-        isUnification _ = False
+        isStructWithName name (Struct name' _) = name == name'
+        isStructWithName _ _ = False
 
-        satisfiesRuleAtOccurrence l r previousNonUnificationVars previousUnificationVars = do
-          let
-            lVars = countVariables l
-            rVars = countVariables r
-          replacement@(x, _term) <- unification totalVars l r
-          guard $ Map.disjoint lVars rVars
+        satisfiesRuleAtOccurrence
+          l
+          r
+          previousNonUnificationVars
+          previousUnificationVars
+          prefixHasDisallowedOp = do
+            let
+              lVars = countVariables l
+              rVars = countVariables r
+            replacement@(x, _term) <- unification totalVars l r
+            guard $ Map.disjoint lVars rVars
 
-          case Map.lookup x headVars of
-            Nothing -> do
-              guard $ Map.notMember x vs
-              Just (Two, replacement)
-            Just 1 -> do
-              guard $ Map.disjoint tVars previousNonUnificationVars
-              guard $ not (Set.member x previousUnificationVars)
-              Just (One, replacement)
-            _ ->
-              Nothing
+            case Map.lookup x headVars of
+              Nothing -> do
+                guard $ Map.notMember x vs
+                Just (Two, replacement)
+              Just 1 -> do
+                guard $ not prefixHasDisallowedOp
+                guard $ Map.disjoint tVars previousNonUnificationVars
+                guard $ not (Set.member x previousUnificationVars)
+                Just (One, replacement)
+              _ ->
+                Nothing
 
     addVariables = Map.unionWith (+)
 
