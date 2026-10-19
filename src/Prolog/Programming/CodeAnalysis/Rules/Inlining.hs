@@ -104,7 +104,7 @@ collectUnifications totalVars headVars goals = go goals Map.empty True False id
         -- Regel 1: Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X
         -- noch Variablen aus term/Y vorkommen oder ihrerseits nur aus Gleichheiten bestehen,
         -- in denen X aber nicht vorkommt, etwas wie X = term oder X = Y oder Y = X oder term = X steht,
-        -- und X im Head nur einmal und weder in term noch im Rest der rechten Seite vorkommt
+        -- und X im Head genau einmal und weder in term noch im Rest der rechten Seite vorkommt
         -- (und X und Y verschiedene Variablen sind), dann darf diese Gleichheit weggelassen
         -- und X im Head entsprechend ersetzt werden.
 
@@ -120,30 +120,21 @@ collectUnifications totalVars headVars goals = go goals Map.empty True False id
             varNotInPrefix = Map.notMember v prefixVars
             vInHead = Map.lookup v headVars
             vCountInSuffix = suffixCount v
-          in
-            and
-              [ -- Wenn die rechte Seite ihrerseits bis zur Unifikation nur aus Gleichheiten besteht,
-                -- in denen X nicht vorkommt
-                (prefixHasOnlyUnifications && varNotInPrefix)
-                  -- oder wenn nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
+
+            rule1 =
+              ( (prefixHasOnlyUnifications && varNotInPrefix)
                   || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
-              , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
-                vInHead == Just 1
-              , -- und weder in term (und X und Y verschiedene Variablen sind)
-                varNotInTerm
-              , -- noch im Rest der rechten Seite vorkommt
-                vCountInSuffix == 0
-              ]
-              || and
-                [ -- X weder im Head,
-                  isNothing vInHead
-                , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
-                  varNotInPrefix
-                , -- (und natürlich auch wieder nicht in term/Y) vorkommt
-                  varNotInTerm
-                , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
-                  vCountInSuffix == 1
-                ]
+              )
+                && vInHead == Just 1
+                && vCountInSuffix == 0
+
+            rule2 =
+              isNothing vInHead
+                && varNotInPrefix
+                && vCountInSuffix == 1
+          in
+            varNotInTerm
+              && (rule1 || rule2)
 
 {- | Order the variable sides of a unification and the terms that substitute
 for them.
