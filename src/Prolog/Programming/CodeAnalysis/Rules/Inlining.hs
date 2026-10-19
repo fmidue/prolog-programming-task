@@ -126,7 +126,7 @@ collectUnifications totalVars headVars goals = results
           in
             and
               [ -- Wenn die rechte Seite ihrerseits nur aus Gleichheiten besteht, in denen X nicht vorkommt
-                (prefixHasOnlyUnifications && Map.notMember v prefixVars)
+                (prefixHasOnlyUnifications && varNotInPrefix)
                   -- oder wenn nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
                   || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
               , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
@@ -141,7 +141,6 @@ collectUnifications totalVars headVars goals = results
                   Map.notMember v headVars
                 , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
                   varNotInPrefix
-                , Map.notMember v prefixVars
                 , -- (und natürlich auch wieder nicht in term/Y) vorkommt
                   varNotInTerm
                 , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
