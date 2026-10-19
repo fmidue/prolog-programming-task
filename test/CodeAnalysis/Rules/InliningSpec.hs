@@ -30,7 +30,7 @@ detectsPatternMatches =
     , ["p(node(L, V, R)) :- q(V), p(L), p(R)."]
     )
   , ("p(X) :- X = a, !.", ["p(a) :- !."]) -- Fulfills rule 1
-  , ("p(X, Y) :- X = Y.", ["p(X, X).", "p(Y, Y)."]) -- Fulfills rule 1
+  , ("p(X, Y) :- X = Y.", ["p(X, X)."]) -- Fulfills rule 1
   , ("p(X) :- q(a), X = b.", ["p(b) :- q(a)."]) -- Fulfills rule 1
   , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", ["p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs)."]) -- Fulfills rule 1
   , ("p(X) :- X = b, q(a).", ["p(b) :- q(a)."]) -- Fulfills rule 1
@@ -44,7 +44,7 @@ detectsPatternMatches =
   , ("p(X, Y) :- X = a, q(Y), Z = Y, r(Z).", ["p(a, Y) :- q(Y), Z = Y, r(Z).", "p(X, Y) :- X = a, q(Y), r(Y)."])
   , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
   , ("p(X, Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
-  , ("p(X, Y) :- Y = X.", ["p(Y, Y).", "p(X, X)."])
+  , ("p(X, Y) :- Y = X.", ["p(Y, Y)."])
   , ("p :- A = b, r, X = c, q(X).", ["p :- A = b, r, q(c)."])
   , ("p(Y) :- X = f(Y), q(X).", ["p(Y) :- q(f(Y))."])
   , ("p :- X = Y, X = a.", ["p :- Y = a."])

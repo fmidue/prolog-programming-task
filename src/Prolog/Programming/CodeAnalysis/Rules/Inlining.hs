@@ -1,5 +1,6 @@
 module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
+import Control.Applicative (asum)
 import Data.Generics (listify)
 import Data.List.Extra (notNull)
 import Data.Map (Map)
@@ -90,13 +91,14 @@ collectUnifications totalVars headVars goals = results
         isDisjunction (Struct ";" _) = True
         isDisjunction _ = False
 
+        checkMaybe uv
+          | check uv = Just uv
+          | otherwise = Nothing
+
         newResults = case g of
-          (Struct "=" [l, r]) ->
-            [ (g, uc, addPrefix suffix)
-            | uc <- unificationCandidates totalVars l r
-            , check uc
-            ]
-              ++ restResult
+          (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates totalVars l r of
+            Nothing -> restResult
+            Just uc -> (g, uc, addPrefix suffix) : restResult
           _ -> restResult
 
         -- Regel 1: Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X
