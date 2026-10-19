@@ -1,6 +1,7 @@
 Aeson
 arities
 arity
+asum
 Autolib
 Autotool
 Bifunctor
