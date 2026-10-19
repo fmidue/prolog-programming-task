@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Prolog.Programming.TestRunner (
   testRunner,
   TestResult (..),
@@ -14,7 +12,7 @@ import Control.Monad.Random.Class (MonadRandom)
 import Data.List (isPrefixOf, nub, (\\))
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
-import Data.Maybe (fromMaybe, isNothing, mapMaybe)
+import Data.Maybe (fromJust, fromMaybe, isNothing)
 
 import Language.Prolog (Atom, Clause (Clause), Goal, Program, Term (..), Unifier, apply, termSignature)
 import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
@@ -86,7 +84,7 @@ useFoundDefsInSpecs ds specs = updateSpec <$> specs
 replaceHeads :: [(Term, Atom)] -> Term -> Term
 replaceHeads ds = replaceHead
   where
-    substitutions = mapMaybe (\(tl, tr) -> (,tr) . predicateName <$> termSignature tl) ds
+    substitutions = map (\(tl, tr) -> (predicateName $ fromJust $ termSignature tl, tr)) ds
     replaceHead :: Term -> Term
     replaceHead (Struct h ts) =
       case lookup h substitutions of
