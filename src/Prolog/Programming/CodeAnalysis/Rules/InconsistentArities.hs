@@ -14,10 +14,10 @@ import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (
   Context,
   IgnoredPredicates (..),
-  Predicate (..),
   Problem (..),
   ProgramRule,
  )
+import Prolog.Programming.Helper (predicateArity, predicateName)
 import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 inconsistentAritiesChecker :: Context -> IgnoredPredicates -> ProgramRule
