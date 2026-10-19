@@ -77,6 +77,7 @@ detectionFree =
   , "p :- Z = f(X), X = a, q(X)."
   , -- should not inline X because for a call p(f(a)) the instantiation status of Y would change
     "p(X) :- Y = U, not(q(Y)), X = f(U), p(Y, U)."
+  , "p(X) :- Y = U, q(Y), X = f(U), p(Y, U)."
   , "p(X) :- !, X = a." -- Cut is not a literal
   , "p(X,Y) :- (q(Y) ; r(Y)), X = a." -- Disjunction in prefix not allowed
   ]
