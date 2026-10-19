@@ -1,18 +1,16 @@
 module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
-import Control.Applicative (asum)
-import Control.Monad (guard)
+import Data.Generics (listify)
+import Data.List.Extra (notNull)
 import Data.Map (Map)
 import qualified Data.Map as Map (
   disjoint,
   empty,
   findWithDefault,
-  keysSet,
   lookup,
   notMember,
   unionWith,
  )
-import qualified Data.Set as Set (empty, member, union)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -27,7 +25,7 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker (name, args, goals) =
   map
-    ( \((_, l, r), replacement, goals') ->
+    ( \((l, r), replacement, goals') ->
         toProblem clause (Struct "=" [l, r]) $ fixedClause replacement goals'
     )
     $ collectUnifications totalVars headVars goals
@@ -46,8 +44,6 @@ inliningChecker (name, args, goals) =
           Struct newName newArgs -> Clause newName newArgs $ map (substitute sub) rhs
           _ -> error "should not happen"
 
-data Rule = One | Two deriving Eq
-
 {- | Collect unifications that can be inlined.
 
 For each unification whose two sides have disjoint variables and which satisfies
@@ -62,90 +58,76 @@ collectUnifications
   -- ^ Number of occurrences of each variable in the clause head.
   -> [Term]
   -- ^ Goals in the clause's right-hand side.
-  -> [((Rule, Term, Term), (String, Term), [Term])]
+  -> [((Term, Term), (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications totalVars headVars goals =
-  validate (collectCandidates goals Map.empty Map.empty Set.empty False id []) Map.empty [] []
+collectUnifications totalVars headVars goals = results
   where
-    collectCandidates [] _ _ _ _ _ candidates = candidates
-    collectCandidates (t : ts) vs nonUnificationVars unificationVars prefixHasDisallowedOperator prefix candidates =
-      collectCandidates
-        ts
-        (addVariables tVars vs)
-        (if isStructWithName "=" t then nonUnificationVars else addVariables tVars nonUnificationVars)
-        (if isStructWithName "=" t then Set.union (Map.keysSet tVars) unificationVars else unificationVars)
-        (prefixHasDisallowedOperator || isStructWithName ";" t || containsCut t)
-        (prefix . (t :))
-        ((t, tVars, candidate) : candidates)
-      where
-        tVars = countVariables t
-        candidate =
-          case t of
-            Struct "=" [l, r] -> do
-              (rule, replacement) <-
-                satisfiesRuleAtOccurrence
-                  l
-                  r
-                  nonUnificationVars
-                  unificationVars
-                  prefixHasDisallowedOperator
-              pure ((rule, l, r), replacement, prefix)
-            _ -> Nothing
-
-        isStructWithName name (Struct name' _) = name == name'
-        isStructWithName _ _ = False
-
-        satisfiesRuleAtOccurrence
-          l
-          r
-          previousNonUnificationVars
-          previousUnificationVars
-          prefixHasDisallowedOp = do
-            let
-              lVars = countVariables l
-              rVars = countVariables r
-            guard $ Map.disjoint lVars rVars
-            asum $ map chooseRule $ unificationCandidates totalVars l r
-            where
-              chooseRule replacement@(x, _term) =
-                case Map.lookup x headVars of
-                  Nothing -> do
-                    guard $ Map.notMember x vs
-                    guard $ suffixCount x == 1
-                    Just (Two, replacement)
-                  Just 1 -> do
-                    guard $ not prefixHasDisallowedOp
-                    guard $ suffixCount x == 0
-                    guard $ Map.disjoint tVars previousNonUnificationVars
-                    guard $ not (Set.member x previousUnificationVars)
-                    Just (One, replacement)
-                  _ ->
-                    Nothing
-
-              suffixCount x =
-                Map.findWithDefault 0 x totalVars
-                  - Map.findWithDefault 0 x headVars
-                  - Map.findWithDefault 0 x vs
-                  - Map.findWithDefault 0 x tVars
+    (_, _, results) = go goals Map.empty Map.empty False id
 
     addVariables = Map.unionWith (+)
 
-    validate [] _ _ confirmed = confirmed
-    validate ((t, tVars, candidate) : rest) suffixVars suffixGoals confirmed =
-      let
-        valid = do
-          ((rule, l, r), replacement@(x, _), prefix) <- candidate
-          let xCountInSuffix = Map.findWithDefault 0 x suffixVars
+    go [] _ _ _ _ = (Map.empty, [], [])
+    go (g : gs) prefixVarsNonUni prefixVarsUni disallowedOpInPrefix addPrefix = (addVariables gVars suffixVars, g : suffix, newResults)
+      where
+        gVars = countVariables g
+        (suffixVars, suffix, restResult) = go gs newPrefixVarsNonUni newPrefixVarsUni newDisallowedOpInPrefix (addPrefix . (g :))
 
-          guard $ (if rule == One then 0 else 1) == xCountInSuffix
+        (newPrefixVarsNonUni, newPrefixVarsUni) = case g of
+          (Struct "=" _) -> (prefixVarsNonUni, addVariables gVars prefixVarsUni)
+          _ -> (addVariables gVars prefixVarsNonUni, prefixVarsUni)
 
-          pure ((rule, l, r), replacement, prefix suffixGoals)
-        suffixVars' = addVariables tVars suffixVars
-        suffixGoals' = t : suffixGoals
-      in
-        validate rest suffixVars' suffixGoals' $ case valid of
-          Just result -> result : confirmed
-          Nothing -> confirmed
+        newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
+
+        containsDisjunction = notNull . listify isDisjunction
+
+        isDisjunction (Struct ";" _) = True
+        isDisjunction _ = False
+
+        newResults = case g of
+          (Struct "=" [l, r]) ->
+            [ ((l, r), (v, t), addPrefix suffix)
+            | (v, t) <- unificationCandidates totalVars l r
+            , checkOne (v, t) || checkTwo (v, t)
+            ]
+              ++ restResult
+          _ -> restResult
+
+        -- Regel 1: Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X
+        -- noch Variablen aus term/Y vorkommen oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt,
+        -- etwas wie X = term oder X = Y oder Y = X oder term = X steht, und X im Head nur einmal und weder in term
+        -- noch im Rest der rechten Seite vorkommt (und X und Y verschiedene Variablen sind), dann darf diese Gleichheit weggelassen
+        -- und X im Head entsprechend ersetzt werden.
+        checkOne (v, t) =
+          and
+            [ -- Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
+              Map.disjoint gVars prefixVarsNonUni
+            , not disallowedOpInPrefix
+            , -- oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt
+              Map.notMember v prefixVarsUni
+            , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
+              Map.findWithDefault 0 v headVars == 1
+            , -- und weder in term (und X und Y verschiedene Variablen sind)
+              Map.notMember v (countVariables t)
+            , -- noch im Rest der rechten Seite vorkommt
+              Map.notMember v suffixVars
+            ]
+
+        -- Regel 2: Wenn auf der rechten Seite einer Klausel irgendwo (nicht unbedingt direkt am Anfang) so etwas auftritt und X weder im Head,
+        -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung (und natürlich auch wieder nicht in term/Y) vorkommt,
+        -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt, dann darf wieder diese Gleichheit weggelassen
+        -- und X an der entsprechenden Stelle ersetzt werden.
+        checkTwo (v, t) =
+          and
+            [ -- X weder im Head,
+              Map.notMember v headVars
+            , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
+              Map.notMember v prefixVarsUni
+            , Map.notMember v prefixVarsNonUni
+            , -- (und natürlich auch wieder nicht in term/Y) vorkommt
+              Map.notMember v (countVariables t)
+            , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
+              Map.findWithDefault 0 v suffixVars == 1
+            ]
 
 {- | Order the variable sides of a unification and the terms that substitute
 for them.
