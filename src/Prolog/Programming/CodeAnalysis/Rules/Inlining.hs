@@ -5,9 +5,9 @@ import Data.Generics (listify)
 import Data.List.Extra (notNull)
 import Data.Map (Map)
 import qualified Data.Map as Map (
+  differenceWith,
   disjoint,
   empty,
-  findWithDefault,
   lookup,
   notMember,
   unionWith,
@@ -62,29 +62,31 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications totalVars headVars goals = go goals Map.empty True False id
+collectUnifications totalVars headVars goals = go goals Map.empty True False (countVariables goals) id
   where
-    go [] _ _ _ _ = []
-    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix addPrefix = case g of
+    go [] _ _ _ _ _ = []
+    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates totalVars l r of
         Nothing -> restResult
         Just uc -> (g, uc, addPrefix gs) : restResult
       _ -> restResult
       where
         gVars = countVariables g
+
+        newSuffixVars =
+          Map.differenceWith
+            (\x y -> let res = x - y in if res > 0 then Just res else Nothing)
+            suffixVars
+            gVars
+
         restResult =
           go
             gs
             (Map.unionWith (+) gVars prefixVars)
             newPrefixHasOnlyUnifications
             newDisallowedOpInPrefix
+            newSuffixVars
             (addPrefix . (g :))
-
-        suffixCount x =
-          Map.findWithDefault 0 x totalVars
-            - Map.findWithDefault 0 x headVars
-            - Map.findWithDefault 0 x prefixVars
-            - Map.findWithDefault 0 x gVars
 
         newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
         newPrefixHasOnlyUnifications =
@@ -119,19 +121,19 @@ collectUnifications totalVars headVars goals = go goals Map.empty True False id
             varNotInTerm = Map.notMember v (countVariables t)
             varNotInPrefix = Map.notMember v prefixVars
             vInHead = Map.lookup v headVars
-            vCountInSuffix = suffixCount v
+            vCountInSuffix = Map.lookup v newSuffixVars
 
             rule1 =
               ( (prefixHasOnlyUnifications && varNotInPrefix)
                   || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
               )
                 && vInHead == Just 1
-                && vCountInSuffix == 0
+                && isNothing vCountInSuffix
 
             rule2 =
               isNothing vInHead
                 && varNotInPrefix
-                && vCountInSuffix == 1
+                && vCountInSuffix == Just 1
           in
             varNotInTerm
               && (rule1 || rule2)
