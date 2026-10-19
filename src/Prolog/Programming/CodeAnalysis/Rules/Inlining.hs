@@ -48,7 +48,7 @@ inliningChecker (name, args, goals) =
 {- | Collect unifications that can be inlined.
 
 For each unification whose two sides have disjoint variables and which satisfies
-one of the inlining rules, the result records the unification,
+one of the inlining rules, the result records the unification goal,
 the selected variable and replacement term, and the goals
 besides it.
 -}
