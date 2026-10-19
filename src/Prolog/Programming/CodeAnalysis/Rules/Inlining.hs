@@ -47,7 +47,7 @@ inliningChecker (name, args, goals) =
 
 data Rule = One | Two deriving Eq
 
-{- | Collect unifications that can be inlined (in reverse order).
+{- | Collect unifications that can be inlined.
 
 For each unification whose two sides have disjoint variables and which satisfies
 one of the inlining rules, the result records the rule matched, left and right
@@ -62,9 +62,9 @@ collectUnifications
   -> [Term]
   -- ^ Goals in the clause's right-hand side.
   -> [((Rule, Term, Term), (String, Term), [Term])]
-  -- ^ Unifications (in reversed order) together with the goals besides them.
+  -- ^ Unifications together with the goals besides them.
 collectUnifications totalVars headVars goals =
-  validate (collectCandidates goals Map.empty Map.empty Set.empty id []) Map.empty []
+  validate (collectCandidates goals Map.empty Map.empty Set.empty id []) Map.empty [] []
   where
     collectCandidates [] _ _ _ _ candidates = candidates
     collectCandidates (t : ts) vs nonUnificationVars unificationVars prefix candidates =
@@ -107,8 +107,8 @@ collectUnifications totalVars headVars goals =
 
     addVariables = Map.unionWith (+)
 
-    validate [] _ _ = []
-    validate ((t, tVars, candidate) : rest) suffixVars suffixGoals =
+    validate [] _ _ confirmed = confirmed
+    validate ((t, tVars, candidate) : rest) suffixVars suffixGoals confirmed =
       let
         valid = do
           ((rule, l, r), replacement@(x, _), prefix) <- candidate
@@ -121,8 +121,8 @@ collectUnifications totalVars headVars goals =
         suffixGoals' = t : suffixGoals
       in
         case valid of
-          Just result -> result : validate rest suffixVars' suffixGoals'
-          Nothing -> validate rest suffixVars' suffixGoals'
+          Just result -> validate rest suffixVars' suffixGoals' (result : confirmed)
+          Nothing -> validate rest suffixVars' suffixGoals' confirmed
 
 {- | Choose the variable side of a unification and the term to substitute for
 it.
