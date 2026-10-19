@@ -1,5 +1,6 @@
 module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
+import Control.Applicative (asum)
 import Control.Monad (guard)
 import Data.Map (Map)
 import qualified Data.Map as Map (
@@ -103,20 +104,29 @@ collectUnifications totalVars headVars goals =
             let
               lVars = countVariables l
               rVars = countVariables r
-            replacement@(x, _term) <- unification totalVars l r
             guard $ Map.disjoint lVars rVars
+            asum $ map chooseRule $ unificationCandidates totalVars l r
+            where
+              chooseRule replacement@(x, _term) =
+                case Map.lookup x headVars of
+                  Nothing -> do
+                    guard $ Map.notMember x vs
+                    guard $ suffixCount x == 1
+                    Just (Two, replacement)
+                  Just 1 -> do
+                    guard $ not prefixHasDisallowedOp
+                    guard $ suffixCount x == 0
+                    guard $ Map.disjoint tVars previousNonUnificationVars
+                    guard $ not (Set.member x previousUnificationVars)
+                    Just (One, replacement)
+                  _ ->
+                    Nothing
 
-            case Map.lookup x headVars of
-              Nothing -> do
-                guard $ Map.notMember x vs
-                Just (Two, replacement)
-              Just 1 -> do
-                guard $ not prefixHasDisallowedOp
-                guard $ Map.disjoint tVars previousNonUnificationVars
-                guard $ not (Set.member x previousUnificationVars)
-                Just (One, replacement)
-              _ ->
-                Nothing
+              suffixCount x =
+                Map.findWithDefault 0 x totalVars
+                  - Map.findWithDefault 0 x headVars
+                  - Map.findWithDefault 0 x vs
+                  - Map.findWithDefault 0 x tVars
 
     addVariables = Map.unionWith (+)
 
@@ -137,33 +147,35 @@ collectUnifications totalVars headVars goals =
           Just result -> validate rest suffixVars' suffixGoals' (result : confirmed)
           Nothing -> validate rest suffixVars' suffixGoals' confirmed
 
-{- | Choose the variable side of a unification and the term to substitute for
-it.
+{- | Order the variable sides of a unification and the terms that substitute
+for them.
 
 If both sides are variables, the variable with fewer total occurrences is
-selected; if their counts are equal, the right-hand variable is selected.
-This keeps the substitution as small as possible while preserving the
-unification. Returns 'Nothing' when neither side is a variable.
+preferred; if their counts are equal, the right-hand variable is preferred.
+The other side is retained as a fallback when the preferred side cannot
+satisfy an inlining rule.
 -}
-unification
+unificationCandidates
   :: Map String Int
   -- ^ Number of occurrences of each variable in the whole clause.
   -> Term
   -- ^ Left side of unification to select from.
   -> Term
   -- ^ Right side of unification to select from.
-  -> Maybe (String, Term)
-  -- ^ The selected variable name and the term that replaces it.
-unification totalVars left right = pick (var left) (var right)
+  -> [(String, Term)]
+  -- ^ Possible selected variables and the terms that replace them.
+unificationCandidates totalVars left right = pick (var left) (var right)
   where
     var (Var (VariableName _ name)) = Just name
     var _ = Nothing
 
-    pick :: Maybe String -> Maybe String -> Maybe (String, Term)
-    pick (Just l) (Just r) = Just $ if Map.lookup l totalVars < Map.lookup r totalVars then (l, right) else (r, left)
-    pick (Just l) Nothing = Just (l, right)
-    pick Nothing (Just r) = Just (r, left)
-    pick Nothing Nothing = Nothing
+    pick :: Maybe String -> Maybe String -> [(String, Term)]
+    pick (Just l) (Just r)
+      | Map.lookup l totalVars < Map.lookup r totalVars = [(l, right), (r, left)]
+      | otherwise = [(r, left), (l, right)]
+    pick (Just l) Nothing = [(l, right)]
+    pick Nothing (Just r) = [(r, left)]
+    pick Nothing Nothing = []
 
 toProblem :: Clause -> Term -> Clause -> Problem
 toProblem originalClause equality fixedClause =
