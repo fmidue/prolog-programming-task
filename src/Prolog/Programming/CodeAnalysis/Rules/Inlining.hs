@@ -61,15 +61,17 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications totalVars headVars goals = results
+collectUnifications totalVars headVars goals = go goals Map.empty True False id
   where
-    (_, results) = go goals Map.empty True False id
-
-    go [] _ _ _ _ = ([], [])
-    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix addPrefix = (g : suffix, newResults)
+    go [] _ _ _ _ = []
+    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix addPrefix = case g of
+      (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates totalVars l r of
+        Nothing -> restResult
+        Just uc -> (g, uc, addPrefix gs) : restResult
+      _ -> restResult
       where
         gVars = countVariables g
-        (suffix, restResult) =
+        restResult =
           go
             gs
             (Map.unionWith (+) gVars prefixVars)
@@ -97,12 +99,6 @@ collectUnifications totalVars headVars goals = results
         checkMaybe uv
           | check uv = Just uv
           | otherwise = Nothing
-
-        newResults = case g of
-          (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates totalVars l r of
-            Nothing -> restResult
-            Just uc -> (g, uc, addPrefix suffix) : restResult
-          _ -> restResult
 
         -- Regel 1: Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X
         -- noch Variablen aus term/Y vorkommen oder ihrerseits nur aus Gleichheiten bestehen,
