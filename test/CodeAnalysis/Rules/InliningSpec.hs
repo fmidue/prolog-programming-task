@@ -32,7 +32,6 @@ detectsPatternMatches =
   , ("p(X) :- X = a, !.", ["p(a) :- !."]) -- Fulfills rule 1
   , ("p(X, Y) :- X = Y.", ["p(X, X)."]) -- Fulfills rule 1
   , ("p(X) :- q(a), X = b.", ["p(b) :- q(a)."]) -- Fulfills rule 1
-  , ("p(X) :- !, X = a.", ["p(a) :- !."]) -- Fulfills rule 1
   , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", ["p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs)."]) -- Fulfills rule 1
   , ("p(X) :- X = b, q(a).", ["p(b) :- q(a)."]) -- Fulfills rule 1
   , ("p(X) :- X = [Y|Ys], q(Y), qs(Ys).", ["p([Y|Ys]) :- q(Y), qs(Ys)."]) -- Fulfills rule 1
@@ -76,7 +75,10 @@ detectionFree =
   , "p :- X = a."
   , "p(X, Y) :- Z = f(X), X = f(Y)."
   , "p :- Z = f(X), X = a, q(X)."
-  , "p(X) :- Y = U, not(q(Y)), X = f(U), p(Y, U)." -- should not inline X because for a call p(f(a)) the instantiation status of Y would change
+  , -- should not inline X because for a call p(f(a)) the instantiation status of Y would change
+    "p(X) :- Y = U, not(q(Y)), X = f(U), p(Y, U)."
+  , "p(X) :- !, X = a." -- Cut is not a literal
+  , "p(X,Y) :- (q(Y) ; r(Y)), X = a." -- Disjunction in prefix not allowed
   ]
 
 spec :: Spec
