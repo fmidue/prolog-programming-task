@@ -108,21 +108,21 @@ collectUnifications totalVars headVars goals =
     addVariables = Map.unionWith (+)
 
     validate [] _ _ = []
-    validate ((t, tVars, candidate) : rest) suffix prependGoals =
+    validate ((t, tVars, candidate) : rest) suffixVars suffixGoals =
       let
         valid = do
           ((rule, l, r), replacement@(x, _), prefix) <- candidate
-          let xCountInSuffix = Map.findWithDefault 0 x suffix
+          let xCountInSuffix = Map.findWithDefault 0 x suffixVars
 
           guard $ (if rule == One then 0 else 1) == xCountInSuffix
 
-          pure ((rule, l, r), replacement, prefix prependGoals)
-        suffix' = addVariables tVars suffix
-        prependGoals' = t : prependGoals
+          pure ((rule, l, r), replacement, prefix suffixGoals)
+        suffixVars' = addVariables tVars suffixVars
+        suffixGoals' = t : suffixGoals
       in
         case valid of
-          Just result -> result : validate rest suffix' prependGoals'
-          Nothing -> validate rest suffix' prependGoals'
+          Just result -> result : validate rest suffixVars' suffixGoals'
+          Nothing -> validate rest suffixVars' suffixGoals'
 
 {- | Choose the variable side of a unification and the term to substitute for
 it.
