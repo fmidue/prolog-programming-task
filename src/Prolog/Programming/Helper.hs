@@ -1,4 +1,9 @@
-module Prolog.Programming.Helper where
+module Prolog.Programming.Helper (
+  Arity,
+  escalateSeverity,
+  predicateName,
+  predicateArity,
+) where
 
 import Data.Data (Data)
 import Data.Generics (everywhere, mkT)
