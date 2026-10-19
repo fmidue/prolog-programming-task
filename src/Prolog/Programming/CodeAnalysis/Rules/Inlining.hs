@@ -143,9 +143,9 @@ collectUnifications totalVars headVars goals =
         suffixVars' = addVariables tVars suffixVars
         suffixGoals' = t : suffixGoals
       in
-        case valid of
-          Just result -> validate rest suffixVars' suffixGoals' (result : confirmed)
-          Nothing -> validate rest suffixVars' suffixGoals' confirmed
+        validate rest suffixVars' suffixGoals' $ case valid of
+          Just result -> result : confirmed
+          Nothing -> confirmed
 
 {- | Order the variable sides of a unification and the terms that substitute
 for them.
