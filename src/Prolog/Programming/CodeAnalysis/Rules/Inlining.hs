@@ -6,6 +6,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map (
   disjoint,
   empty,
+  findWithDefault,
   lookup,
   notMember,
   unionWith,
@@ -61,15 +62,22 @@ collectUnifications
   -- ^ Unifications together with the goals besides them.
 collectUnifications totalVars headVars goals = results
   where
-    (_, _, results) = go goals Map.empty Map.empty False id
+    (_, results) = go goals Map.empty Map.empty False id
 
     addVariables = Map.unionWith (+)
 
-    go [] _ _ _ _ = (Map.empty, [], [])
-    go (g : gs) prefixVarsNonUni prefixVarsUni disallowedOpInPrefix addPrefix = (addVariables gVars suffixVars, g : suffix, newResults)
+    go [] _ _ _ _ = ([], [])
+    go (g : gs) prefixVarsNonUni prefixVarsUni disallowedOpInPrefix addPrefix = (g : suffix, newResults)
       where
         gVars = countVariables g
-        (suffixVars, suffix, restResult) = go gs newPrefixVarsNonUni newPrefixVarsUni newDisallowedOpInPrefix (addPrefix . (g :))
+        (suffix, restResult) = go gs newPrefixVarsNonUni newPrefixVarsUni newDisallowedOpInPrefix (addPrefix . (g :))
+
+        suffixCount x =
+          Map.findWithDefault 0 x totalVars
+            - Map.findWithDefault 0 x headVars
+            - Map.findWithDefault 0 x prefixVarsUni
+            - Map.findWithDefault 0 x prefixVarsNonUni
+            - Map.findWithDefault 0 x gVars
 
         (newPrefixVarsNonUni, newPrefixVarsUni) = case g of
           (Struct "=" _) -> (prefixVarsNonUni, addVariables gVars prefixVarsUni)
@@ -118,7 +126,7 @@ collectUnifications totalVars headVars goals = results
               , -- und weder in term (und X und Y verschiedene Variablen sind)
                 varNotInTerm
               , -- noch im Rest der rechten Seite vorkommt
-                Map.notMember v suffixVars
+                suffixCount v == 0
               ]
               || and
                 [ -- X weder im Head,
@@ -129,7 +137,7 @@ collectUnifications totalVars headVars goals = results
                 , -- (und natürlich auch wieder nicht in term/Y) vorkommt
                   varNotInTerm
                 , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
-                  Map.lookup v suffixVars == Just 1
+                  suffixCount v == 1
                 ]
 
 {- | Order the variable sides of a unification and the terms that substitute
