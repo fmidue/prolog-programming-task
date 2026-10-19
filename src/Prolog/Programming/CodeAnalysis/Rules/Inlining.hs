@@ -65,8 +65,6 @@ collectUnifications totalVars headVars goals = results
   where
     (_, results) = go goals Map.empty True False id
 
-    addVariables = Map.unionWith (+)
-
     go [] _ _ _ _ = ([], [])
     go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix addPrefix = (g : suffix, newResults)
       where
@@ -74,7 +72,7 @@ collectUnifications totalVars headVars goals = results
         (suffix, restResult) =
           go
             gs
-            (addVariables gVars prefixVars)
+            (Map.unionWith (+) gVars prefixVars)
             newPrefixHasOnlyUnifications
             newDisallowedOpInPrefix
             (addPrefix . (g :))
