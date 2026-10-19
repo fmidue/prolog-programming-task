@@ -63,28 +63,33 @@ collectUnifications
   -- ^ Unifications together with the goals besides them.
 collectUnifications totalVars headVars goals = results
   where
-    (_, results) = go goals Map.empty Map.empty False id
+    (_, results) = go goals Map.empty True False id
 
     addVariables = Map.unionWith (+)
 
     go [] _ _ _ _ = ([], [])
-    go (g : gs) prefixVarsNonUni prefixVarsUni disallowedOpInPrefix addPrefix = (g : suffix, newResults)
+    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix addPrefix = (g : suffix, newResults)
       where
         gVars = countVariables g
-        (suffix, restResult) = go gs newPrefixVarsNonUni newPrefixVarsUni newDisallowedOpInPrefix (addPrefix . (g :))
+        (suffix, restResult) =
+          go
+            gs
+            (addVariables gVars prefixVars)
+            newPrefixHasOnlyUnifications
+            newDisallowedOpInPrefix
+            (addPrefix . (g :))
 
         suffixCount x =
           Map.findWithDefault 0 x totalVars
             - Map.findWithDefault 0 x headVars
-            - Map.findWithDefault 0 x prefixVarsUni
-            - Map.findWithDefault 0 x prefixVarsNonUni
+            - Map.findWithDefault 0 x prefixVars
             - Map.findWithDefault 0 x gVars
 
-        (newPrefixVarsNonUni, newPrefixVarsUni) = case g of
-          (Struct "=" _) -> (prefixVarsNonUni, addVariables gVars prefixVarsUni)
-          _ -> (addVariables gVars prefixVarsNonUni, prefixVarsUni)
-
         newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
+        newPrefixHasOnlyUnifications =
+          prefixHasOnlyUnifications && case g of
+            (Struct "=" _) -> True
+            _ -> False
 
         containsDisjunction = notNull . listify isDisjunction
 
@@ -117,15 +122,13 @@ collectUnifications totalVars headVars goals = results
         check (v, t) =
           let
             varNotInTerm = Map.notMember v (countVariables t)
-            varNotInPrefix = Map.notMember v prefixVarsUni
+            varNotInPrefix = Map.notMember v prefixVars
           in
             and
-              [ -- Wenn auf der rechten Seite einer Klausel nach höchstens Literalen,
-                -- in denen weder X noch Variablen aus term/Y vorkommen
-                Map.disjoint gVars prefixVarsNonUni
-              , not disallowedOpInPrefix
-              , -- oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt
-                varNotInPrefix
+              [ -- Wenn die rechte Seite ihrerseits nur aus Gleichheiten besteht, in denen X nicht vorkommt
+                (prefixHasOnlyUnifications && Map.notMember v prefixVars)
+                  -- oder wenn nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
+                  || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
               , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
                 Map.lookup v headVars == Just 1
               , -- und weder in term (und X und Y verschiedene Variablen sind)
@@ -138,7 +141,7 @@ collectUnifications totalVars headVars goals = results
                   Map.notMember v headVars
                 , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
                   varNotInPrefix
-                , Map.notMember v prefixVarsNonUni
+                , Map.notMember v prefixVars
                 , -- (und natürlich auch wieder nicht in term/Y) vorkommt
                   varNotInTerm
                 , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
