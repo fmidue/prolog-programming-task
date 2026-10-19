@@ -5,34 +5,34 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Data.Set (Set)
 import qualified Data.Set as Set (fromList)
+import Language.Prolog (Signature (Signature))
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
-  Predicate (..),
  )
 import Prolog.Programming.Data (Code)
 import Test.Hspec (Spec, describe, it)
 
-caConfig :: Set Predicate -> CodeAnalysisConfig
+caConfig :: Set Signature -> CodeAnalysisConfig
 caConfig forbidden =
   emptyCodeAnalysisConfig {
     forbiddenPredicates = ForbiddenPredicatesConfig forbidden
     }
 
-withProblems :: [(Code, Set Predicate)]
+withProblems :: [(Code, Set Signature)]
 withProblems =
-  [ ("p(X) :- q(X).", Set.fromList [Predicate "q" 1])
-  , ("p(X) :- q(X), r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
-  , ("p(X) :- q(X); r(X).", Set.fromList [Predicate "q" 1, Predicate "r" 1])
-  , ("p(X) :- not(q(X)).", Set.fromList [Predicate "not" 1])
+  [ ("p(X) :- q(X).", Set.fromList [Signature "q" 1])
+  , ("p(X) :- q(X), r(X).", Set.fromList [Signature "q" 1, Signature "r" 1])
+  , ("p(X) :- q(X); r(X).", Set.fromList [Signature "q" 1, Signature "r" 1])
+  , ("p(X) :- not(q(X)).", Set.fromList [Signature "not" 1])
   ]
 
-detectionFree :: [(Code, Set Predicate)]
+detectionFree :: [(Code, Set Signature)]
 detectionFree =
-  [ ("p(X) :- q(X).", Set.fromList [Predicate "p" 1])
-  , ("p.", Set.fromList [Predicate "p" 1])
-  , ("p(X) :- q(X).", Set.fromList [Predicate "r" 1])
+  [ ("p(X) :- q(X).", Set.fromList [Signature "p" 1])
+  , ("p.", Set.fromList [Signature "p" 1])
+  , ("p(X) :- q(X).", Set.fromList [Signature "r" 1])
   ]
 
 spec :: Spec

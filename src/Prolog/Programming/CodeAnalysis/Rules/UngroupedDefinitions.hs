@@ -5,7 +5,8 @@ import qualified Data.List.NonEmpty as NE (groupWith, head, toList)
 import Data.List.Ordered (isSorted)
 import Data.Text.Lazy (pack)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
-import Prolog.Programming.CodeAnalysis.Types (Predicate (predicateArity, predicateName), Problem (..), ProgramRule)
+import Prolog.Programming.CodeAnalysis.Types (Problem (..), ProgramRule)
+import Prolog.Programming.Helper (predicateArity, predicateName)
 import Text.PrettyPrint.Leijen.Text (string)
 
 ungroupedDefinitionsChecker :: ProgramRule

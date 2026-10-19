@@ -14,7 +14,7 @@ import Control.Monad (unless, void, when)
 
 import Data.List (intercalate, isPrefixOf)
 
-import Language.Prolog (Term, consultString, term, terms)
+import Language.Prolog (Signature (..), Term, consultString, term, terms)
 
 import Data.Aeson (Result (..), fromJSON)
 import Data.Aeson.Key (toString)
@@ -40,7 +40,6 @@ import Prolog.Programming.CodeAnalysis.Types (
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
   InliningConfig (..),
-  Predicate (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
@@ -153,10 +152,10 @@ instance FromJSON UngroupedDefinitionsConfig where
 instance FromJSON RecursionConfig where
   parseJSON = withRuleParser RecursionConfig
 
-instance FromJSON Predicate where
+instance FromJSON Signature where
   parseJSON (String s) = case T.split (== '/') s of
     [name, arity] -> case T.readMaybe $ T.unpack arity of
-      Just arity' | arity' >= 0 -> pure $ Predicate (T.unpack name) arity'
+      Just arity' | arity' >= 0 -> pure $ Signature (T.unpack name) arity'
       _ -> fail "Invalid arity: expected a non-negative integer"
     _ -> fail "Invalid value"
   parseJSON _ = fail "Invalid value type"
