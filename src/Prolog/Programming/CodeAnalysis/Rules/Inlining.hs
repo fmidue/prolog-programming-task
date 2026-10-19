@@ -25,8 +25,8 @@ import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
 inliningChecker :: ClauseRule
 inliningChecker (name, args, goals) =
   map
-    ( \((l, r), replacement, goals') ->
-        toProblem clause (Struct "=" [l, r]) $ fixedClause replacement goals'
+    ( \(u, replacement, goals') ->
+        toProblem clause u $ fixedClause replacement goals'
     )
     $ collectUnifications totalVars headVars goals
   where
@@ -58,7 +58,7 @@ collectUnifications
   -- ^ Number of occurrences of each variable in the clause head.
   -> [Term]
   -- ^ Goals in the clause's right-hand side.
-  -> [((Term, Term), (String, Term), [Term])]
+  -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
 collectUnifications totalVars headVars goals = results
   where
@@ -85,9 +85,9 @@ collectUnifications totalVars headVars goals = results
 
         newResults = case g of
           (Struct "=" [l, r]) ->
-            [ ((l, r), (v, t), addPrefix suffix)
-            | (v, t) <- unificationCandidates totalVars l r
-            , checkOne (v, t) || checkTwo (v, t)
+            [ (g, uc, addPrefix suffix)
+            | uc <- unificationCandidates totalVars l r
+            , check uc
             ]
               ++ restResult
           _ -> restResult
