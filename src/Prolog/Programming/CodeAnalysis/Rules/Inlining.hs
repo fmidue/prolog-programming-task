@@ -102,15 +102,17 @@ collectUnifications totalVars headVars goals = results
           _ -> restResult
 
         -- Regel 1: Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X
-        -- noch Variablen aus term/Y vorkommen oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt,
-        -- etwas wie X = term oder X = Y oder Y = X oder term = X steht, und X im Head nur einmal und weder in term
-        -- noch im Rest der rechten Seite vorkommt (und X und Y verschiedene Variablen sind), dann darf diese Gleichheit weggelassen
+        -- noch Variablen aus term/Y vorkommen oder ihrerseits nur aus Gleichheiten bestehen,
+        -- in denen X aber nicht vorkommt, etwas wie X = term oder X = Y oder Y = X oder term = X steht,
+        -- und X im Head nur einmal und weder in term noch im Rest der rechten Seite vorkommt
+        -- (und X und Y verschiedene Variablen sind), dann darf diese Gleichheit weggelassen
         -- und X im Head entsprechend ersetzt werden.
 
-        -- Regel 2: Wenn auf der rechten Seite einer Klausel irgendwo (nicht unbedingt direkt am Anfang) so etwas auftritt und X weder im Head,
-        -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung (und natürlich auch wieder nicht in term/Y) vorkommt,
-        -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt, dann darf wieder diese Gleichheit weggelassen
-        -- und X an der entsprechenden Stelle ersetzt werden.
+        -- Regel 2: Wenn auf der rechten Seite einer Klausel irgendwo (nicht unbedingt direkt am Anfang)
+        -- so etwas auftritt und X weder im Head, noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
+        -- (und natürlich auch wieder nicht in term/Y) vorkommt,
+        -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt, dann darf wieder diese Gleichheit
+        -- weggelassen und X an der entsprechenden Stelle ersetzt werden.
 
         check (v, t) =
           let
@@ -118,7 +120,8 @@ collectUnifications totalVars headVars goals = results
             varNotInPrefix = Map.notMember v prefixVarsUni
           in
             and
-              [ -- Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
+              [ -- Wenn auf der rechten Seite einer Klausel nach höchstens Literalen,
+                -- in denen weder X noch Variablen aus term/Y vorkommen
                 Map.disjoint gVars prefixVarsNonUni
               , not disallowedOpInPrefix
               , -- oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt
