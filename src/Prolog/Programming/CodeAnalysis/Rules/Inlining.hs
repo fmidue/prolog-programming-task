@@ -12,6 +12,7 @@ import qualified Data.Map as Map (
   notMember,
   unionWith,
  )
+import Data.Maybe (isNothing)
 import Data.Text.Lazy (pack)
 import Language.Prolog (
   Clause (..),
@@ -117,6 +118,8 @@ collectUnifications totalVars headVars goals = go goals Map.empty True False id
           let
             varNotInTerm = Map.notMember v (countVariables t)
             varNotInPrefix = Map.notMember v prefixVars
+            vInHead = Map.lookup v headVars
+            vCountInSuffix = suffixCount v
           in
             and
               [ -- Wenn die rechte Seite ihrerseits bis zur Unifikation nur aus Gleichheiten besteht,
@@ -125,21 +128,21 @@ collectUnifications totalVars headVars goals = go goals Map.empty True False id
                   -- oder wenn nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
                   || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
               , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
-                Map.lookup v headVars == Just 1
+                vInHead == Just 1
               , -- und weder in term (und X und Y verschiedene Variablen sind)
                 varNotInTerm
               , -- noch im Rest der rechten Seite vorkommt
-                suffixCount v == 0
+                vCountInSuffix == 0
               ]
               || and
                 [ -- X weder im Head,
-                  Map.notMember v headVars
+                  isNothing vInHead
                 , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
                   varNotInPrefix
                 , -- (und natürlich auch wieder nicht in term/Y) vorkommt
                   varNotInTerm
                 , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
-                  suffixCount v == 1
+                  vCountInSuffix == 1
                 ]
 
 {- | Order the variable sides of a unification and the terms that substitute
