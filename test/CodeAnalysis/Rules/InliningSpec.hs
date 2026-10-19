@@ -46,6 +46,7 @@ detectsPatternMatches =
   , ("p(X, Y) :- Y = f(Z), X = f(Y), Z = 3.", ["p(f(Y), Y) :- Y = f(Z), Z = 3."])
   , ("p(X, Y) :- Y = X.", ["p(Y, Y)."])
   , ("p :- A = b, r, X = c, q(X).", ["p :- A = b, r, q(c)."])
+  , ("p :- A = b, (r, X = c, q(X)).", ["p :- A = b, r, q(c)."])
   , ("p(Y) :- X = f(Y), q(X).", ["p(Y) :- q(f(Y))."])
   , ("p :- X = Y, X = a.", ["p :- Y = a."])
   ]
@@ -69,6 +70,7 @@ detectionFree =
   , "p(X, Y) :- X = f(X), q(X,Y)." -- term includes X
   , "p(X, Y) :- X = a, q(X, Y)." -- X used after unification
   , "p :- r, X = a, q(X), d(X)." -- X used twice after unification
+  , "p :- r, X = a, (q(X), d(X))."
   , "p(X, X) :- X = f(g(c))." -- X used twice in head
   , "p(Y) :- X = f(Y)." -- Y occurs in head
   , "p(X) :- a = b, q(X)."
@@ -78,6 +80,7 @@ detectionFree =
   , -- should not inline X because for a call p(f(a)) the instantiation status of Y would change
     "p(X) :- Y = U, not(q(Y)), X = f(U), p(Y, U)."
   , "p(X) :- Y = U, q(Y), X = f(U), p(Y, U)."
+  , "p(X) :- (Y = U, q(Y)), X = f(U), p(Y, U)."
   , "p(X) :- !, X = a." -- Cut is not a literal
   , "p(X,Y) :- (q(Y) ; r(Y)), X = a." -- Disjunction in prefix not allowed
   ]
