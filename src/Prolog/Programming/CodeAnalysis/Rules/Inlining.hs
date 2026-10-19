@@ -6,7 +6,6 @@ import Data.Map (Map)
 import qualified Data.Map as Map (
   disjoint,
   empty,
-  findWithDefault,
   lookup,
   notMember,
   unionWith,
@@ -97,37 +96,41 @@ collectUnifications totalVars headVars goals = results
         -- etwas wie X = term oder X = Y oder Y = X oder term = X steht, und X im Head nur einmal und weder in term
         -- noch im Rest der rechten Seite vorkommt (und X und Y verschiedene Variablen sind), dann darf diese Gleichheit weggelassen
         -- und X im Head entsprechend ersetzt werden.
-        checkOne (v, t) =
-          and
-            [ -- Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
-              Map.disjoint gVars prefixVarsNonUni
-            , not disallowedOpInPrefix
-            , -- oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt
-              Map.notMember v prefixVarsUni
-            , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
-              Map.findWithDefault 0 v headVars == 1
-            , -- und weder in term (und X und Y verschiedene Variablen sind)
-              Map.notMember v (countVariables t)
-            , -- noch im Rest der rechten Seite vorkommt
-              Map.notMember v suffixVars
-            ]
 
         -- Regel 2: Wenn auf der rechten Seite einer Klausel irgendwo (nicht unbedingt direkt am Anfang) so etwas auftritt und X weder im Head,
         -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung (und natürlich auch wieder nicht in term/Y) vorkommt,
         -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt, dann darf wieder diese Gleichheit weggelassen
         -- und X an der entsprechenden Stelle ersetzt werden.
-        checkTwo (v, t) =
-          and
-            [ -- X weder im Head,
-              Map.notMember v headVars
-            , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
-              Map.notMember v prefixVarsUni
-            , Map.notMember v prefixVarsNonUni
-            , -- (und natürlich auch wieder nicht in term/Y) vorkommt
-              Map.notMember v (countVariables t)
-            , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
-              Map.findWithDefault 0 v suffixVars == 1
-            ]
+
+        check (v, t) =
+          let
+            varNotInTerm = Map.notMember v (countVariables t)
+            varNotInPrefix = Map.notMember v prefixVarsUni
+          in
+            and
+              [ -- Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X noch Variablen aus term/Y vorkommen
+                Map.disjoint gVars prefixVarsNonUni
+              , not disallowedOpInPrefix
+              , -- oder ihrerseits nur aus Gleichheiten bestehen, in denen X aber nicht vorkommt
+                varNotInPrefix
+              , -- und X im Head nur einmal    ÄNDERUNG: genau einmal
+                Map.lookup v headVars == Just 1
+              , -- und weder in term (und X und Y verschiedene Variablen sind)
+                varNotInTerm
+              , -- noch im Rest der rechten Seite vorkommt
+                Map.notMember v suffixVars
+              ]
+              || and
+                [ -- X weder im Head,
+                  Map.notMember v headVars
+                , -- noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
+                  varNotInPrefix
+                , Map.notMember v prefixVarsNonUni
+                , -- (und natürlich auch wieder nicht in term/Y) vorkommt
+                  varNotInTerm
+                , -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt
+                  Map.lookup v suffixVars == Just 1
+                ]
 
 {- | Order the variable sides of a unification and the terms that substitute
 for them.
