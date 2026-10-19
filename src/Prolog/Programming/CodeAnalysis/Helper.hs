@@ -12,8 +12,10 @@ clauseIdentities includeWrapperPredicates (name, args, rs) =
 grabPredicateIdentities :: Bool -> Term -> Set Signature
 grabPredicateIdentities includeWrapperPredicates (Struct name args)
   | name `elem` [",", ";", "\\+", "not"] =
-      (if includeWrapperPredicates then Set.insert (Signature name (length args)) else id)
+      (if includeWrapperPredicates then Set.insert sig else id)
         $ Set.unions
         $ map (grabPredicateIdentities includeWrapperPredicates) args
-  | otherwise = Set.singleton $ Signature name (length args)
+  | otherwise = Set.singleton sig
+  where
+    sig = Signature name (length args)
 grabPredicateIdentities _ _ = Set.empty
