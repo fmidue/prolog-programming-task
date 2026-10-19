@@ -19,5 +19,5 @@ escalateSeverity = everywhere $ mkT toError
 predicateName :: Signature -> Atom
 predicateName (Signature name _) = name
 
-predicateArity :: Signature -> Int
+predicateArity :: Signature -> Arity
 predicateArity (Signature _ arity) = arity
