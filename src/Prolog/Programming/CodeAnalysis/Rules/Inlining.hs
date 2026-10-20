@@ -58,103 +58,85 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications headVars goals = go goals Map.empty Map.empty True False goalsVars id
+collectUnifications headVars goals = go goals Map.empty True False goalsVars id
   where
     goalsVars = countVariables goals
 
-    go [] _ _ _ _ _ _ = []
-    go
-      (g : gs)
-      prefixVarsNonUni
-      prefixVarsUni
-      prefixHasOnlyUnifications
-      disallowedOpInPrefix
-      suffixVars
-      addPrefix = case g of
-        (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
-          Nothing -> restResult
-          Just uc -> (g, uc, addPrefix gs) : restResult
-        _ -> restResult
-        where
-          gVars = countVariables g
+    go [] _ _ _ _ _ = []
+    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
+      (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
+        Nothing -> restResult
+        Just uc -> (g, uc, addPrefix gs) : restResult
+      _ -> restResult
+      where
+        gVars = countVariables g
 
-          newSuffixVars =
-            Map.differenceWith
-              (\x y -> let res = x - y in if res > 0 then Just res else Nothing)
-              suffixVars
-              gVars
+        newSuffixVars =
+          Map.differenceWith
+            (\x y -> let res = x - y in if res > 0 then Just res else Nothing)
+            suffixVars
+            gVars
 
-          addVariables = Map.unionWith (+)
+        restResult =
+          go
+            gs
+            (Map.unionWith (+) gVars prefixVars)
+            newPrefixHasOnlyUnifications
+            newDisallowedOpInPrefix
+            newSuffixVars
+            (addPrefix . (g :))
 
-          (newPrefixVarsNonUni, newPrefixVarsUni) = case g of
-            Struct "=" _ -> (prefixVarsNonUni, addVariables gVars prefixVarsUni)
-            _ -> (addVariables gVars prefixVarsNonUni, prefixVarsUni)
+        newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
 
-          restResult =
-            go
-              gs
-              newPrefixVarsNonUni
-              newPrefixVarsUni
-              newPrefixHasOnlyUnifications
-              newDisallowedOpInPrefix
-              newSuffixVars
-              (addPrefix . (g :))
+        newPrefixHasOnlyUnifications =
+          prefixHasOnlyUnifications && case g of
+            (Struct "=" _) -> True
+            _ -> False
 
-          newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
+        containsDisjunction = notNull . listify isDisjunction
 
-          newPrefixHasOnlyUnifications =
-            prefixHasOnlyUnifications && case g of
-              (Struct "=" _) -> True
-              _ -> False
+        isDisjunction (Struct ";" _) = True
+        isDisjunction _ = False
 
-          containsDisjunction = notNull . listify isDisjunction
+        checkMaybe uv
+          | check uv = Just uv
+          | otherwise = Nothing
 
-          isDisjunction (Struct ";" _) = True
-          isDisjunction _ = False
+        -- Rule 1: If, on the right-hand side of a clause, following at most literals in which neither X
+        -- nor variables from term/Y appear and the variables the prefix are disjoint to
+        -- the variables in the head — or which themselves consist only of equalities in which X
+        -- does not appear — there is something like X = term or X = Y or Y = X or term = X,
+        -- and X appears exactly once in the head and appears neither in term nor in the rest of the right-hand side
+        -- (and X and Y are different variables), then this equality may inlined.
 
-          checkMaybe uv
-            | check uv = Just uv
-            | otherwise = Nothing
+        -- Rule 2: If something like this appears somewhere on the right-hand side of a clause
+        -- (not necessarily right at the beginning), and X does not appear in the head, nor in
+        -- the initial part of the right-hand side up to this equation (and, of course, not in term/Y either),
+        -- and if X appears exactly once in the remaining part of the right-hand side,
+        -- then this equality may inlined.
 
-          -- Rule 1: If, on the right-hand side of a clause, following at most literals in which neither X
-          -- nor variables from term/Y appear and the variables in the non-unification goals are disjoint to
-          -- the variables in the head — or which themselves consist only of equalities in which X
-          -- does not appear — there is something like X = term or X = Y or Y = X or term = X,
-          -- and X appears exactly once in the head and appears neither in term nor in the rest of the right-hand side
-          -- (and X and Y are different variables), then this equality may inlined.
+        check (v, t) =
+          let
+            varNotInTerm = Map.notMember v (countVariables t)
+            varNotInPrefix = Map.notMember v prefixVars
+            vInHead = Map.lookup v headVars
+            vCountInSuffix = Map.lookup v newSuffixVars
 
-          -- Rule 2: If something like this appears somewhere on the right-hand side of a clause
-          -- (not necessarily right at the beginning), and X does not appear in the head, nor in
-          -- the initial part of the right-hand side up to this equation (and, of course, not in term/Y either),
-          -- and if X appears exactly once in the remaining part of the right-hand side,
-          -- then this equality may inlined.
+            rule1 =
+              ( (prefixHasOnlyUnifications && varNotInPrefix)
+                  || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
+              )
+                && Map.disjoint prefixVars headVars
+                && vInHead == Just 1
+                && isNothing vCountInSuffix
 
-          prefixVars = addVariables prefixVarsUni prefixVarsNonUni
-
-          check (v, t) =
-            let
-              varNotInTerm = Map.notMember v (countVariables t)
-              varNotInPrefix = Map.notMember v prefixVars
-              vInHead = Map.lookup v headVars
-              vCountInSuffix = Map.lookup v newSuffixVars
-
-              rule1 =
-                ( (prefixHasOnlyUnifications && varNotInPrefix)
-                    || ( not disallowedOpInPrefix
-                           && Map.disjoint gVars prefixVars
-                           && Map.disjoint prefixVarsNonUni headVars
-                       )
-                )
-                  && vInHead == Just 1
-                  && isNothing vCountInSuffix
-
-              rule2 =
-                isNothing vInHead
-                  && varNotInPrefix
-                  && vCountInSuffix == Just 1
-            in
-              varNotInTerm
-                && (rule1 || rule2)
+            rule2 =
+              isNothing vInHead
+                && varNotInPrefix
+                && vCountInSuffix == Just 1
+          in
+            varNotInTerm
+              && (rule1 || rule2)
 
 {- | Give the variable sides of a unification and the terms that substitute
 for them.
