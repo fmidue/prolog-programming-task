@@ -2,7 +2,6 @@ module Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker) where
 
 import Control.Applicative (asum)
 import Data.Generics (listify)
-import Data.List.Extra (notNull)
 import Data.Map (Map)
 import qualified Data.Map as Map (
   differenceWith,
@@ -58,10 +57,10 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications headVars goals = go goals Map.empty True False (countVariables goals) id
+collectUnifications headVars goals = go goals Map.empty True True (countVariables goals) id
   where
     go [] _ _ _ _ _ = []
-    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOccurrenceInPrefix suffixVars addPrefix = case g of
+    go (g : gs) prefixVars prefixHasOnlyUnifications onlyAllowedOccurrencesInPrefix suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
         Nothing -> restResult
         Just uc -> (g, uc, addPrefix gs) : restResult
@@ -80,22 +79,20 @@ collectUnifications headVars goals = go goals Map.empty True False (countVariabl
             gs
             (Map.unionWith (+) gVars prefixVars)
             newPrefixHasOnlyUnifications
-            newDisallowedOccurrenceInPrefix
+            newOnlyAllowedOccurrencesInPrefix
             newSuffixVars
             (addPrefix . (g :))
 
-        newDisallowedOccurrenceInPrefix =
-          not (Map.disjoint gVars headVars)
-            || disallowedOccurrenceInPrefix
-            || containsCut g
-            || containsDisjunction g
+        newOnlyAllowedOccurrencesInPrefix =
+          onlyAllowedOccurrencesInPrefix
+            && Map.disjoint gVars headVars
+            && not (containsCut g)
+            && null (listify isDisjunction g)
 
         newPrefixHasOnlyUnifications =
           prefixHasOnlyUnifications && case g of
             (Struct "=" _) -> True
             _ -> False
-
-        containsDisjunction = notNull . listify isDisjunction
 
         isDisjunction (Struct ";" _) = True
         isDisjunction _ = False
@@ -127,7 +124,7 @@ collectUnifications headVars goals = go goals Map.empty True False (countVariabl
 
             rule1 =
               ( prefixHasOnlyUnifications
-                  || (not disallowedOccurrenceInPrefix && Map.disjoint tVars prefixVars)
+                  || (onlyAllowedOccurrencesInPrefix && Map.disjoint tVars prefixVars)
               )
                 && vInHead == Just 1
                 && isNothing vCountInSuffix
