@@ -53,6 +53,13 @@ detectsPatternMatches =
   , ("p :- X = z, g(X), (a;b).", ["p :- g(z), a;b."])
   , ("p :- !, X = z, g(X).", ["p :- !, g(z)."])
   , ("p :- X = z, g(X), !.", ["p :- g(z), !."])
+  , ("p(X) :- (g(Y), q(Y)), X = a, h(Y).", ["p(a) :- ,(g(Y), q(Y)), h(Y)."]) -- ill pretty-print output
+  , ("p(X) :- (A = B, C = D), X = a.", ["p(a) :- ,(A = B, C = D)."]) -- ill pretty-print output
+  -- two rules apply targeting different unifications
+  , ("p(X) :- U = Z, V = W, X = f(Z).", ["p(X) :- V = W, X = f(U).", "p(f(Z)) :- U = Z, V = W."])
+  , ("p(X, Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a"]) -- rule 1 applies twice
+  -- rule 2 applies twice
+  , ("p :- X = a, Y = b, g(Y), q(X).", ["p :- Y = b, g(Y), q(a).", "p :- X = a, g(b), q(X)."])
   ]
 
 detectionFree :: [String]
@@ -87,6 +94,8 @@ detectionFree =
   , "p(X) :- (Y = U, q(Y)), X = f(U), p(Y, U)."
   , "p(X) :- !, X = a." -- Cut is not a literal
   , "p(X, Y) :- (q(Y) ; r(Y)), X = a." -- Disjunction in prefix not allowed
+  , "p(f(Y), Y) :- Y = f(Z), Z = 3." -- not covered yet
+  , "p(f(Y), Y) :- Y = f(Z), q(Y), Z = 3." -- not allowed
   ]
 
 spec :: Spec
