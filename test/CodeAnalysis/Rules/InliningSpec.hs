@@ -167,6 +167,8 @@ notCovered :: [String]
 notCovered =
   [ -- Z = 3 could be inlined
     "p(f(Y), Y) :- Y = f(Z), Z = 3."
+  , --  Rule two would apply for X = Y but that unification is not tracked as it is inside a conjunction
+    "p :- (X = Y, Z = U), g(X)."
   ]
 
 noUnificationsWithVariables :: [String]
