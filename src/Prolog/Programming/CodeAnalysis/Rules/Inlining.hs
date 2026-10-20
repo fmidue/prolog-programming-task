@@ -101,18 +101,17 @@ collectUnifications headVars goalsVars goals = go goals Map.empty True False goa
           | check uv = Just uv
           | otherwise = Nothing
 
-        -- Regel 1: Wenn auf der rechten Seite einer Klausel nach höchstens Literalen, in denen weder X
-        -- noch Variablen aus term/Y vorkommen oder ihrerseits nur aus Gleichheiten bestehen,
-        -- in denen X aber nicht vorkommt, etwas wie X = term oder X = Y oder Y = X oder term = X steht,
-        -- und X im Head genau einmal und weder in term noch im Rest der rechten Seite vorkommt
-        -- (und X und Y verschiedene Variablen sind), dann darf diese Gleichheit weggelassen
-        -- und X im Head entsprechend ersetzt werden.
+        -- Rule 1: If, on the right-hand side of a clause, following at most literals in which neither X
+        -- nor variables from term/Y appear — or which themselves consist only of equalities in which X
+        -- does not appear — there is something like X = term or X = Y or Y = X or term = X,
+        -- and X appears exactly once in the head and appears neither in term nor in the rest of the right-hand side
+        -- (and X and Y are different variables), then this equality may inlined.
 
-        -- Regel 2: Wenn auf der rechten Seite einer Klausel irgendwo (nicht unbedingt direkt am Anfang)
-        -- so etwas auftritt und X weder im Head, noch im Anfangsstück der rechten Seite bis zu dieser Gleichung
-        -- (und natürlich auch wieder nicht in term/Y) vorkommt,
-        -- und danach im Reststück der rechten Seite X nur genau einmal vorkommt, dann darf wieder diese Gleichheit
-        -- weggelassen und X an der entsprechenden Stelle ersetzt werden.
+        -- Rule 2: If something like this appears somewhere on the right-hand side of a clause
+        -- (not necessarily right at the beginning), and X does not appear in the head, nor in
+        -- the initial part of the right-hand side up to this equation (and, of course, not in term/Y either),
+        -- and if X appears exactly once in the remaining part of the right-hand side,
+        -- then this equality may inlined.
 
         check (v, t) =
           let
