@@ -136,7 +136,7 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
             varNotInTerm
               && (rule1 || rule2)
 
-{- | Gibe the variable sides of a unification and the terms that substitute
+{- | Give the variable sides of a unification and the terms that substitute
 for them.
 -}
 unificationCandidates
@@ -150,7 +150,6 @@ unificationCandidates left right = var left right ++ var right left
   where
     var (Var (VariableName _ name)) other = [(name, other)]
     var _ _ = []
-
 
 toProblem :: Clause -> Term -> Clause -> Problem
 toProblem originalClause equality fixedClause =
