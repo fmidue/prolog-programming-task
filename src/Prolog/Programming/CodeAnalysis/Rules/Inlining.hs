@@ -30,11 +30,12 @@ inliningChecker (name, args, goals) =
     ( \(u, replacement, goals') ->
         toProblem clause u $ fixedClause replacement goals'
     )
-    $ collectUnifications totalVars headVars goals
+    $ collectUnifications totalVars headVars goalVars goals
   where
     clause = Clause name args goals
     clauseHead = Struct name args
-    totalVars = Map.unionWith (+) headVars $ countVariables goals
+    goalVars = countVariables goals
+    totalVars = Map.unionWith (+) headVars goalVars
     headVars = countVariables args
 
     fixedClause (x, term) rhs =
@@ -58,11 +59,13 @@ collectUnifications
   -- ^ Number of occurrences of each variable in the whole clause.
   -> Map String Int
   -- ^ Number of occurrences of each variable in the clause head.
+  -> Map String Int
+  -- ^ Number of occurrences of each variable in the clause goals.
   -> [Term]
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications totalVars headVars goals = go goals Map.empty True False (countVariables goals) id
+collectUnifications totalVars headVars goalsVars goals = go goals Map.empty True False goalsVars id
   where
     go [] _ _ _ _ _ = []
     go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
