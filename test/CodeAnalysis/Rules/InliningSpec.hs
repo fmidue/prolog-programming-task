@@ -67,7 +67,7 @@ detectionFree =
   , "p(X) :- q(X)." -- no unification
   , "p(X, Y) :- b(X, Y), X = Y, q(X, Y)." -- X used in head and in first predicate
   , "p(X, Y) :- X = f(A, B), q(X, Y)." -- X used after unification
-  , "p(X, Y) :- X = f(X), q(X,Y)." -- term includes X
+  , "p(X, Y) :- X = f(X), q(X, Y)." -- term includes X
   , "p(X, Y) :- X = a, q(X, Y)." -- X used after unification
   , "p :- r, X = a, q(X), d(X)." -- X used twice after unification
   , "p :- r, X = a, (q(X), d(X))."
@@ -82,7 +82,7 @@ detectionFree =
   , "p(X) :- Y = U, q(Y), X = f(U), p(Y, U)."
   , "p(X) :- (Y = U, q(Y)), X = f(U), p(Y, U)."
   , "p(X) :- !, X = a." -- Cut is not a literal
-  , "p(X,Y) :- (q(Y) ; r(Y)), X = a." -- Disjunction in prefix not allowed
+  , "p(X, Y) :- (q(Y) ; r(Y)), X = a." -- Disjunction in prefix not allowed
   ]
 
 spec :: Spec
