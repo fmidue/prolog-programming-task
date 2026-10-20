@@ -60,7 +60,7 @@ collectUnifications
 collectUnifications headVars goals = go goals Map.empty True True (countVariables goals) id
   where
     go [] _ _ _ _ _ = []
-    go (g : gs) prefixVars prefixHasOnlyUnifications onlyAllowedOccurrencesInPrefix suffixVars addPrefix = case g of
+    go (g : gs) prefixVars prefixHasOnlyUnifications onlyAllowedOccurrencesInPrefixOtherwise suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
         Nothing -> restResult
         Just uc -> (g, uc, addPrefix gs) : restResult
@@ -79,20 +79,20 @@ collectUnifications headVars goals = go goals Map.empty True True (countVariable
             gs
             (Map.unionWith (+) gVars prefixVars)
             newPrefixHasOnlyUnifications
-            newOnlyAllowedOccurrencesInPrefix
+            newOnlyAllowedOccurrencesInPrefixOtherwise
             newSuffixVars
             (addPrefix . (g :))
-
-        newOnlyAllowedOccurrencesInPrefix =
-          onlyAllowedOccurrencesInPrefix
-            && Map.disjoint gVars headVars
-            && not (containsCut g)
-            && null (listify isDisjunction g)
 
         newPrefixHasOnlyUnifications =
           prefixHasOnlyUnifications && case g of
             (Struct "=" _) -> True
             _ -> False
+
+        newOnlyAllowedOccurrencesInPrefixOtherwise =
+          onlyAllowedOccurrencesInPrefixOtherwise
+            && Map.disjoint gVars headVars
+            && not (containsCut g)
+            && null (listify isDisjunction g)
 
         isDisjunction (Struct ";" _) = True
         isDisjunction _ = False
@@ -124,7 +124,7 @@ collectUnifications headVars goals = go goals Map.empty True True (countVariable
 
             rule1 =
               ( prefixHasOnlyUnifications
-                  || (onlyAllowedOccurrencesInPrefix && Map.disjoint tVars prefixVars)
+                  || (onlyAllowedOccurrencesInPrefixOtherwise && Map.disjoint tVars prefixVars)
               )
                 && vInHead == Just 1
                 && isNothing vCountInSuffix
