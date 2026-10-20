@@ -30,18 +30,18 @@ inliningChecker (name, args, goals) =
     ( \(u, replacement, goals') ->
         toProblem clause u $ fixedClause replacement goals'
     )
-    $ collectUnifications (countVariables args) (countVariables goals) goals
+    $ collectUnifications (countVariables args) goals
   where
     clause = Clause name args goals
     clauseHead = Struct name args
 
-    fixedClause (x, term) rhs =
+    fixedClause (x, term) =
       let
         sub = (VariableName 0 x, term)
         substitutedHead = substitute sub clauseHead
       in
         case substitutedHead of
-          Struct newName newArgs -> Clause newName newArgs $ map (substitute sub) rhs
+          Struct newName newArgs -> Clause newName newArgs . map (substitute sub)
           _ -> error "should not happen"
 
 {- | Collect unifications that can be inlined.
@@ -54,14 +54,14 @@ besides it.
 collectUnifications
   :: Map String Int
   -- ^ Number of occurrences of each variable in the clause head.
-  -> Map String Int
-  -- ^ Number of occurrences of each variable in the clause goals.
   -> [Term]
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications headVars goalsVars goals = go goals Map.empty True False goalsVars id
+collectUnifications headVars goals = go goals Map.empty True False goalsVars id
   where
+    goalsVars = countVariables goals
+
     go [] _ _ _ _ _ = []
     go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
@@ -87,6 +87,7 @@ collectUnifications headVars goalsVars goals = go goals Map.empty True False goa
             (addPrefix . (g :))
 
         newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
+
         newPrefixHasOnlyUnifications =
           prefixHasOnlyUnifications && case g of
             (Struct "=" _) -> True
@@ -135,13 +136,8 @@ collectUnifications headVars goalsVars goals = go goals Map.empty True False goa
             varNotInTerm
               && (rule1 || rule2)
 
-{- | Order the variable sides of a unification and the terms that substitute
+{- | Gibe the variable sides of a unification and the terms that substitute
 for them.
-
-If both sides are variables, the variable with fewer total occurrences is
-preferred; if their counts are equal, the right-hand variable is preferred.
-The other side is retained as a fallback when the preferred side cannot
-satisfy an inlining rule.
 -}
 unificationCandidates
   :: Term
@@ -150,16 +146,11 @@ unificationCandidates
   -- ^ Right side of unification to select from.
   -> [(String, Term)]
   -- ^ Possible selected variables and the terms that replace them.
-unificationCandidates left right = pick (var left) (var right)
+unificationCandidates left right = var left right ++ var right left
   where
-    var (Var (VariableName _ name)) = Just name
-    var _ = Nothing
+    var (Var (VariableName _ name)) other = [(name, other)]
+    var _ _ = []
 
-    pick :: Maybe String -> Maybe String -> [(String, Term)]
-    pick (Just l) (Just r) = [(l, right), (r, left)]
-    pick (Just l) Nothing = [(l, right)]
-    pick Nothing (Just r) = [(r, left)]
-    pick Nothing Nothing = []
 
 toProblem :: Clause -> Term -> Clause -> Problem
 toProblem originalClause equality fixedClause =
