@@ -28,6 +28,7 @@ hasSuggestionsOnlyOneUnification =
   , ("p(X) :- leaf = X.", ["p(leaf)."])
   , ("p(X) :- X = node(L, V, R), q(V), p(L), p(R).", ["p(node(L, V, R)) :- q(V), p(L), p(R)."])
   , ("p(X) :- X = a, !.", ["p(a) :- !."])
+  , ("p(X) :- X = a, (g(Y) ; q(Y)).", ["p(a) :- g(Y);q(Y)."])
   , ("p(X, Y) :- X = Y.", ["p(X, X)."])
   , ("p(X, Y) :- Y = X.", ["p(Y, Y)."])
   , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", ["p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs)."])
