@@ -18,6 +18,7 @@ GHC
 hsep
 Hspec
 HUnit
+listify
 mconcat
 mempty
 mzero
