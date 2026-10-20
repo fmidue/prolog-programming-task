@@ -63,7 +63,7 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
     goalsVars = countVariables goals
 
     go [] _ _ _ _ _ = []
-    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
+    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOccurrenceInPrefix suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
         Nothing -> restResult
         Just uc -> (g, uc, addPrefix gs) : restResult
@@ -82,11 +82,15 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
             gs
             (Map.unionWith (+) gVars prefixVars)
             newPrefixHasOnlyUnifications
-            newDisallowedOpInPrefix
+            newDisallowedOccurrenceInPrefix
             newSuffixVars
             (addPrefix . (g :))
 
-        newDisallowedOpInPrefix = disallowedOpInPrefix || containsCut g || containsDisjunction g
+        newDisallowedOccurrenceInPrefix =
+          not (Map.disjoint gVars headVars)
+            || disallowedOccurrenceInPrefix
+            || containsCut g
+            || containsDisjunction g
 
         newPrefixHasOnlyUnifications =
           prefixHasOnlyUnifications && case g of
@@ -124,9 +128,8 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
 
             rule1 =
               ( (prefixHasOnlyUnifications && varNotInPrefix)
-                  || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
+                  || (not disallowedOccurrenceInPrefix && Map.disjoint gVars prefixVars)
               )
-                && Map.disjoint prefixVars headVars
                 && vInHead == Just 1
                 && isNothing vCountInSuffix
 
