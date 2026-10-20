@@ -30,13 +30,10 @@ inliningChecker (name, args, goals) =
     ( \(u, replacement, goals') ->
         toProblem clause u $ fixedClause replacement goals'
     )
-    $ collectUnifications totalVars headVars goalVars goals
+    $ collectUnifications (countVariables args) (countVariables goals) goals
   where
     clause = Clause name args goals
     clauseHead = Struct name args
-    goalVars = countVariables goals
-    totalVars = Map.unionWith (+) headVars goalVars
-    headVars = countVariables args
 
     fixedClause (x, term) rhs =
       let
@@ -56,8 +53,6 @@ besides it.
 -}
 collectUnifications
   :: Map String Int
-  -- ^ Number of occurrences of each variable in the whole clause.
-  -> Map String Int
   -- ^ Number of occurrences of each variable in the clause head.
   -> Map String Int
   -- ^ Number of occurrences of each variable in the clause goals.
@@ -65,11 +60,11 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications totalVars headVars goalsVars goals = go goals Map.empty True False goalsVars id
+collectUnifications headVars goalsVars goals = go goals Map.empty True False goalsVars id
   where
     go [] _ _ _ _ _ = []
     go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
-      (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates totalVars l r of
+      (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
         Nothing -> restResult
         Just uc -> (g, uc, addPrefix gs) : restResult
       _ -> restResult
@@ -150,23 +145,19 @@ The other side is retained as a fallback when the preferred side cannot
 satisfy an inlining rule.
 -}
 unificationCandidates
-  :: Map String Int
-  -- ^ Number of occurrences of each variable in the whole clause.
-  -> Term
+  :: Term
   -- ^ Left side of unification to select from.
   -> Term
   -- ^ Right side of unification to select from.
   -> [(String, Term)]
   -- ^ Possible selected variables and the terms that replace them.
-unificationCandidates totalVars left right = pick (var left) (var right)
+unificationCandidates left right = pick (var left) (var right)
   where
     var (Var (VariableName _ name)) = Just name
     var _ = Nothing
 
     pick :: Maybe String -> Maybe String -> [(String, Term)]
-    pick (Just l) (Just r)
-      | Map.lookup l totalVars < Map.lookup r totalVars = [(l, right), (r, left)]
-      | otherwise = [(r, left), (l, right)]
+    pick (Just l) (Just r) = [(l, right), (r, left)]
     pick (Just l) Nothing = [(l, right)]
     pick Nothing (Just r) = [(r, left)]
     pick Nothing Nothing = []
