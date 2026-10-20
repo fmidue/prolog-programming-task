@@ -56,7 +56,7 @@ hasSuggestionsMultipleUnifications =
   [ -- first unification does not match rule 1 because Y is used in suffix
     -- first unification does not match rule 2 because Y is used in clause head
     -- second unification matches rule 1
-    ("p(X, Y) :- Y = [Z], q(Y), X = a.", ["p(a, Y) :- Y = [Z], q(Y)."])
+    ("p(X, Y) :- Y = [Z], X = a, g(Y).", ["p(a, Y) :- Y = [Z], g(Y)."])
   , -- first unification matches rule 1
     -- second unification matches rule 1
     ("p(X, Y) :- X = a, Y = b.", ["p(a, Y) :- Y = b.", "p(X, b) :- X = a."])
@@ -123,6 +123,8 @@ hasViolationsOnlyOneUnification =
   , "p(X) :- (q(X) ; r(X)), X = a."
   , "p(X) :- !, X = a."
   , "p(X, Y) :- (q(Y) ; r(Y)), X = a."
+  , -- rule 1: variables in non-unification goals in prefix are not disjoint with variables in clause head
+    "p(X,Y) :- atom(Y), X = a."
   , -- rule 2: unification variable does not occur exactly once in suffix
     "p :- r, X = a, q(X), d(X)."
   , "p :- r, X = a, (q(X), d(X))."
@@ -161,6 +163,12 @@ hasViolationsMultipleUnifications =
     -- the second unification does not match rule 2 as Z is used in it's prefix
     -- it should also not match the not yet covered third rule
     "p(f(Y), Y) :- Y = f(Z), q(Y), Z = 3."
+  , -- the first unification does not match rule 1 because Y is used in suffix
+    -- the first unification does not match rule 2 because Y is used in clause head
+    -- the second unification does not match rule 1 because the non-unification variables in the prefix are not
+    --   disjoint with the variables in the clause head
+    -- the second unification does not match rule 2 because X is in the clause head
+    "p(X, Y) :- Y = [Z], q(Y), X = a."
   ]
 
 notCovered :: [String]

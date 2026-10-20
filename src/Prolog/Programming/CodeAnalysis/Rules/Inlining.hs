@@ -58,12 +58,12 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications headVars goals = go goals Map.empty True False goalsVars id
+collectUnifications headVars goals = go goals Map.empty Map.empty True False goalsVars id
   where
     goalsVars = countVariables goals
 
-    go [] _ _ _ _ _ = []
-    go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
+    go [] _ _ _ _ _ _ = []
+    go (g : gs) prefixVarsNonUni prefixVarsUni prefixHasOnlyUnifications disallowedOpInPrefix suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
         Nothing -> restResult
         Just uc -> (g, uc, addPrefix gs) : restResult
@@ -77,10 +77,17 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
             suffixVars
             gVars
 
+        addVariables = Map.unionWith (+)
+
+        (newPrefixVarsNonUni, newPrefixVarsUni) = case g of
+          Struct "=" _ -> (prefixVarsNonUni, addVariables gVars prefixVarsUni)
+          _ -> (addVariables gVars prefixVarsNonUni, prefixVarsUni)
+
         restResult =
           go
             gs
-            (Map.unionWith (+) gVars prefixVars)
+            newPrefixVarsNonUni
+            newPrefixVarsUni
             newPrefixHasOnlyUnifications
             newDisallowedOpInPrefix
             newSuffixVars
@@ -103,7 +110,8 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
           | otherwise = Nothing
 
         -- Rule 1: If, on the right-hand side of a clause, following at most literals in which neither X
-        -- nor variables from term/Y appear — or which themselves consist only of equalities in which X
+        -- nor variables from term/Y appear and the variables in the non-unification goals are disjoint to
+        -- the variables in the head — or which themselves consist only of equalities in which X
         -- does not appear — there is something like X = term or X = Y or Y = X or term = X,
         -- and X appears exactly once in the head and appears neither in term nor in the rest of the right-hand side
         -- (and X and Y are different variables), then this equality may inlined.
@@ -114,6 +122,8 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
         -- and if X appears exactly once in the remaining part of the right-hand side,
         -- then this equality may inlined.
 
+        prefixVars = addVariables prefixVarsUni prefixVarsNonUni
+
         check (v, t) =
           let
             varNotInTerm = Map.notMember v (countVariables t)
@@ -123,7 +133,7 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
 
             rule1 =
               ( (prefixHasOnlyUnifications && varNotInPrefix)
-                  || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars)
+                  || (not disallowedOpInPrefix && Map.disjoint gVars prefixVars && Map.disjoint prefixVarsNonUni headVars)
               )
                 && vInHead == Just 1
                 && isNothing vCountInSuffix
