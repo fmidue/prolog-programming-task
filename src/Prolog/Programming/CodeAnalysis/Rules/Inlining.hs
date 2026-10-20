@@ -58,10 +58,8 @@ collectUnifications
   -- ^ Goals in the clause's right-hand side.
   -> [(Term, (String, Term), [Term])]
   -- ^ Unifications together with the goals besides them.
-collectUnifications headVars goals = go goals Map.empty True False goalsVars id
+collectUnifications headVars goals = go goals Map.empty True False (countVariables goals) id
   where
-    goalsVars = countVariables goals
-
     go [] _ _ _ _ _ = []
     go (g : gs) prefixVars prefixHasOnlyUnifications disallowedOccurrenceInPrefix suffixVars addPrefix = case g of
       (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
@@ -107,7 +105,7 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
           | otherwise = Nothing
 
         -- Rule 1: If, on the right-hand side of a clause, following at most literals in which neither X
-        -- nor variables from term/Y appear and the variables the prefix are disjoint to
+        -- nor variables from term/Y appear and the variables in the prefix are disjoint to
         -- the variables in the head — or which themselves consist only of equalities in which X
         -- does not appear — there is something like X = term or X = Y or Y = X or term = X,
         -- and X appears exactly once in the head and appears neither in term nor in the rest of the right-hand side
@@ -121,24 +119,25 @@ collectUnifications headVars goals = go goals Map.empty True False goalsVars id
 
         check (v, t) =
           let
-            varNotInTerm = Map.notMember v (countVariables t)
+            tVars = countVariables t
+            varNotInTerm = Map.notMember v tVars
             varNotInPrefix = Map.notMember v prefixVars
             vInHead = Map.lookup v headVars
             vCountInSuffix = Map.lookup v newSuffixVars
 
             rule1 =
-              ( (prefixHasOnlyUnifications && varNotInPrefix)
-                  || (not disallowedOccurrenceInPrefix && Map.disjoint gVars prefixVars)
+              ( prefixHasOnlyUnifications
+                  || (not disallowedOccurrenceInPrefix && Map.disjoint tVars prefixVars)
               )
                 && vInHead == Just 1
                 && isNothing vCountInSuffix
 
             rule2 =
               isNothing vInHead
-                && varNotInPrefix
                 && vCountInSuffix == Just 1
           in
             varNotInTerm
+              && varNotInPrefix
               && (rule1 || rule2)
 
 {- | Give the variable sides of a unification and the terms that substitute
