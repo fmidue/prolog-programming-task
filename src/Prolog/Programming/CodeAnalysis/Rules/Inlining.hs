@@ -60,11 +60,12 @@ collectUnifications
 collectUnifications headVars goals = go goals Map.empty True True (countVariables goals) id
   where
     go [] _ _ _ _ _ = []
-    go (g : gs) prefixVars prefixHasOnlyUnifications onlyAllowedOccurrencesInPrefixOtherwise suffixVars addPrefix = case g of
-      (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
-        Nothing -> restResult
-        Just uc -> (g, uc, addPrefix gs) : restResult
-      _ -> restResult
+    go (g : gs) prefixVars prefixHasOnlyUnifications onlyAllowedOccurrencesInPrefixOtherwise suffixVars addPrefix =
+      case g of
+        (Struct "=" [l, r]) -> case asum $ map checkMaybe $ unificationCandidates l r of
+          Nothing -> restResult
+          Just uc -> (g, uc, addPrefix gs) : restResult
+        _ -> restResult
       where
         gVars = countVariables g
 
