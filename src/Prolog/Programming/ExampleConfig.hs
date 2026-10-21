@@ -85,6 +85,9 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  inlining:
+    # what to do concerning unifications in the clause body that can be directly applied
+    status: hint
 
   # which predicates are not allowed to be used
   forbiddenPredicates:
