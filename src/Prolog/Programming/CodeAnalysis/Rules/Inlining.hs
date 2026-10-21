@@ -147,10 +147,10 @@ unificationCandidates
   -- ^ Right side of unification to select from.
   -> [(String, Term)]
   -- ^ Possible selected variables and the terms that replace them.
-unificationCandidates left right = var left right ++ var right left
+unificationCandidates left right = pair left right ++ pair right left
   where
-    var (Var (VariableName _ name)) other = [(name, other)]
-    var _ _ = []
+    pair (Var (VariableName _ name)) other = [(name, other)]
+    pair _ _ = []
 
 toProblem :: Clause -> Term -> Clause -> Problem
 toProblem originalClause equality fixedClause =
