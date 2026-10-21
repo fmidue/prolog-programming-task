@@ -123,10 +123,10 @@ collectUnifications headVars goals = go goals Map.empty True True (countVariable
             varCountInSuffix = Map.lookup v newSuffixVars
 
             rule1 =
-              ( prefixHasOnlyUnifications
-                  || (onlyAllowedOccurrencesInPrefixOtherwise && Map.disjoint tVars prefixVars)
-              )
-                && varInHead == Just 1
+              varInHead == Just 1
+                && ( prefixHasOnlyUnifications
+                       || (onlyAllowedOccurrencesInPrefixOtherwise && Map.disjoint tVars prefixVars)
+                   )
                 && isNothing varCountInSuffix
 
             rule2 =
