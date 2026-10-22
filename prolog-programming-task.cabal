@@ -34,6 +34,7 @@ library
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
       Prolog.Programming.CodeAnalysis.Rules.Cuts
+      Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion
       Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates
       Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
       Prolog.Programming.CodeAnalysis.Rules.Recursion

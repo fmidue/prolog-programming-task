@@ -94,6 +94,9 @@ codeAnalysis:
    - \==/2
   # This field is optional and otherwise takes a list of predicate identities.
 
+  earlyRecursion:
+    # what to do concerning recursive calls before the last goal
+    status: ignore
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.

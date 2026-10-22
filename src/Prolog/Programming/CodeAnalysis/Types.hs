@@ -22,6 +22,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   Severity (..),
   WithSeverity (..),
   ForbiddenPredicatesConfig (..),
+  EarlyRecursionConfig (..),
 )
 where
 
@@ -77,6 +78,9 @@ newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMess
 newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Signature}
   deriving (Data, Generic, Reader, Show, ToDoc)
 
+newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig ())
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -92,6 +96,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , recursion :: RecursionConfig
   -- | Configuration for forbiddenPredicates rule
   , forbiddenPredicates :: ForbiddenPredicatesConfig
+  -- | Configuration for detecting recursive calls before the last goal
+  , earlyRecursion :: EarlyRecursionConfig
   }
   deriving (Data, Generic, Show, Reader, ToDoc)
 
