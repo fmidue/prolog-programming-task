@@ -110,6 +110,7 @@ test-suite prolog-programming-task-test
   other-modules:
       CodeAnalysis.Helper
       CodeAnalysis.Rules.CutsSpec
+      CodeAnalysis.Rules.EarlyRecursionSpec
       CodeAnalysis.Rules.ForbiddenPredicatesSpec
       CodeAnalysis.Rules.InconsistentAritiesSpec
       CodeAnalysis.Rules.MixedSpec
