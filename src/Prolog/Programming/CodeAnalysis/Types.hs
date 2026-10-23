@@ -78,7 +78,7 @@ newtype RecursionConfig = RecursionConfig (CodeAnalysisRuleConfig AdditionalMess
 newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicateSet :: Set Signature}
   deriving (Data, Generic, Reader, Show, ToDoc)
 
-newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig ())
+newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving (Data, Generic, Reader, Show, ToDoc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed

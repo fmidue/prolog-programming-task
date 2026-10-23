@@ -48,7 +48,7 @@ configuredRules
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
       , configuredForbiddenPredicates
-      , toConfigured earlyRecursionCfg (concatMap . const earlyRecursionChecker)
+      , toConfigured earlyRecursionCfg (concatMap . earlyRecursionChecker)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)

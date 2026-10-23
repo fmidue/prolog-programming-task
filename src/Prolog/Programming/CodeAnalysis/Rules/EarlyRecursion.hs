@@ -6,13 +6,13 @@ import qualified Data.Set as Set (member)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), Signature (Signature), Term (..))
 import Prolog.Programming.CodeAnalysis.Helper (grabPredicateIdentities)
-import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
-import Text.PrettyPrint.Leijen.Text (indent, string, vsep)
+import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (AdditionalMessage), ClauseRule, Problem (..))
+import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
 
-earlyRecursionChecker :: ClauseRule
-earlyRecursionChecker (name, args, goals) = case recursionInfo of
+earlyRecursionChecker :: AdditionalMessage -> ClauseRule
+earlyRecursionChecker (AdditionalMessage msg) (name, args, goals) = case recursionInfo of
   Nothing -> []
-  Just (hasRecursion, lastIsRecursion) -> [toProblem (Clause name args goals) | not lastIsRecursion, hasRecursion]
+  Just (hasRecursion, lastIsRecursion) -> [toProblem msg (Clause name args goals) | not lastIsRecursion, hasRecursion]
   where
     definedPredicate = Signature name $ length args
     recursionInfo = foldr update Nothing goals
@@ -30,13 +30,14 @@ isLastCall p (Struct name args)
   | otherwise = False
 isLastCall _ _ = False
 
-toProblem :: Clause -> Problem
-toProblem clause =
+toProblem :: Maybe String -> Clause -> Problem
+toProblem msg clause =
   Problem {
     problemDisplay =
       vsep
         [ string "Your clause"
         , indent 2 $ string $ pack $ show clause
         , string "seems to use a recursive call that is not the last goal."
+        , maybe empty (string . pack) msg
         ]
     }
