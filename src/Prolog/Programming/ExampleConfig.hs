@@ -85,6 +85,13 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  earlyRecursion:
+    # what to do concerning recursive calls before the last goal
+    # as this is more a performance optimization, setting this field to 'reject' is discouraged
+    status: ignore
+    # additional message to display next to default feedback
+    # additionalMessage: "Early recursive call have an impact on performance."
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
 
   # which predicates are not allowed to be used
   forbiddenPredicates:
@@ -93,10 +100,6 @@ codeAnalysis:
    - \=/2
    - \==/2
   # This field is optional and otherwise takes a list of predicate identities.
-
-  earlyRecursion:
-    # what to do concerning recursive calls before the last goal
-    status: ignore
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.
