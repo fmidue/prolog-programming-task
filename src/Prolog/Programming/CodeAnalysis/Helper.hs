@@ -1,4 +1,7 @@
-module Prolog.Programming.CodeAnalysis.Helper (clauseIdentities) where
+module Prolog.Programming.CodeAnalysis.Helper (
+  clauseIdentities,
+  grabPredicateIdentities,
+) where
 
 import Data.Set (Set)
 import qualified Data.Set as Set (empty, insert, singleton, unions)
