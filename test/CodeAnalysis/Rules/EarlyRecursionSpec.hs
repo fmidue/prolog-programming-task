@@ -5,6 +5,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  AdditionalMessage (..),
   CodeAnalysisConfig (..),
   EarlyRecursionConfig (EarlyRecursionConfig),
   Severity (..),
@@ -16,7 +17,7 @@ import Test.Hspec (Spec, describe, it)
 caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
-    earlyRecursion = EarlyRecursionConfig $ Just $ WithSeverity Hint ()
+    earlyRecursion = EarlyRecursionConfig $ Just $ WithSeverity Hint $ AdditionalMessage Nothing
     }
 
 hasViolation :: [Code]
