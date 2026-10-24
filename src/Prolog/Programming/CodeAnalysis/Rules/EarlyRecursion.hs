@@ -35,9 +35,9 @@ toProblem msg clause =
   Problem {
     problemDisplay =
       vsep
-        [ string "Your clause"
+        [ string "The last goal in your clause"
         , indent 2 $ string $ pack $ show clause
-        , string "seems to use a recursive call that is not the last goal."
+        , string "doesn't seem to be a recursive call despite one being used."
         , maybe empty (string . pack) msg
         ]
     }
