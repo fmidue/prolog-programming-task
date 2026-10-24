@@ -22,12 +22,12 @@ earlyRecursionChecker (AdditionalMessage msg) (name, args, goals) = case recursi
     update x (Just (h, l)) = Just (containsPredicate x || h, l)
 
 isLastCall :: Signature -> Term -> Bool
-isLastCall p (Struct name args)
-  | p == Signature name (length args) = True
-  | name `elem` ["not", "\\+"] = all (isLastCall p) args
-  | name == "," && not (null args) = isLastCall p $ last args
-  | name == ";" = any (isLastCall p) args
-  | otherwise = False
+isLastCall p (Struct name args) | p == Signature name (length args) = True
+isLastCall p (Struct name [arg])
+  | name `elem` ["not", "\\+"] = isLastCall p arg
+isLastCall p (Struct name [left, right])
+  | name == "," = isLastCall p right
+  | name == ";" = isLastCall p left || isLastCall p right
 isLastCall _ _ = False
 
 toProblem :: Maybe String -> Clause -> Problem
