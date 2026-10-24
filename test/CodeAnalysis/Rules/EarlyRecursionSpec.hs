@@ -28,6 +28,7 @@ hasViolation =
   , "p(X) :- p(X), not(q(X))."
   , "p(X) :- (p(X), r(X)), not(q(X))."
   , "p(X) :- (p(X); r(X)), not(q(X))."
+  , "p(X) :- p(0), q(X)."
   ]
 
 detectionFree :: [Code]
@@ -38,6 +39,7 @@ detectionFree =
   , "p(X) :- q(X), not(p(X))."
   , "p(X) :- q(X), (r(X), p(X))."
   , "p(X,Y) :- p(X), p(Y)."
+  , "p(s(X)) :- p(0), p(X)."
   ]
 
 spec :: Spec
