@@ -86,11 +86,11 @@ codeAnalysis:
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
   earlyRecursion:
-    # what to do concerning recursive calls before the last goal
-    # as this is more a performance optimization, setting this field to 'reject' is discouraged
+    # what to do concerning detection of recursion not happening at the end of clauses;
+    # as this is more a performance/termination optimization, setting this field to 'reject' is discouraged
     status: ignore
     # additional message to display next to default feedback
-    # additionalMessage: "Early recursive call have an impact on performance."
+    # additionalMessage: "Early recursive call often have an impact on performance or termination."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
 
   # which predicates are not allowed to be used
