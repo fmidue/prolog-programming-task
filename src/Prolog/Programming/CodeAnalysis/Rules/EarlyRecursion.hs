@@ -10,25 +10,24 @@ import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (AdditionalMessa
 import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
 
 earlyRecursionChecker :: AdditionalMessage -> ClauseRule
-earlyRecursionChecker (AdditionalMessage msg) (name, args, goals) = case recursionInfo of
-  Nothing -> []
-  Just (hasRecursion, lastIsRecursion) -> [toProblem msg (Clause name args goals) | not lastIsRecursion, hasRecursion]
+earlyRecursionChecker (AdditionalMessage msg) (name, args, goals) =
+  [toProblem msg (Clause name args goals) | hasViolation definedPredicate goals]
   where
     definedPredicate = Signature name $ length args
-    recursionInfo = foldr update Nothing goals
-    containsPredicate = Set.member definedPredicate . grabPredicateIdentities False
 
-    update x Nothing = Just (containsPredicate x, isLastCall definedPredicate x)
-    update x (Just (h, l)) = Just (containsPredicate x || h, l)
+hasViolation :: Signature -> [Term] -> Bool
+hasViolation p = go False
+  where
+    containsPredicate = Set.member p . grabPredicateIdentities False
+    isPredicate name args = p == Signature name (length args)
 
-isLastCall :: Signature -> Term -> Bool
-isLastCall p (Struct name args) | p == Signature name (length args) = True
-isLastCall p (Struct name [arg])
-  | name `elem` ["not", "\\+"] = isLastCall p arg
-isLastCall p (Struct name [left, right])
-  | name == "," = isLastCall p right
-  | name == ";" = isLastCall p left || isLastCall p right
-isLastCall _ _ = False
+    go _ [] = False
+    go seen [Struct m [arg]]
+      | m `elem` ["not", "\\+"] = go seen [arg]
+    go seen [Struct "," [l, r]] = go (seen || containsPredicate l) [r]
+    go seen [Struct ";" [l, r]] = go seen [l] || go seen [r]
+    go seen [Struct name args] = seen && not (isPredicate name args)
+    go seen (t : ts) = go (seen || containsPredicate t) ts
 
 toProblem :: Maybe String -> Clause -> Problem
 toProblem msg clause =
