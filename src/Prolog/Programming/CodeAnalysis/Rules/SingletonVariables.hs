@@ -4,7 +4,7 @@ import Data.Generics (Data, everything, mkQ)
 import Data.Map (Map)
 import qualified Data.Map as Map (empty, filter, keys, singleton, unionWith)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Term (..), VariableName (..))
+import Language.Prolog (Clause (..), Term (..), VariableName (..), prettifyClause)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
 
@@ -27,7 +27,7 @@ toProblem clause var =
     problemDisplay =
       vsep
         [ string $ pack "Your clause"
-        , indent 2 $ string $ pack $ show clause
+        , indent 2 $ string $ pack $ prettifyClause clause
         , string (pack $ "includes the singleton variable " ++ var ++ ".") <> linebreak
         , string $ pack "You can safely replace it with a wildcard (_)."
         ]
