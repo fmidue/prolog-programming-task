@@ -17,6 +17,8 @@ import Language.Prolog (
   Clause (..),
   Term (..),
   VariableName (VariableName),
+  prettifyClause,
+  prettifyTerm,
   substitute,
  )
 import Prolog.Programming.CodeAnalysis.Helper (containsCut, countVariables)
@@ -159,11 +161,11 @@ toProblem originalClause equality fixedClause =
     problemDisplay =
       vsep
         [ string $ pack "Your clause"
-        , indent 2 $ string $ pack $ show originalClause
+        , indent 2 $ string $ pack $ prettifyClause originalClause
         , string $ pack "uses the unification"
-        , indent 2 $ string $ pack $ show equality
+        , indent 2 $ string $ pack $ prettifyTerm equality
         , string $ pack "as a goal that can also directly be applied to the clause."
         , string $ pack "Doing that would result in:"
-        , indent 2 $ string $ pack $ show fixedClause
+        , indent 2 $ string $ pack $ prettifyClause fixedClause
         ]
     }

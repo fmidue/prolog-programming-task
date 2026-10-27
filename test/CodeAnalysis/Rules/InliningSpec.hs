@@ -28,7 +28,7 @@ hasSuggestionsOnlyOneUnification =
   , ("p(X) :- leaf = X.", ["p(leaf)."])
   , ("p(X) :- X = node(L, V, R), q(V), p(L), p(R).", ["p(node(L, V, R)) :- q(V), p(L), p(R)."])
   , ("p(X) :- X = a, !.", ["p(a) :- !."])
-  , ("p(X) :- X = a, (g(Y) ; q(Y)).", ["p(a) :- g(Y);q(Y)."])
+  , ("p(X) :- X = a, (g(Y) ; q(Y)).", ["p(a) :- g(Y); q(Y)."])
   , ("p(X, Y) :- X = Y.", ["p(Y, Y)."])
   , ("p(X, Y) :- Y = X.", ["p(X, X)."])
   , ("p([X,Y|Ys], Zs) :- X = Y, p([Y|Ys], Zs).", ["p([Y,Y|Ys], Zs) :- p([Y|Ys], Zs)."])
@@ -39,15 +39,15 @@ hasSuggestionsOnlyOneUnification =
   , -- rule 1: unification with prefixes containing only literals
     ("p(X) :- q(a), X = b.", ["p(b) :- q(a)."])
   , ("p(X) :- q(3), X = b.", ["p(b) :- q(3)."])
-  , ("p(X) :- (g(Y), q(Y)), X = a, h(Y).", ["p(a) :- ,(g(Y), q(Y)), h(Y)."])
+  , ("p(X) :- (g(Y), q(Y)), X = a, h(Y).", ["p(a) :- g(Y), q(Y), h(Y)."])
   , -- rule 2: unification without prefix
     ("p(Y) :- X = f(Y), q(X).", ["p(Y) :- q(f(Y))."])
-  , ("p :- X = z, g(X), (a;b).", ["p :- g(z), a;b."])
+  , ("p :- X = z, g(X), (a;b).", ["p :- g(z), (a; b)."])
   , ("p :- X = z, g(X), !.", ["p :- g(z), !."])
   , -- rule 2: unification with prefix
     ("p :- r, X = a, q(X, b).", ["p :- r, q(a, b)."])
   , ("p :- r, a = X, q(X, b).", ["p :- r, q(a, b)."])
-  , ("p :- (a;b), X = z, g(X).", ["p :- a;b, g(z)."])
+  , ("p :- (a;b), X = z, g(X).", ["p :- (a; b), g(z)."])
   , ("p :- !, X = z, g(X).", ["p :- !, g(z)."])
   ]
 
@@ -83,7 +83,7 @@ hasSuggestionsMultipleUnifications =
     ("p :- X = a, Y = b, g(Y), q(X).", ["p :- Y = b, g(Y), q(a).", "p :- X = a, g(b), q(X)."])
   , -- first and second unification is not tracked because they are part of an explicit conjunction
     -- the third unification matches rule 1
-    ("p(X) :- (A = B, C = D), X = a.", ["p(a) :- ,(A = B, C = D)."])
+    ("p(X) :- (A = B, C = D), X = a.", ["p(a) :- A = B, C = D."])
   , -- the first unification matches rule 2
     -- the second unification does not match rule 1 because V and W are not used in the clause head
     -- the second unification does not match rule 2 because V and W are not used in the suffix
