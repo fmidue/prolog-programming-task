@@ -44,6 +44,9 @@ import Language.Prolog (
   Term (..),
   Unifier,
   consultString,
+  prettifyClause,
+  prettifyTerm,
+  prettifyVariableName,
  )
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
@@ -164,7 +167,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
-          Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ show t
+          Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ prettifyClause t
 
       newDefs <- case findNewPredicateDefs specifications inProg of
         (matchReport, Nothing) -> do
@@ -316,7 +319,7 @@ pretty-print the interpreter result
 
 printUnifier :: Unifier -> String
 printUnifier [] = "true"
-printUnifier xs = intercalate ", " $ map (\(x, t) -> show x ++ " = " ++ show t) xs
+printUnifier xs = intercalate ", " $ map (\(x, t) -> prettifyVariableName x ++ " = " ++ prettifyTerm t) xs
 
 describeSpec :: Spec -> Doc
 describeSpec (Spec (Hidden str) _ _ _ _) =
@@ -333,8 +336,8 @@ describeSpec (Spec Visible _ _ _ (QueryWithAnswers query _)) =
     "The result of the query " ++ show (showQuery query) ++ " is incorrect."
 describeSpec (Spec Visible _ _ _ (NewPredDecl _ _)) = error "NewPredDecl should not be passed to describeSpec"
 
-showQuery :: Show a => [a] -> String
-showQuery query = "?- " ++ intercalate ", " (map show query) ++ "."
+showQuery :: [Term] -> String
+showQuery query = "?- " ++ intercalate ", " (map prettifyTerm query) ++ "."
 
 -- | Working with predicates whose name is unknown at configuration time
 isNewPredDecl :: Spec -> Bool
