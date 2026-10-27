@@ -90,7 +90,7 @@ codeAnalysis:
     # as this is more a performance/termination optimization, setting this field to 'reject' is discouraged
     status: ignore
     # additional message to display next to default feedback
-    # additionalMessage: "Early recursive call often have an impact on performance or termination."
+    # additionalMessage: "Early recursive calls often have an impact on performance or termination."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
