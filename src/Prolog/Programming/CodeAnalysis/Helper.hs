@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+
 module Prolog.Programming.CodeAnalysis.Helper (
   clauseIdentities,
   countVariables,
