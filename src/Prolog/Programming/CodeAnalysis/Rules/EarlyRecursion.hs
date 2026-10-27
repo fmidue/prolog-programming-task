@@ -4,7 +4,7 @@ module Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion (earlyRecursionCheck
 
 import qualified Data.Set as Set (member)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..), Signature (Signature), Term (..))
+import Language.Prolog (Clause (..), Signature (Signature), Term (..), prettifyClause)
 import Prolog.Programming.CodeAnalysis.Helper (grabPredicateIdentities)
 import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (AdditionalMessage), ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
@@ -35,7 +35,7 @@ toProblem msg clause =
     problemDisplay =
       vsep
         [ string "The last goal in your clause"
-        , indent 2 $ string $ pack $ show clause
+        , indent 2 $ string $ pack $ prettifyClause clause
         , string "doesn't seem to be a recursive call despite one being used."
         , maybe empty (string . pack) msg
         ]
