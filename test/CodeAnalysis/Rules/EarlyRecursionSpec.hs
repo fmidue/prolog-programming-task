@@ -55,7 +55,7 @@ spec = describe "EarlyRecursion" $ do
       it programCode $
         shouldDetectProblemsStrict
           caConfig
-          [isInfixOf "doesn't seem to be a recursive call despite one being used."]
+          [isInfixOf "doesn't seem to be a recursive call despite one being used in it."]
           programCode
   describe "Should not detect recursive calls in the last goal" $
     forM_ detectionFree $ \programCode ->
