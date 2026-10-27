@@ -83,7 +83,9 @@ hasSuggestionsMultipleUnifications =
     ("p :- X = a, Y = b, g(Y), q(X).", ["p :- Y = b, g(Y), q(a).", "p :- X = a, g(b), q(X)."])
   , -- first and second unification is not tracked because they are part of an explicit conjunction
     -- the third unification matches rule 1
-    ("p(X) :- (A = B, C = D), X = A.", ["p(A) :- A = B, C = D."])
+    ("p(X) :- (A = B, C = D), X = a.", ["p(a) :- A = B, C = D."])
+  , -- first and third unification create matches
+    ("p(X) :- A = B, C = D, X = A.", ["p(X) :- C = D, X = B.", "p(A) :- A = B, C = D."])
   , -- the first unification matches rule 2
     -- the second unification does not match rule 1 because V and W are not used in the clause head
     -- the second unification does not match rule 2 because V and W are not used in the suffix
