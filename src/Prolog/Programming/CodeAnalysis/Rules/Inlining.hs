@@ -106,16 +106,16 @@ collectUnifications headVars goals = go goals Map.empty True True (countVariable
 
         -- Rule 1: If, on the right-hand side of a clause, following at most literals in which neither X
         -- nor variables from term/Y appear and the variables in the prefix are disjoint to
-        -- the variables in the head — or which themselves consist only of equalities in which X
+        -- the variables in the head — or the literals themselves consist only of equalities in which X
         -- does not appear — there is something like X = term or X = Y or Y = X or term = X,
-        -- and X appears exactly once in the head and appears neither in term nor in the rest of the right-hand side
-        -- (and X and Y are different variables), then this equality may inlined.
+        -- and X appears exactly once in the head and appears neither in term nor in the rest of the
+        -- right-hand side (and X and Y are different variables), then this equality may be inlined.
 
         -- Rule 2: If something like this appears somewhere on the right-hand side of a clause
         -- (not necessarily right at the beginning), and X does not appear in the head, nor in
         -- the initial part of the right-hand side up to this equation (and, of course, not in term/Y either),
         -- and if X appears exactly once in the remaining part of the right-hand side,
-        -- then this equality may inlined.
+        -- then this equality may be inlined.
 
         check (v, t) =
           let
