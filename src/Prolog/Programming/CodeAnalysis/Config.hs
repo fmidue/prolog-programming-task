@@ -10,6 +10,7 @@ import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion (earlyRecursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
+import Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
@@ -21,6 +22,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   EarlyRecursionConfig (..),
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
+  InliningConfig (..),
   ProgramRule,
   RecursionConfig (..),
   Severity (Error),
@@ -39,6 +41,7 @@ configuredRules
     , recursion = RecursionConfig recursionCfg
     , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
     , earlyRecursion = EarlyRecursionConfig earlyRecursionCfg
+    , inlining = InliningConfig inliningCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -49,6 +52,7 @@ configuredRules
       , toConfigured recursionCfg recursionChecker
       , configuredForbiddenPredicates
       , toConfigured earlyRecursionCfg (concatMap . earlyRecursionChecker)
+      , toConfigured inliningCfg (concatMap . const inliningChecker)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -69,4 +73,5 @@ emptyCodeAnalysisConfig =
     , recursion = RecursionConfig Nothing
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
     , earlyRecursion = EarlyRecursionConfig Nothing
+    , inlining = InliningConfig Nothing
     }

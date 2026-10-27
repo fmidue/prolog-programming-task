@@ -40,6 +40,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   ForbiddenPredicatesConfig (..),
   IgnoredPredicates (..),
   InconsistentAritiesConfig (..),
+  InliningConfig (..),
   RecursionConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
@@ -132,6 +133,9 @@ instance FromJSON AdditionalMessage where
     AdditionalMessage
       <$> v .:? "additionalMessage"
 
+instance FromJSON InliningConfig where
+  parseJSON = withRuleParser InliningConfig
+
 instance FromJSON CutUsageConfig where
   parseJSON = withRuleParser CutUsageConfig
 
@@ -176,6 +180,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "recursion" .!= RecursionConfig Nothing
       <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
       <*> v .:? "earlyRecursion" .!= EarlyRecursionConfig Nothing
+      <*> v .:? "inlining" .!= InliningConfig Nothing
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do

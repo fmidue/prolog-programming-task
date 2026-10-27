@@ -37,6 +37,7 @@ library
       Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion
       Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates
       Prolog.Programming.CodeAnalysis.Rules.InconsistentArities
+      Prolog.Programming.CodeAnalysis.Rules.Inlining
       Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
@@ -113,6 +114,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.EarlyRecursionSpec
       CodeAnalysis.Rules.ForbiddenPredicatesSpec
       CodeAnalysis.Rules.InconsistentAritiesSpec
+      CodeAnalysis.Rules.InliningSpec
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
