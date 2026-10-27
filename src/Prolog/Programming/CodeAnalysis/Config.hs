@@ -7,6 +7,7 @@ where
 import Data.Maybe (catMaybes)
 import qualified Data.Set as Set (empty, null)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
+import Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion (earlyRecursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates (forbiddenPredicatesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAritiesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker)
@@ -18,6 +19,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisRuleConfig,
   Context,
   CutUsageConfig (..),
+  EarlyRecursionConfig (..),
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
   InliningConfig (..),
@@ -38,6 +40,7 @@ configuredRules
     , ungroupedDefinitions = UngroupedDefinitionsConfig ungroupedDefinitionsCfg
     , recursion = RecursionConfig recursionCfg
     , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
+    , earlyRecursion = EarlyRecursionConfig earlyRecursionCfg
     , inlining = InliningConfig inliningCfg
     }
   taskAndHiddenDefinitions =
@@ -48,6 +51,7 @@ configuredRules
       , toConfigured ungroupedDefinitionsCfg (const ungroupedDefinitionsChecker)
       , toConfigured recursionCfg recursionChecker
       , configuredForbiddenPredicates
+      , toConfigured earlyRecursionCfg (concatMap . earlyRecursionChecker)
       , toConfigured inliningCfg (concatMap . const inliningChecker)
       ]
     where
@@ -68,5 +72,6 @@ emptyCodeAnalysisConfig =
     , ungroupedDefinitions = UngroupedDefinitionsConfig Nothing
     , recursion = RecursionConfig Nothing
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
+    , earlyRecursion = EarlyRecursionConfig Nothing
     , inlining = InliningConfig Nothing
     }

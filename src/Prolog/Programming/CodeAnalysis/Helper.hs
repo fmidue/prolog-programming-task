@@ -4,6 +4,7 @@ module Prolog.Programming.CodeAnalysis.Helper (
   clauseIdentities,
   countVariables,
   containsCut,
+  grabPredicateIdentities,
 ) where
 
 import Data.Data (Data)

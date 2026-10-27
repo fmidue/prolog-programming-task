@@ -85,6 +85,13 @@ codeAnalysis:
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+  earlyRecursion:
+    # what to do concerning detection of recursion not happening at the end of clauses;
+    # as this is more a performance/termination optimization, setting this field to 'reject' is discouraged
+    status: ignore
+    # additional message to display next to default feedback
+    # additionalMessage: "Early recursive calls often have an impact on performance or termination."
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
@@ -96,7 +103,6 @@ codeAnalysis:
    - \=/2
    - \==/2
   # This field is optional and otherwise takes a list of predicate identities.
-
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.
