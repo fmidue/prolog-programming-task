@@ -42,7 +42,7 @@ detectionFree =
   , "p(X) :- q(X), (r(X); p(X))."
   , "p(X) :- q(X), not(p(X))."
   , "p(X) :- q(X), (r(X), p(X))."
-  , "p(X,Y) :- p(X), p(Y)."
+  , "p(X, Y) :- p(X), p(Y)."
   , "p(s(X)) :- p(0), p(X)."
   , "p(X) :- p(X), not((q(X), p(X) ; p(X)))."
   , "p(X) :- not((q(X), p(X); q(X)))."
