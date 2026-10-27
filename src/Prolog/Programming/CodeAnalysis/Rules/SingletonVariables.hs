@@ -2,7 +2,7 @@ module Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariab
 
 import qualified Data.Map as Map (filter, keys)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..))
+import Language.Prolog (Clause (..), prettifyClause)
 import Prolog.Programming.CodeAnalysis.Helper (countVariables)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (indent, linebreak, string, vsep)
@@ -19,7 +19,7 @@ toProblem clause var =
     problemDisplay =
       vsep
         [ string $ pack "Your clause"
-        , indent 2 $ string $ pack $ show clause
+        , indent 2 $ string $ pack $ prettifyClause clause
         , string (pack $ "includes the singleton variable " ++ var ++ ".") <> linebreak
         , string $ pack "You can safely replace it with a wildcard (_)."
         ]

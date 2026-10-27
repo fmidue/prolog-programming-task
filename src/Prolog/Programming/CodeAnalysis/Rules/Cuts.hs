@@ -3,7 +3,7 @@
 module Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker) where
 
 import Data.Text.Lazy (pack)
-import Language.Prolog (Clause (..))
+import Language.Prolog (Clause (..), prettifyClause)
 import Prolog.Programming.CodeAnalysis.Helper (containsCut)
 import Prolog.Programming.CodeAnalysis.Types (AdditionalMessage (..), ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, linebreak, string, vsep)
@@ -19,7 +19,7 @@ toProblem cMsg clause =
     problemDisplay =
       vsep
         [ string "Your clause"
-        , indent 2 $ string $ pack $ show clause
+        , indent 2 $ string $ pack $ prettifyClause clause
         , string "makes use of the cut (!) operator." <> linebreak
         , maybe empty (string . pack) cMsg
         ]

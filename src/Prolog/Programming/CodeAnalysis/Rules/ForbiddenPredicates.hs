@@ -6,7 +6,7 @@ import Data.List (intercalate)
 import Data.Set (Set)
 import qualified Data.Set as Set (intersection, toList)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Atom, Clause (..), Goal, Signature, Term)
+import Language.Prolog (Atom, Clause (..), Goal, Signature, Term, prettifyClause)
 import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
 import Prolog.Programming.CodeAnalysis.Types (ClauseRule, Problem (..))
 import Text.PrettyPrint.Leijen.Text (empty, indent, string, vsep)
@@ -28,7 +28,7 @@ toProblem msg predicates clause =
     problemDisplay =
       vsep
         [ string "Your clause"
-        , indent 2 $ string $ pack $ show clause
+        , indent 2 $ string $ pack $ prettifyClause clause
         , string $ pack $ "makes use of forbidden predicates: " ++ intercalate ", " (map show predicates)
         , maybe empty (string . pack) msg
         ]
