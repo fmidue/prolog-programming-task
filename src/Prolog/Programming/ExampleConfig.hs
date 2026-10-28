@@ -95,6 +95,9 @@ codeAnalysis:
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
+  redundantCode:
+    # what to do concerning redundant clauses or goals being present
+    status: hint
 
   # which predicates are not allowed to be used
   forbiddenPredicates:
