@@ -25,6 +25,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InliningConfig (..),
   ProgramRule,
   RecursionConfig (..),
+  RedundantCodeConfig (RedundantCodeConfig),
   Severity (Error),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
@@ -74,4 +75,5 @@ emptyCodeAnalysisConfig =
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
     , earlyRecursion = EarlyRecursionConfig Nothing
     , inlining = InliningConfig Nothing
+    , redundantCode = RedundantCodeConfig Nothing
     }

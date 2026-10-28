@@ -54,6 +54,8 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
+import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig (redundantCode))
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -236,7 +238,10 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
-      case checkForProblems codeAnalysis inProg factProg of
+      let checker p = testResultToBool . fst <$> testRunner globalTimeout factProg p specifications newDefs
+      redundantCodeProblems <- liftIO $ checkForRedundantCode (redundantCode codeAnalysis) checker inProg
+
+      case redundantCodeProblems ++ checkForProblems codeAnalysis inProg factProg of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 
