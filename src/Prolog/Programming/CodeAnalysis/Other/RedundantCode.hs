@@ -1,15 +1,25 @@
-module Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode) where
+module Prolog.Programming.CodeAnalysis.Other.RedundantCode (
+  checkForRedundantCode,
+) where
 
 import Control.Monad.Identity (Identity)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Atom, Clause (..), Goal, Term, prettifyClause, prettifyTerm)
-import Prolog.Programming.CodeAnalysis.Types (Problem (..), RedundantCodeConfig (..), WithSeverity (WithSeverity))
+import Prolog.Programming.CodeAnalysis.Types (
+  Problem (..),
+  RedundantCodeConfig (..),
+  WithSeverity (WithSeverity),
+ )
 import Prolog.Programming.Mutation (filterAliveMutants, runMutations)
 import Prolog.Programming.Mutation.Mutations (dropClauseMutator, dropGoalMutator)
 import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..))
 import Text.PrettyPrint.Leijen.Text (indent, text, vsep)
 
-checkForRedundantCode :: RedundantCodeConfig -> ([(Atom, [Term], [Goal])] -> IO Bool) -> [(Atom, [Term], [Goal])] -> IO [WithSeverity Problem]
+checkForRedundantCode
+  :: RedundantCodeConfig
+  -> ([(Atom, [Term], [Goal])] -> IO Bool)
+  -> [(Atom, [Term], [Goal])]
+  -> IO [WithSeverity Problem]
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure []
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity _))) checker prog = do
   let toResult = pure . map (WithSeverity severity) . toProblems
