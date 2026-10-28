@@ -25,7 +25,7 @@ checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity _))) che
   let toResult = pure . map (WithSeverity severity) . toProblems
   dropClausesResult <- runMutations [dropClauseMutator] checker prog
   case dropClausesResult of
-    rs@(_ : _) -> toResult rs
+    (dc : _) -> toResult [dc]
     _ -> do
       dropGoalsResult <- runMutations [dropGoalMutator] checker prog
       toResult dropGoalsResult
