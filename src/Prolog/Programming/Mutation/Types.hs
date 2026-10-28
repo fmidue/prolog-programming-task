@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 module Prolog.Programming.Mutation.Types (
   Mutator,
   Mutation (..),
@@ -5,15 +8,17 @@ module Prolog.Programming.Mutation.Types (
   MutantState (..),
 ) where
 
-import Data.Data (Proxy)
+import Data.Data (Data, Proxy)
+import GHC.Generics (Generic)
 import Language.Prolog (Atom, Goal, Term)
 
 type Mutator = [(Atom, [Term], [Goal])] -> [MutantState Proxy]
 
 data Mutation = DropClause (Atom, [Term], [Goal]) | DropGoal (Atom, [Term], [Goal]) Goal
+  deriving (Data, Eq, Generic, Show)
 
 data MutantStatus = Dead | Alive
-  deriving Eq
+  deriving (Data, Eq, Generic, Show)
 
 data MutantState m = MutantState {
   mutatedProgram :: [(Atom, [Term], [Goal])]
