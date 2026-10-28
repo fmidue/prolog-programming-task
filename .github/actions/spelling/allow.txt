@@ -27,7 +27,6 @@ rhs
 snd
 SWI
 SYB
-uncons
 uncurry
 unifications
 unlines
