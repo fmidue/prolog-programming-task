@@ -31,6 +31,9 @@ library
       Prolog.Programming.CodeAnalysis
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
+      Prolog.Programming.Mutation
+      Prolog.Programming.Mutation.Types
+      Prolog.Programming.Mutation.Mutations
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
       Prolog.Programming.CodeAnalysis.Other.RedundantCode
@@ -44,9 +47,6 @@ library
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper
-      Prolog.Programming.Mutation
-      Prolog.Programming.Mutation.Mutations
-      Prolog.Programming.Mutation.Types
       Prolog.Programming.Parser
       Prolog.Programming.TestRunner
       Prolog.Programming.TypeHelper
@@ -114,6 +114,7 @@ test-suite prolog-programming-task-test
   main-is: Spec.hs
   other-modules:
       CodeAnalysis.Helper
+      CodeAnalysis.MutationSpec
       CodeAnalysis.Rules.CutsSpec
       CodeAnalysis.Rules.EarlyRecursionSpec
       CodeAnalysis.Rules.ForbiddenPredicatesSpec
