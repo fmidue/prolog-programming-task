@@ -40,6 +40,7 @@ library
       Prolog.Programming.CodeAnalysis.Rules.Inlining
       Prolog.Programming.CodeAnalysis.Rules.Recursion
       Prolog.Programming.CodeAnalysis.Rules.SingletonVariables
+      Prolog.Programming.CodeAnalysis.Rules.SymbolOverload
       Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions
       Prolog.Programming.ExampleConfig
       Prolog.Programming.Helper

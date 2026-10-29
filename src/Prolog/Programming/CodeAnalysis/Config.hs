@@ -13,6 +13,7 @@ import Prolog.Programming.CodeAnalysis.Rules.InconsistentArities (inconsistentAr
 import Prolog.Programming.CodeAnalysis.Rules.Inlining (inliningChecker)
 import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
+import Prolog.Programming.CodeAnalysis.Rules.SymbolOverload (symbolOverloadChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
@@ -27,6 +28,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RecursionConfig (..),
   Severity (Error),
   SingletonVariablesConfig (..),
+  SymbolOverloadConfig (SymbolOverloadConfig),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
@@ -42,6 +44,7 @@ configuredRules
     , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
     , earlyRecursion = EarlyRecursionConfig earlyRecursionCfg
     , inlining = InliningConfig inliningCfg
+    , symbolOverload = SymbolOverloadConfig symbolOverloadCfg
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -53,6 +56,7 @@ configuredRules
       , configuredForbiddenPredicates
       , toConfigured earlyRecursionCfg (concatMap . earlyRecursionChecker)
       , toConfigured inliningCfg (concatMap . const inliningChecker)
+      , toConfigured symbolOverloadCfg (const $ symbolOverloadChecker taskAndHiddenDefinitions)
       ]
     where
       toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
@@ -74,4 +78,5 @@ emptyCodeAnalysisConfig =
     , forbiddenPredicates = ForbiddenPredicatesConfig Set.empty
     , earlyRecursion = EarlyRecursionConfig Nothing
     , inlining = InliningConfig Nothing
+    , symbolOverload = SymbolOverloadConfig Nothing
     }

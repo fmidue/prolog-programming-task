@@ -95,6 +95,9 @@ codeAnalysis:
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
+  symbolOverload:
+    # what do do concerning usage of symbol both as predicate and data constructor
+    status: hint
 
   # which predicates are not allowed to be used
   forbiddenPredicates:
