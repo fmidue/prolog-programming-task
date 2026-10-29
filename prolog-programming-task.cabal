@@ -119,6 +119,7 @@ test-suite prolog-programming-task-test
       CodeAnalysis.Rules.MixedSpec
       CodeAnalysis.Rules.RecursionSpec
       CodeAnalysis.Rules.SingletonVariablesSpec
+      CodeAnalysis.Rules.SymbolOverloadSpec
       CodeAnalysis.Rules.UngroupedDefinitionsSpec
       ConfigSpec
       Paths_prolog_programming_task
