@@ -31,7 +31,6 @@ symbolOverloadChecker otherDefinitions prog
           , "This is usually not caused by a fault within your submission."
           , "Please contact your lecturers, providing the following error message:"
           , "Task instance has mixed usage of predicates and data constructors under same name."
-          , hcat $ map (string . pack . show) $ Set.toList $ Set.intersection taskPredicates taskDataCons
           ]
   | otherwise =
       concat
