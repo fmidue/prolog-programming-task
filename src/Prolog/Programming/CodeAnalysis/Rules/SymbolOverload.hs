@@ -19,7 +19,7 @@ import qualified Data.Set as Set (
 import Data.Text.Lazy (pack)
 import Language.Prolog (Atom, Goal, Term (Struct))
 import Prolog.Programming.CodeAnalysis.Types (Context, Problem (..), ProgramRule)
-import Text.PrettyPrint.Leijen.Text (hcat, hsep, string, vcat)
+import Text.PrettyPrint.Leijen.Text (hsep, string, vcat)
 
 symbolOverloadChecker :: Context -> ProgramRule
 symbolOverloadChecker otherDefinitions prog
