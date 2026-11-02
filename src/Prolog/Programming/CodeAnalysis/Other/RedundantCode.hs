@@ -2,7 +2,7 @@ module Prolog.Programming.CodeAnalysis.Other.RedundantCode (
   checkForRedundantCode,
 ) where
 
-import Data.List (uncons)
+import Data.Maybe (listToMaybe)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), ProgramClause, prettifyClause, prettifyTerm)
 import Prolog.Programming.CodeAnalysis.Types (
@@ -28,7 +28,7 @@ checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) ch
     (dc : _) -> toResult $ Just dc
     _ -> do
       dropGoalsResult <- runMutationsAndFilterAlive checker (dropGoalMutator prog)
-      toResult $ fst <$> uncons dropGoalsResult
+      toResult $ listToMaybe dropGoalsResult
 
 toProblems :: Maybe MutantState -> Maybe Problem
 toProblems = fmap (Problem . displaySuggestion . mutation)
