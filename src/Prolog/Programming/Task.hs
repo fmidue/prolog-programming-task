@@ -186,7 +186,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       let factProg =
             filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
               ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
-      testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
+      testResult <- liftIO $ testRunner globalTimeout False factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
