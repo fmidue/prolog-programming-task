@@ -1,15 +1,15 @@
-module Prolog.Programming.Mutation (runMutationsAndFilterAlive) where
+module Prolog.Programming.Mutation (testMutantsAndFilterAlive) where
 
 import Control.Monad (forM)
 import Data.Maybe (catMaybes)
 import Language.Prolog (ProgramClause)
 import Prolog.Programming.Mutation.Types (Mutant (..), Mutation)
 
-runMutationsAndFilterAlive
+testMutantsAndFilterAlive
   :: ([ProgramClause] -> IO Bool)
   -> [Mutant]
   -> IO [Mutation]
-runMutationsAndFilterAlive check mutants = do
+testMutantsAndFilterAlive check mutants = do
   processed <- forM mutants $ \(Mutant mp m) -> do
     res <- check mp
     case res of

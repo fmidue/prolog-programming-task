@@ -10,7 +10,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RedundantCodeConfig (..),
   WithSeverity (WithSeverity),
  )
-import Prolog.Programming.Mutation (runMutationsAndFilterAlive)
+import Prolog.Programming.Mutation (testMutantsAndFilterAlive)
 import Prolog.Programming.Mutation.Mutators (dropClauseMutator, dropGoalMutator)
 import Prolog.Programming.Mutation.Types (Mutation (..))
 import Text.PrettyPrint.Leijen.Text (indent, text, vsep)
@@ -23,11 +23,11 @@ checkForRedundantCode
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure Nothing
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
   let toResult = pure . fmap (WithSeverity severity . toProblem)
-  dropClausesResult <- listToMaybe <$> runMutationsAndFilterAlive checker (dropClauseMutator prog)
+  dropClausesResult <- listToMaybe <$> testMutantsAndFilterAlive checker (dropClauseMutator prog)
   case dropClausesResult of
     Just _ -> toResult dropClausesResult
     Nothing -> do
-      dropGoalsResult <- listToMaybe <$> runMutationsAndFilterAlive checker (dropGoalMutator prog)
+      dropGoalsResult <- listToMaybe <$> testMutantsAndFilterAlive checker (dropGoalMutator prog)
       toResult dropGoalsResult
 
 toProblem :: Mutation -> Problem
