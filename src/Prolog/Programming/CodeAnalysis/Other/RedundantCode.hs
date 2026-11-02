@@ -22,16 +22,16 @@ checkForRedundantCode
   -> IO (Maybe (WithSeverity Problem))
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure Nothing
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
-  let toResult = pure . fmap (WithSeverity severity) . toProblems
-  dropClausesResult <- runMutationsAndFilterAlive checker (dropClauseMutator prog)
+  let toResult = pure . fmap (WithSeverity severity . toProblem)
+  dropClausesResult <- listToMaybe <$> runMutationsAndFilterAlive checker (dropClauseMutator prog)
   case dropClausesResult of
-    (dc : _) -> toResult $ Just dc
-    _ -> do
-      dropGoalsResult <- runMutationsAndFilterAlive checker (dropGoalMutator prog)
-      toResult $ listToMaybe dropGoalsResult
+    Just _ -> toResult dropClausesResult
+    Nothing -> do
+      dropGoalsResult <- listToMaybe <$> runMutationsAndFilterAlive checker (dropGoalMutator prog)
+      toResult dropGoalsResult
 
-toProblems :: Maybe MutantState -> Maybe Problem
-toProblems = fmap (Problem . displaySuggestion . mutation)
+toProblem :: MutantState -> Problem
+toProblem = Problem . displaySuggestion . mutation
   where
     displaySuggestion (DropClause (n, a, g)) =
       vsep
