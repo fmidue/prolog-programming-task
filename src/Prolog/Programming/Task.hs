@@ -55,7 +55,11 @@ import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
-import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig (redundantCode))
+import Prolog.Programming.CodeAnalysis.Types (
+  CodeAnalysisConfig (redundantCode),
+  RedundantCodeConfig (RedundantCodeConfig),
+  WithSeverity (..),
+ )
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -243,12 +247,15 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 
-      let checker p = testResultToBool . fst <$> testRunner globalTimeout factProg p specifications newDefs
-      redundantCodeProblems <- liftIO $ checkForRedundantCode (redundantCode codeAnalysis) checker inProg
+      case redundantCode codeAnalysis of
+        RedundantCodeConfig Nothing -> pure ()
+        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+          let checker p = testResultToBool . fst <$> testRunner globalTimeout factProg p specifications newDefs
+          redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
 
-      case redundantCodeProblems of
-        Nothing -> pure ()
-        Just problem -> either reject inform $ displayProblems [problem]
+          case redundantCodeProblem of
+            Nothing -> pure ()
+            Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
