@@ -13,7 +13,7 @@ import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Void (Void)
 import GHC.Generics (Generic)
-import Language.Prolog (Atom, Goal, Term (..), VariableName (..))
+import Language.Prolog (ProgramClause, Term (..), VariableName (..))
 import Prolog.Programming.CodeAnalysis.Types (CodeAnalysisConfig)
 import Prolog.Programming.Data (Code)
 
@@ -50,8 +50,8 @@ data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
   , sampleSolution :: Code
   , taskDescription :: Code
-  , visiblePredicates :: [(Atom, [Term], [Goal])]
-  , hiddenPredicates :: [(Atom, [Term], [Goal])]
+  , visiblePredicates :: [ProgramClause]
+  , hiddenPredicates :: [ProgramClause]
   }
   deriving (Generic, Reader, Show, ToDoc)
 

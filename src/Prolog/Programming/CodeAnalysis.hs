@@ -7,7 +7,7 @@ module Prolog.Programming.CodeAnalysis (
 where
 
 import Data.Text.Lazy (pack)
-import Language.Prolog (Atom, Goal, Term)
+import Language.Prolog (ProgramClause)
 import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
@@ -18,7 +18,7 @@ import Prolog.Programming.CodeAnalysis.Types (
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
-checkForProblems :: CodeAnalysisConfig -> [(Atom, [Term], [Goal])] -> Context -> [WithSeverity Problem]
+checkForProblems :: CodeAnalysisConfig -> [ProgramClause] -> Context -> [WithSeverity Problem]
 checkForProblems cfg program = concatMap (traverse ($ program)) . configuredRules cfg
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
