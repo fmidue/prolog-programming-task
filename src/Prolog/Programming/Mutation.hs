@@ -1,17 +1,19 @@
-module Prolog.Programming.Mutation (runMutations, filterAliveMutants) where
+module Prolog.Programming.Mutation (runMutationsAndFilterAlive) where
 
 import Control.Monad (forM)
+import Data.Maybe (catMaybes)
 import Language.Prolog (ProgramClause)
-import Prolog.Programming.Mutation.Types (MutantState (..), MutantStatus (..))
+import Prolog.Programming.Mutation.Types (MutantState (..))
 
-runMutations
+runMutationsAndFilterAlive
   :: ([ProgramClause] -> IO Bool)
   -> [MutantState]
-  -> IO [(MutantState, MutantStatus)]
-runMutations check mutants = do
-  forM mutants $ \(MutantState mp m) -> do
+  -> IO [MutantState]
+runMutationsAndFilterAlive check mutants = do
+  processed <- forM mutants $ \(MutantState mp m) -> do
     res <- check mp
-    pure (MutantState mp m, if res then Alive else Dead)
+    case res of
+      False -> pure Nothing
+      True -> pure $ Just $ MutantState mp m
 
-filterAliveMutants :: [(MutantState, MutantStatus)] -> [(MutantState, MutantStatus)]
-filterAliveMutants = filter ((== Alive) . snd)
+  pure $ catMaybes processed

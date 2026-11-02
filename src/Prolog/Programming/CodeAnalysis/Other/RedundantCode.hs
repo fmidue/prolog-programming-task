@@ -10,9 +10,9 @@ import Prolog.Programming.CodeAnalysis.Types (
   RedundantCodeConfig (..),
   WithSeverity (WithSeverity),
  )
-import Prolog.Programming.Mutation (filterAliveMutants, runMutations)
+import Prolog.Programming.Mutation (runMutationsAndFilterAlive)
 import Prolog.Programming.Mutation.Mutations (dropClauseMutator, dropGoalMutator)
-import Prolog.Programming.Mutation.Types (MutantState (..), MutantStatus, Mutation (..))
+import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..))
 import Text.PrettyPrint.Leijen.Text (indent, text, vsep)
 
 checkForRedundantCode
@@ -23,15 +23,15 @@ checkForRedundantCode
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure Nothing
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
   let toResult = pure . fmap (WithSeverity severity) . toProblems
-  dropClausesResult <- filterAliveMutants <$> runMutations checker (dropClauseMutator prog)
+  dropClausesResult <- runMutationsAndFilterAlive checker (dropClauseMutator prog)
   case dropClausesResult of
     (dc : _) -> toResult $ Just dc
     _ -> do
-      dropGoalsResult <- filterAliveMutants <$> runMutations checker (dropGoalMutator prog)
+      dropGoalsResult <- runMutationsAndFilterAlive checker (dropGoalMutator prog)
       toResult $ fst <$> uncons dropGoalsResult
 
-toProblems :: Maybe (MutantState, MutantStatus) -> Maybe Problem
-toProblems = fmap (Problem . displaySuggestion . mutation . fst)
+toProblems :: Maybe MutantState -> Maybe Problem
+toProblems = fmap (Problem . displaySuggestion . mutation)
   where
     displaySuggestion (DropClause (n, a, g)) =
       vsep

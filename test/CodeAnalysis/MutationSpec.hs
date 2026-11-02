@@ -3,7 +3,7 @@
 
 module CodeAnalysis.MutationSpec where
 
-import Prolog.Programming.Mutation (filterAliveMutants, runMutations)
+import Prolog.Programming.Mutation (runMutationsAndFilterAlive)
 import Prolog.Programming.Mutation.Mutations (dropClauseMutator, dropGoalMutator)
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -33,9 +33,9 @@ q(X) :- p(X).
     case consultString progDef of
       Left err -> fail $ show err
       Right prog -> do
-        result <- runMutations (requirePredicateChecker ["p"]) $ dropClauseMutator prog
+        result <- runMutationsAndFilterAlive (requirePredicateChecker ["p"]) $ dropClauseMutator prog
 
-        let droppedClauses = flip mapMaybe (map (mutation . fst) $ filterAliveMutants result) $ \case
+        let droppedClauses = flip mapMaybe (map mutation result) $ \case
               DropClause (n, a, g) -> Just $ prettifyClause (Clause n a g)
               _ -> Nothing
 
@@ -50,9 +50,9 @@ q(X) :- d(X).
     case consultString progDef of
       Left err -> fail $ show err
       Right prog -> do
-        result <- runMutations (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
+        result <- runMutationsAndFilterAlive (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
 
-        let droppedGoalsWithClause = flip mapMaybe (map (mutation . fst) $ filterAliveMutants result) $ \case
+        let droppedGoalsWithClause = flip mapMaybe (map mutation result) $ \case
               DropGoal (n, a, gs) g -> Just (prettifyTerm g, prettifyClause $ Clause n a gs)
               _ -> Nothing
 
