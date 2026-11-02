@@ -6,13 +6,13 @@ module Prolog.Programming.Mutation.Mutators (
 import Data.Bifunctor (first)
 import Data.List.Extra (notNull)
 import Data.List.HT (removeEach)
-import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..), Mutator)
+import Prolog.Programming.Mutation.Types (Mutant (..), Mutation (..), Mutator)
 
 -- | Returns all possible programs where one clause is dropped
 dropClauseMutator :: Mutator
 dropClauseMutator =
   map
-    (\(dropped, newProg) -> MutantState newProg (DropClause dropped))
+    (\(dropped, newProg) -> Mutant newProg (DropClause dropped))
     . filter (notNull . snd)
     . removeEach
 
@@ -22,7 +22,7 @@ dropGoalMutator prog = go prog id
   where
     go [] _ = []
     go (c@(n, a, g) : cs) addPrefix =
-      [MutantState (addPrefix $ (n, a, goals) : cs) what | (what, goals) <- dropGoal g] ++ res
+      [Mutant (addPrefix $ (n, a, goals) : cs) what | (what, goals) <- dropGoal g] ++ res
       where
         res = go cs (addPrefix . (c :))
 
