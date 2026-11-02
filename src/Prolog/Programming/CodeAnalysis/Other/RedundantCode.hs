@@ -12,7 +12,7 @@ import Prolog.Programming.CodeAnalysis.Types (
  )
 import Prolog.Programming.Mutation (runMutationsAndFilterAlive)
 import Prolog.Programming.Mutation.Mutators (dropClauseMutator, dropGoalMutator)
-import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..))
+import Prolog.Programming.Mutation.Types (Mutation (..))
 import Text.PrettyPrint.Leijen.Text (indent, text, vsep)
 
 checkForRedundantCode
@@ -30,8 +30,8 @@ checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) ch
       dropGoalsResult <- listToMaybe <$> runMutationsAndFilterAlive checker (dropGoalMutator prog)
       toResult dropGoalsResult
 
-toProblem :: MutantState -> Problem
-toProblem = Problem . displaySuggestion . mutation
+toProblem :: Mutation -> Problem
+toProblem = Problem . displaySuggestion
   where
     displaySuggestion (DropClause (n, a, g)) =
       vsep

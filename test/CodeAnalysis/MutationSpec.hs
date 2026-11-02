@@ -9,7 +9,7 @@ import Test.Hspec (Spec, describe, it, shouldBe)
 
 import Data.Maybe (mapMaybe)
 import Language.Prolog (Clause (Clause), ProgramClause, Term (..), consultString, prettifyClause, prettifyTerm, var)
-import Prolog.Programming.Mutation.Types (MutantState (mutation), Mutation (..))
+import Prolog.Programming.Mutation.Types (Mutation (..))
 import qualified Text.RawString.QQ as RS (r)
 
 requirePredicateChecker :: [String] -> [ProgramClause] -> IO Bool
@@ -35,7 +35,7 @@ q(X) :- p(X).
       Right prog -> do
         result <- runMutationsAndFilterAlive (requirePredicateChecker ["p"]) $ dropClauseMutator prog
 
-        let droppedClauses = flip mapMaybe (map mutation result) $ \case
+        let droppedClauses = flip mapMaybe result $ \case
               DropClause (n, a, g) -> Just $ prettifyClause (Clause n a g)
               _ -> Nothing
 
@@ -52,7 +52,7 @@ q(X) :- d(X).
       Right prog -> do
         result <- runMutationsAndFilterAlive (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
 
-        let droppedGoalsWithClause = flip mapMaybe (map mutation result) $ \case
+        let droppedGoalsWithClause = flip mapMaybe result $ \case
               DropGoal (n, a, gs) g -> Just (prettifyTerm g, prettifyClause $ Clause n a gs)
               _ -> Nothing
 
