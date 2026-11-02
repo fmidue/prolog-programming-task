@@ -36,6 +36,7 @@ dependencies:
   - autolib-reader
   - autolib-todoc
   - autolib-data
+  - utility-ht
 
 library:
   source-dirs: src

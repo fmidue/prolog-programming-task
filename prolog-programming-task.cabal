@@ -74,6 +74,7 @@ library
     , raw-strings-qq
     , syb >=0.3
     , text
+    , utility-ht
     , wl-pprint-text
     , yaml
   default-language: Haskell2010
@@ -105,6 +106,7 @@ executable test-task-prolog
     , raw-strings-qq
     , syb >=0.3
     , text
+    , utility-ht
     , wl-pprint-text
     , yaml
   default-language: Haskell2010
@@ -151,6 +153,7 @@ test-suite prolog-programming-task-test
     , raw-strings-qq
     , syb >=0.3
     , text
+    , utility-ht
     , wl-pprint-text
     , yaml
   default-language: Haskell2010
