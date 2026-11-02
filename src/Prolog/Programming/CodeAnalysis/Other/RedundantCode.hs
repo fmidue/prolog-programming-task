@@ -3,6 +3,7 @@ module Prolog.Programming.CodeAnalysis.Other.RedundantCode (
 ) where
 
 import Control.Monad.Identity (Identity)
+import Data.List (uncons)
 import Data.Text.Lazy (pack)
 import Language.Prolog (Clause (..), ProgramClause, prettifyClause, prettifyTerm)
 import Prolog.Programming.CodeAnalysis.Types (
@@ -23,17 +24,15 @@ checkForRedundantCode
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure Nothing
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
   let toResult = pure . fmap (WithSeverity severity) . toProblems
-  dropClausesResult <- runMutations checker $ dropClauseMutator prog
+  dropClausesResult <- filterAliveMutants <$> runMutations checker (dropClauseMutator prog)
   case dropClausesResult of
-    (dc : _) -> toResult [dc]
+    (dc : _) -> toResult $ Just dc
     _ -> do
-      dropGoalsResult <- runMutations checker $ dropGoalMutator prog
-      toResult $ take 1 dropGoalsResult
+      dropGoalsResult <- filterAliveMutants <$> runMutations checker (dropGoalMutator prog)
+      toResult $ fst <$> uncons dropGoalsResult
 
-toProblems :: [MutantState Identity] -> Maybe Problem
-toProblems ms = case filterAliveMutants ms of
-  [] -> Nothing
-  (m : _) -> Just $ Problem $ displaySuggestion $ mutation m
+toProblems :: Maybe (MutantState Identity) -> Maybe Problem
+toProblems = fmap (Problem . displaySuggestion . mutation)
   where
     displaySuggestion (DropClause (n, a, g)) =
       vsep
