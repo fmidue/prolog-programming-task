@@ -33,7 +33,7 @@ import Data.ByteString (ByteString)
 import Data.Either (fromRight)
 import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Maybe (mapMaybe, maybeToList)
+import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
 import Data.Void (absurd)
 
@@ -147,6 +147,7 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 3. Are all required predicates-to-be-defined present?
 4. Is the specification (the tests) fulfilled by the program together with task and hidden predicates?
 5. Does the code analysis run through without rejections?
+6. Is there no dead code?
 
 The procedure aborts once the first check fails.
 -}
@@ -238,12 +239,16 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
+      case checkForProblems codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject inform $ displayProblems pbs
+
       let checker p = testResultToBool . fst <$> testRunner globalTimeout factProg p specifications newDefs
       redundantCodeProblems <- liftIO $ checkForRedundantCode (redundantCode codeAnalysis) checker inProg
 
-      case maybeToList redundantCodeProblems ++ checkForProblems codeAnalysis inProg factProg of
-        [] -> pure ()
-        pbs -> either reject inform $ displayProblems pbs
+      case redundantCodeProblems of
+        Nothing -> pure ()
+        Just problem -> either reject inform $ displayProblems [problem]
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
@@ -291,8 +296,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-            <$$> resultMsg mActual
-              <> treeMsg mTree
+              <$$> resultMsg mActual
+            <> treeMsg mTree
       , mTree
       )
 
