@@ -2,17 +2,15 @@ module Prolog.Programming.Mutation (runMutations, filterAliveMutants) where
 
 import Control.Monad (forM)
 import Control.Monad.Identity (Identity (..), runIdentity)
+import Data.Data (Proxy)
 import Language.Prolog (Atom, Goal, Term)
-import Prolog.Programming.Mutation.Types (MutantState (..), MutantStatus (..), Mutator)
+import Prolog.Programming.Mutation.Types (MutantState (..), MutantStatus (..))
 
 runMutations
-  :: Mutator
-  -> ([(Atom, [Term], [Goal])] -> IO Bool)
-  -> [(Atom, [Term], [Goal])]
+  :: ([(Atom, [Term], [Goal])] -> IO Bool)
+  -> [MutantState Proxy]
   -> IO [MutantState Identity]
-runMutations mutator check prog = do
-  let mutants = mutator prog
-
+runMutations check mutants = do
   forM mutants $ \(MutantState mp m _) -> do
     res <- check mp
     pure $ MutantState mp m $ Identity $ if res then Alive else Dead

@@ -23,11 +23,11 @@ checkForRedundantCode
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure []
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
   let toResult = pure . map (WithSeverity severity) . toProblems
-  dropClausesResult <- runMutations dropClauseMutator checker prog
+  dropClausesResult <- runMutations checker $ dropClauseMutator prog
   case dropClausesResult of
     (dc : _) -> toResult [dc]
     _ -> do
-      dropGoalsResult <- runMutations dropGoalMutator checker prog
+      dropGoalsResult <- runMutations checker $ dropGoalMutator prog
       toResult $ take 1 dropGoalsResult
 
 toProblems :: [MutantState Identity] -> [Problem]
