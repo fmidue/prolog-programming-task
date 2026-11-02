@@ -113,8 +113,8 @@ data AbortReason a res
 run a sequence of tests until the first error
 returns the result and the test that produced the error
 additionally the number of passed tests and tests that were not run is returned
-(timeout are only counted as errors when stopTimeout is True or
-otherwise are not counted as errors unless no other error occurs)
+(timeouts are only counted as errors when stopOnTimeout is True or
+when no other error occurs)
 -}
 runTests
   :: Monad m
