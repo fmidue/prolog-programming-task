@@ -1,4 +1,7 @@
-module Prolog.Programming.Mutation.Mutations where
+module Prolog.Programming.Mutation.Mutations (
+  dropClauseMutator,
+  dropGoalMutator,
+) where
 
 import Data.Bifunctor (first)
 import Data.Data (Proxy (..))
