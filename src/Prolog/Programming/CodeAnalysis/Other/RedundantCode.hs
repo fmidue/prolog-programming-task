@@ -28,7 +28,7 @@ checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) ch
     (dc : _) -> toResult [dc]
     _ -> do
       dropGoalsResult <- runMutations [dropGoalMutator] checker prog
-      toResult dropGoalsResult
+      toResult $ take 1 dropGoalsResult
 
 toProblems :: [MutantState Identity] -> [Problem]
 toProblems = map (Problem . displaySuggestion . mutation) . filterAliveMutants
