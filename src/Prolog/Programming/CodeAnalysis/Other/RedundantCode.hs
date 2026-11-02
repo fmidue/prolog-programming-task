@@ -21,7 +21,7 @@ checkForRedundantCode
   -> [(Atom, [Term], [Goal])]
   -> IO [WithSeverity Problem]
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure []
-checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity _))) checker prog = do
+checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
   let toResult = pure . map (WithSeverity severity) . toProblems
   dropClausesResult <- runMutations [dropClauseMutator] checker prog
   case dropClausesResult of
