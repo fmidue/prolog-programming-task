@@ -3,11 +3,11 @@ module Prolog.Programming.Mutation (runMutations, filterAliveMutants) where
 import Control.Monad (forM)
 import Control.Monad.Identity (Identity (..), runIdentity)
 import Data.Data (Proxy)
-import Language.Prolog (Atom, Goal, Term)
+import Language.Prolog (ProgramClause)
 import Prolog.Programming.Mutation.Types (MutantState (..), MutantStatus (..))
 
 runMutations
-  :: ([(Atom, [Term], [Goal])] -> IO Bool)
+  :: ([ProgramClause] -> IO Bool)
   -> [MutantState Proxy]
   -> IO [MutantState Identity]
 runMutations check mutants = do

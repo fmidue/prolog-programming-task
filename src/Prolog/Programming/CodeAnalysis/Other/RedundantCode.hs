@@ -4,7 +4,7 @@ module Prolog.Programming.CodeAnalysis.Other.RedundantCode (
 
 import Control.Monad.Identity (Identity)
 import Data.Text.Lazy (pack)
-import Language.Prolog (Atom, Clause (..), Goal, Term, prettifyClause, prettifyTerm)
+import Language.Prolog (Clause (..), ProgramClause, prettifyClause, prettifyTerm)
 import Prolog.Programming.CodeAnalysis.Types (
   Problem (..),
   RedundantCodeConfig (..),
@@ -17,8 +17,8 @@ import Text.PrettyPrint.Leijen.Text (indent, text, vsep)
 
 checkForRedundantCode
   :: RedundantCodeConfig
-  -> ([(Atom, [Term], [Goal])] -> IO Bool)
-  -> [(Atom, [Term], [Goal])]
+  -> ([ProgramClause] -> IO Bool)
+  -> [ProgramClause]
   -> IO (Maybe (WithSeverity Problem))
 checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure Nothing
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do

@@ -8,15 +8,15 @@ import Prolog.Programming.Mutation.Mutations (dropClauseMutator, dropGoalMutator
 import Test.Hspec (Spec, describe, it, shouldBe)
 
 import Data.Maybe (mapMaybe)
-import Language.Prolog (Atom, Clause (Clause), Goal, Term (..), consultString, prettifyClause, prettifyTerm, var)
+import Language.Prolog (Clause (Clause), ProgramClause, Term (..), consultString, prettifyClause, prettifyTerm, var)
 import Prolog.Programming.Mutation.Types (MutantState (mutation), Mutation (..))
 import qualified Text.RawString.QQ as RS (r)
 
-requirePredicateChecker :: [String] -> [(Atom, [Term], [Goal])] -> IO Bool
+requirePredicateChecker :: [String] -> [ProgramClause] -> IO Bool
 requirePredicateChecker requiredPredicatesNames prog =
   pure $ all (\req -> any (\(n, _, _) -> n == req) prog) requiredPredicatesNames
 
-requireGoalChecker :: [Term] -> [(Atom, [Term], [Goal])] -> IO Bool
+requireGoalChecker :: [Term] -> [ProgramClause] -> IO Bool
 requireGoalChecker requiredGoals prog =
   pure $ all (\req -> any (\(_, _, gs) -> req `elem` gs) prog) requiredGoals
 
