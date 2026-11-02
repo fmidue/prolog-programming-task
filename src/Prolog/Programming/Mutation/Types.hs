@@ -4,7 +4,6 @@
 module Prolog.Programming.Mutation.Types (
   Mutator,
   Mutation (..),
-  MutantStatus (..),
   MutantState (..),
 ) where
 
@@ -15,9 +14,6 @@ import Language.Prolog (Goal, ProgramClause)
 type Mutator = [ProgramClause] -> [MutantState]
 
 data Mutation = DropClause ProgramClause | DropGoal ProgramClause Goal
-  deriving (Data, Eq, Generic, Show)
-
-data MutantStatus = Dead | Alive
   deriving (Data, Eq, Generic, Show)
 
 data MutantState = MutantState {
