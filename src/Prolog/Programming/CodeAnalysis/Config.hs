@@ -43,6 +43,7 @@ configuredRules
     , forbiddenPredicates = ForbiddenPredicatesConfig forbiddenPredicatesCfg
     , earlyRecursion = EarlyRecursionConfig earlyRecursionCfg
     , inlining = InliningConfig inliningCfg
+    , redundantCode = _ -- redundant code is not checked via rules
     }
   taskAndHiddenDefinitions =
     catMaybes
