@@ -1,4 +1,4 @@
-module Prolog.Programming.Mutation.Mutations (
+module Prolog.Programming.Mutation.Mutators (
   dropClauseMutator,
   dropGoalMutator,
 ) where

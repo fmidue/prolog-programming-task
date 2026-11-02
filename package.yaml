@@ -54,7 +54,7 @@ library:
     - Prolog.Programming.CodeAnalysis.Config
     - Prolog.Programming.Mutation
     - Prolog.Programming.Mutation.Types
-    - Prolog.Programming.Mutation.Mutations
+    - Prolog.Programming.Mutation.Mutators
 
 executables:
   test-task-prolog:

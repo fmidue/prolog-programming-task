@@ -33,7 +33,7 @@ library
       Prolog.Programming.CodeAnalysis.Config
       Prolog.Programming.Mutation
       Prolog.Programming.Mutation.Types
-      Prolog.Programming.Mutation.Mutations
+      Prolog.Programming.Mutation.Mutators
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
       Prolog.Programming.CodeAnalysis.Other.RedundantCode

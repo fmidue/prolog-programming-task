@@ -11,7 +11,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   WithSeverity (WithSeverity),
  )
 import Prolog.Programming.Mutation (runMutationsAndFilterAlive)
-import Prolog.Programming.Mutation.Mutations (dropClauseMutator, dropGoalMutator)
+import Prolog.Programming.Mutation.Mutators (dropClauseMutator, dropGoalMutator)
 import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..))
 import Text.PrettyPrint.Leijen.Text (indent, text, vsep)
 

@@ -4,7 +4,7 @@
 module CodeAnalysis.MutationSpec where
 
 import Prolog.Programming.Mutation (runMutationsAndFilterAlive)
-import Prolog.Programming.Mutation.Mutations (dropClauseMutator, dropGoalMutator)
+import Prolog.Programming.Mutation.Mutators (dropClauseMutator, dropGoalMutator)
 import Test.Hspec (Spec, describe, it, shouldBe)
 
 import Data.Maybe (mapMaybe)
