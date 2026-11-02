@@ -146,7 +146,7 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 2. Does the program respect a configured ban of head/tail pattern-matching on lists?
 3. Are all required predicates-to-be-defined present?
 4. Is the specification (the tests) fulfilled by the program together with task and hidden predicates?
-5. Does the code analysis run through without rejections?
+5. Does the code analysis - minus dead code detection - run through without rejections?
 6. Is there no dead code?
 
 The procedure aborts once the first check fails.
