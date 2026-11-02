@@ -31,7 +31,7 @@ import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
 import Data.Either (fromRight)
-import Data.List (intercalate)
+import Data.List (intercalate, singleton)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
@@ -241,7 +241,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       let checker p = testResultToBool . fst <$> testRunner globalTimeout factProg p specifications newDefs
       redundantCodeProblems <- liftIO $ checkForRedundantCode (redundantCode codeAnalysis) checker inProg
 
-      case redundantCodeProblems ++ checkForProblems codeAnalysis inProg factProg of
+      case maybe [] singleton redundantCodeProblems ++ checkForProblems codeAnalysis inProg factProg of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 

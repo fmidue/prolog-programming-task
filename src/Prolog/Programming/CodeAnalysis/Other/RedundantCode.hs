@@ -19,10 +19,10 @@ checkForRedundantCode
   :: RedundantCodeConfig
   -> ([(Atom, [Term], [Goal])] -> IO Bool)
   -> [(Atom, [Term], [Goal])]
-  -> IO [WithSeverity Problem]
-checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure []
+  -> IO (Maybe (WithSeverity Problem))
+checkForRedundantCode (RedundantCodeConfig Nothing) _ _ = pure Nothing
 checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) checker prog = do
-  let toResult = pure . map (WithSeverity severity) . toProblems
+  let toResult = pure . fmap (WithSeverity severity) . toProblems
   dropClausesResult <- runMutations checker $ dropClauseMutator prog
   case dropClausesResult of
     (dc : _) -> toResult [dc]
@@ -30,8 +30,10 @@ checkForRedundantCode (RedundantCodeConfig (Just (WithSeverity severity ()))) ch
       dropGoalsResult <- runMutations checker $ dropGoalMutator prog
       toResult $ take 1 dropGoalsResult
 
-toProblems :: [MutantState Identity] -> [Problem]
-toProblems = map (Problem . displaySuggestion . mutation) . filterAliveMutants
+toProblems :: [MutantState Identity] -> Maybe Problem
+toProblems ms = case filterAliveMutants ms of
+  [] -> Nothing
+  (m : _) -> Just $ Problem $ displaySuggestion $ mutation m
   where
     displaySuggestion (DropClause (n, a, g)) =
       vsep
