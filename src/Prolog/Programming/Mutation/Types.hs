@@ -8,11 +8,11 @@ module Prolog.Programming.Mutation.Types (
   MutantState (..),
 ) where
 
-import Data.Data (Data, Proxy)
+import Data.Data (Data)
 import GHC.Generics (Generic)
 import Language.Prolog (Goal, ProgramClause)
 
-type Mutator = [ProgramClause] -> [MutantState Proxy]
+type Mutator = [ProgramClause] -> [MutantState]
 
 data Mutation = DropClause ProgramClause | DropGoal ProgramClause Goal
   deriving (Data, Eq, Generic, Show)
@@ -20,8 +20,7 @@ data Mutation = DropClause ProgramClause | DropGoal ProgramClause Goal
 data MutantStatus = Dead | Alive
   deriving (Data, Eq, Generic, Show)
 
-data MutantState m = MutantState {
+data MutantState = MutantState {
   mutatedProgram :: [ProgramClause]
   , mutation :: Mutation
-  , mutantStatus :: m MutantStatus
   }

@@ -4,7 +4,6 @@ module Prolog.Programming.Mutation.Mutations (
 ) where
 
 import Data.Bifunctor (first)
-import Data.Data (Proxy (..))
 import Data.List.Extra (notNull)
 import Data.List.HT (removeEach)
 import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..), Mutator)
@@ -13,7 +12,7 @@ import Prolog.Programming.Mutation.Types (MutantState (..), Mutation (..), Mutat
 dropClauseMutator :: Mutator
 dropClauseMutator =
   map
-    (\(dropped, newProg) -> MutantState newProg (DropClause dropped) Proxy)
+    (\(dropped, newProg) -> MutantState newProg (DropClause dropped))
     . filter (notNull . snd)
     . removeEach
 
@@ -23,7 +22,7 @@ dropGoalMutator prog = go prog id
   where
     go [] _ = []
     go (c@(n, a, g) : cs) addPrefix =
-      [MutantState (addPrefix $ (n, a, goals) : cs) what Proxy | (what, goals) <- dropGoal g] ++ res
+      [MutantState (addPrefix $ (n, a, goals) : cs) what | (what, goals) <- dropGoal g] ++ res
       where
         res = go cs (addPrefix . (c :))
 

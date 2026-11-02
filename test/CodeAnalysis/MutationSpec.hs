@@ -35,7 +35,7 @@ q(X) :- p(X).
       Right prog -> do
         result <- runMutations (requirePredicateChecker ["p"]) $ dropClauseMutator prog
 
-        let droppedClauses = flip mapMaybe (map mutation $ filterAliveMutants result) $ \case
+        let droppedClauses = flip mapMaybe (map (mutation . fst) $ filterAliveMutants result) $ \case
               DropClause (n, a, g) -> Just $ prettifyClause (Clause n a g)
               _ -> Nothing
 
@@ -52,7 +52,7 @@ q(X) :- d(X).
       Right prog -> do
         result <- runMutations (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
 
-        let droppedGoalsWithClause = flip mapMaybe (map mutation $ filterAliveMutants result) $ \case
+        let droppedGoalsWithClause = flip mapMaybe (map (mutation . fst) $ filterAliveMutants result) $ \case
               DropGoal (n, a, gs) g -> Just (prettifyTerm g, prettifyClause $ Clause n a gs)
               _ -> Nothing
 
