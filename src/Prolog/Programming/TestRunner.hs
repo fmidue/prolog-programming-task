@@ -14,7 +14,7 @@ import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 
-import Language.Prolog (Atom, Clause (Clause), Goal, Program, Term (..), Unifier, apply, termSignature)
+import Language.Prolog (Atom, Clause (Clause), Goal, Program, ProgramClause, Term (..), Unifier, apply, termSignature)
 import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
 
 import Data.Tuple.Extra (uncurry3)
@@ -33,8 +33,8 @@ import System.Timeout (timeout)
 
 testRunner
   :: TimeoutDuration
-  -> [(Atom, [Term], [Goal])]
-  -> [(Atom, [Term], [Goal])]
+  -> [ProgramClause]
+  -> [ProgramClause]
   -> [Spec]
   -> [(Term, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
@@ -56,12 +56,12 @@ testRunner globalTO factProg inputProg specs newDefs = do
       pure $ fromMaybe Timeout res
     millisecond2microSec = (* 1000)
 
-useFoundDefsInProgram :: [(Term, Atom)] -> [(Atom, [Term], [Goal])] -> [Clause]
+useFoundDefsInProgram :: [(Term, Atom)] -> [ProgramClause] -> [Clause]
 useFoundDefsInProgram ds = map updateClause
   where
     replace = replaceHeads ds
 
-    updateClause :: (Atom, [Term], [Goal]) -> Clause
+    updateClause :: ProgramClause -> Clause
     updateClause (name, args, gs) =
       case replace (Struct name args) of
         Struct newName newArgs -> Clause newName newArgs $ map replace gs

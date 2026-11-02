@@ -40,7 +40,7 @@ import Data.Void (absurd)
 import Language.Prolog (
   Atom,
   Clause (..),
-  Goal,
+  ProgramClause,
   Term (..),
   Unifier,
   consultString,
@@ -252,12 +252,12 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-taskFilter :: IncludeTask -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
+taskFilter :: IncludeTask -> [ProgramClause] -> ProgramClause -> Bool
 taskFilter Yes _ = const True
 taskFilter No {} _ = const False
 taskFilter Filtered prog = (`notElem` prog)
 
-hiddenFilter :: IncludeHidden -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
+hiddenFilter :: IncludeHidden -> [ProgramClause] -> ProgramClause -> Bool
 hiddenFilter Yes _ = const True
 hiddenFilter (No x) _ = absurd x
 hiddenFilter Filtered prog = \(name, args, _) ->
@@ -347,7 +347,7 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [(Atom, [Term], [Goal])] -> (Doc, Maybe [(Term, Atom)])
+findNewPredicateDefs :: [Spec] -> [ProgramClause] -> (Doc, Maybe [(Term, Atom)])
 findNewPredicateDefs specs clauses = (report, result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
@@ -409,7 +409,7 @@ grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle
 grabFormatting ResolutionStyle = resolutionStyle
 
-containsHeadTailPattern :: [(Atom, [Term], [Goal])] -> Maybe Clause
+containsHeadTailPattern :: [ProgramClause] -> Maybe Clause
 containsHeadTailPattern [] = Nothing
 containsHeadTailPattern ((name, args, goals) : clauses) =
   case hasHeadTailPattern (Struct name args) <> mconcat (map hasHeadTailPattern goals) of
