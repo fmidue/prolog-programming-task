@@ -347,7 +347,7 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [ProgramClause] -> (Doc, Maybe [(Term, Atom)])
+findNewPredicateDefs :: [Spec] -> [ProgramClause] -> (Doc, Maybe [(Atom, Atom)])
 findNewPredicateDefs specs clauses = (report, result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
@@ -375,8 +375,8 @@ data MatchResult
   | WrongArity (String, Arity) (Atom, Arity)
   | MissingPredicate String
 
-fromSuccess :: MatchResult -> Maybe (Term, Atom)
-fromSuccess (MatchSuccess tl tr _) = Just (tl, tr)
+fromSuccess :: MatchResult -> Maybe (Atom, Atom)
+fromSuccess (MatchSuccess (Struct name _) tr _) = Just (name, tr)
 fromSuccess _ = Nothing
 
 reportMatch :: MatchResult -> Doc

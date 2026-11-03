@@ -12,13 +12,12 @@ import Control.Monad.Random.Class (MonadRandom)
 import Data.List (isPrefixOf, nub, (\\))
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
-import Data.Maybe (fromJust, fromMaybe, isNothing)
+import Data.Maybe (fromMaybe, isNothing)
 
-import Language.Prolog (Atom, Clause (Clause), Goal, Program, ProgramClause, Term (..), Unifier, apply, termSignature)
+import Language.Prolog (Atom, Clause (Clause), Goal, Program, ProgramClause, Term (..), Unifier, apply)
 import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
 
 import Data.Tuple.Extra (uncurry3)
-import Prolog.Programming.Helper (predicateName)
 import Prolog.Programming.Types (
   Expection (..),
   Requirement (..),
@@ -36,7 +35,7 @@ testRunner
   -> [ProgramClause]
   -> [ProgramClause]
   -> [Spec]
-  -> [(Term, Atom)]
+  -> [(Atom, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
 testRunner globalTO factProg inputProg specs newDefs = do
   let
@@ -56,7 +55,7 @@ testRunner globalTO factProg inputProg specs newDefs = do
       pure $ fromMaybe Timeout res
     millisecond2microSec = (* 1000)
 
-useFoundDefsInProgram :: [(Term, Atom)] -> [ProgramClause] -> [Clause]
+useFoundDefsInProgram :: [(Atom, Atom)] -> [ProgramClause] -> [Clause]
 useFoundDefsInProgram ds = map updateClause
   where
     replace = replaceHeads ds
@@ -67,7 +66,7 @@ useFoundDefsInProgram ds = map updateClause
         Struct newName newArgs -> Clause newName newArgs $ map replace gs
         _ -> error "should not happen"
 
-useFoundDefsInSpecs :: [(Term, Atom)] -> [Spec] -> [Spec]
+useFoundDefsInSpecs :: [(Atom, Atom)] -> [Spec] -> [Spec]
 useFoundDefsInSpecs ds specs = updateSpec <$> specs
   where
     replace = replaceHeads ds
@@ -81,13 +80,12 @@ useFoundDefsInSpecs ds specs = updateSpec <$> specs
     updateReq (StatementToCheck ts) =
       StatementToCheck $ replace <$> ts
 
-replaceHeads :: [(Term, Atom)] -> Term -> Term
+replaceHeads :: [(Atom, Atom)] -> Term -> Term
 replaceHeads ds = replaceHead
   where
-    substitutions = map (\(tl, tr) -> (predicateName $ fromJust $ termSignature tl, tr)) ds
     replaceHead :: Term -> Term
     replaceHead (Struct h ts) =
-      case lookup h substitutions of
+      case lookup h ds of
         Just r -> Struct r (replaceHead <$> ts)
         Nothing -> Struct h (replaceHead <$> ts)
     replaceHead t = t
