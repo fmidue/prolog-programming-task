@@ -190,10 +190,10 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
               <$$> matchReport
           pure newDefs
 
-      let factProg p =
-            filter (taskFilter includeTaskDefinitions p) visiblePredicates
-              ++ filter (hiddenFilter includeHiddenDefinitions p) hiddenPredicates
-      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout (factProg inProg) inProg specifications newDefs
+      let factProg =
+            filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
+              ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
+      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
@@ -243,7 +243,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
-      case checkForProblems codeAnalysis inProg (factProg inProg) of
+      case checkForProblems codeAnalysis inProg factProg of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 
@@ -252,7 +252,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         RedundantCodeConfig (Just (WithSeverity severity ())) -> do
           let checker p =
                 allTestResultsAreOkay . fst
-                  <$> testRunner globalTimeout True (factProg p) p specifications newDefs
+                  <$> testRunner globalTimeout True factProg p specifications newDefs
           redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
 
           case redundantCodeProblem of
