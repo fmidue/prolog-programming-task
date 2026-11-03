@@ -186,7 +186,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       let factProg =
             filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
               ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
-      testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
+      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
@@ -290,6 +290,15 @@ explainReason = explainResult
               <> treeMsg mTree
       , mTree
       )
+    explainResult (FirstTimeout x) =
+      ( nested $
+          line
+            <> vcat
+              [ describeSpec x
+              , text "The test case timed out."
+              ]
+      , Nothing
+      )
 
 treeMsg :: Maybe Graph -> Doc
 treeMsg = maybe empty (const (line <> text "Derivation tree:"))
@@ -347,7 +356,7 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [ProgramClause] -> (Doc, Maybe [(Term, Atom)])
+findNewPredicateDefs :: [Spec] -> [ProgramClause] -> (Doc, Maybe [(Atom, Atom)])
 findNewPredicateDefs specs clauses = (report, result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
@@ -375,8 +384,8 @@ data MatchResult
   | WrongArity (String, Arity) (Atom, Arity)
   | MissingPredicate String
 
-fromSuccess :: MatchResult -> Maybe (Term, Atom)
-fromSuccess (MatchSuccess tl tr _) = Just (tl, tr)
+fromSuccess :: MatchResult -> Maybe (Atom, Atom)
+fromSuccess (MatchSuccess (Struct name _) tr _) = Just (name, tr)
 fromSuccess _ = Nothing
 
 reportMatch :: MatchResult -> Doc
