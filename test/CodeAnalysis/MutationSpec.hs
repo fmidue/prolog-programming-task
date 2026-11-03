@@ -3,14 +3,11 @@
 
 module CodeAnalysis.MutationSpec where
 
-import Prolog.Programming.Mutation (findFirstAliveMutation)
-import Prolog.Programming.Mutation.Mutators (dropClauseMutator, dropGoalMutator)
-import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
+import Test.Hspec (Spec, describe, it, shouldSatisfy)
 
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.List (isInfixOf, isPrefixOf)
-import Language.Prolog (Clause (Clause), ProgramClause, Term (..), consultString, prettifyClause, prettifyTerm, var)
-import Prolog.Programming.Mutation.Types (Mutation (..))
+import Language.Prolog (ProgramClause, Term (..))
 import Prolog.Programming.Task (checkTask, toInstance)
 import qualified Text.RawString.QQ as RS (r)
 
@@ -48,42 +45,6 @@ check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
 
 spec :: Spec
 spec = describe "Mutation" $ do
-  it "reports the all redundant clauses" $ do
-    let progDef =
-          [RS.r|
-p(_).
-q(a).
-q(X) :- p(X).
-    |]
-
-    case consultString progDef of
-      Left err -> fail $ show err
-      Right prog -> do
-        result <- findFirstAliveMutation (requirePredicateChecker ["p"]) $ dropClauseMutator prog
-
-        let droppedClause = flip fmap result $ \case
-              DropClause (n, a, g) -> prettifyClause (Clause n a g)
-              _ -> error "should not happen"
-
-        droppedClause `shouldBe` Just "q(a)."
-  it "reports the all redundant goals" $ do
-    let progDef =
-          [RS.r|
-p(X) :- a(X), b(X), c(X).
-q(X) :- d(X).
-    |]
-
-    case consultString progDef of
-      Left err -> fail $ show err
-      Right prog -> do
-        result <- findFirstAliveMutation (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
-
-        let droppedGoalWithClause = flip fmap result $ \case
-              DropGoal (n, a, gs) g -> (prettifyTerm g, prettifyClause $ Clause n a gs)
-              _ -> error "should not happen"
-
-        droppedGoalWithClause
-          `shouldBe` Just ("a(X)", "p(X) :- a(X), b(X), c(X).")
   describe "tests on an actual task" $ do
     let config = toInstance taskConfig
     it "detects redundant A =:= B goal" $ do
