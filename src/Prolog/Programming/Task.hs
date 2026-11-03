@@ -290,6 +290,15 @@ explainReason = explainResult
               <> treeMsg mTree
       , mTree
       )
+    explainResult (FirstTimeout x) = 
+      ( nested $
+          line
+            <> vcat
+              [ describeSpec x
+              , text "The test case timed out."
+              ]
+      , Nothing
+      )
 
 treeMsg :: Maybe Graph -> Doc
 treeMsg = maybe empty (const (line <> text "Derivation tree:"))

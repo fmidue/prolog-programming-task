@@ -108,6 +108,7 @@ data AreAllOk a
 data AbortReason a res
   = OnWrong a (Maybe Graph) res
   | OnErrorMsg a String
+  | FirstTimeout a
 
 {- |
 run a sequence of tests until the first error
