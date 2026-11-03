@@ -18,6 +18,7 @@ import Data.Maybe (fromMaybe, isNothing)
 import Language.Prolog (Atom, Clause (Clause), Goal, Program, ProgramClause, Term (..), Unifier, apply)
 import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
 
+import Data.List.Extra (notNull)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.Types (
   Expection (..),
@@ -135,7 +136,7 @@ runTests stopOnTimeout = runTests' 0 []
         Wrong g r -> pure (Aborted $ OnWrong x g r, (n, length xs))
         ErrorMsg msg -> pure (Aborted $ OnErrorMsg x msg, (n, length xs))
         Timeout
-          | stopOnTimeout ->
+          | stopOnTimeout && notNull xs ->
               pure
                 ( Aborted $ FirstTimeout x
                 , (n, length xs)
