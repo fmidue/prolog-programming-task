@@ -3,10 +3,13 @@
 
 module CodeAnalysis.MutationSpec where
 
-import Test.Hspec (Spec, describe, it, shouldSatisfy)
+import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.List (isInfixOf, isPrefixOf)
+import Language.Prolog (Atom, Term (..))
+import Prolog.Programming.Mutation.Mutators (dropGoalMutator)
+import Prolog.Programming.Mutation.Types (Mutant (..), Mutation (..))
 import Prolog.Programming.Task (checkTask, toInstance)
 import qualified Text.RawString.QQ as RS (r)
 
@@ -35,8 +38,32 @@ check([],[]).
 check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
 |]
 
+constant :: Atom -> Term
+constant name = Struct name []
+
+con :: Term -> Term -> Term
+con l r = Struct "," [l, r]
+
+dis :: Term -> Term -> Term
+dis l r = Struct ";" [l, r]
+
 spec :: Spec
 spec = describe "Mutation" $ do
+  describe "dropGoalMutator" $ do
+    it "removes one non-connective goal from deeply nested conjunctions and disjunctions" $ do
+      let outcomes =
+            [ (deleted, goals)
+            | Mutant [(_, _, goals)] (DropGoal _ deleted) <-
+                dropGoalMutator
+                  [("p", [], [dis (con (constant "a") (dis (constant "b") (constant "c"))) (constant "f")])]
+            ]
+
+      outcomes
+        `shouldBe` [ (constant "a", [dis (dis (constant "b") (constant "c")) (constant "f")])
+                   , (constant "b", [dis (con (constant "a") (constant "c")) (constant "f")])
+                   , (constant "c", [dis (con (constant "a") (constant "b")) (constant "f")])
+                   , (constant "f", [con (constant "a") (dis (constant "b") (constant "c"))])
+                   ]
   describe "tests on an actual task" $ do
     let config = toInstance $ "includeTaskDefinitions: filtered\n" ++ taskConfig
     it "detects redundant A =:= B goal" $ do
