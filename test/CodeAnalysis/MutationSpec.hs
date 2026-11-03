@@ -99,9 +99,11 @@ check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
 
       report `shouldSatisfy` any (\p -> "The clause" `isInfixOf` p && "length([], 0)." `isInfixOf` p)
     it "detects redundant task definitions in submission when includeTaskDefinition is set to 'yes'" $ do
-      {- Task definitions that are included in the submission may be marked as redundant iff includeTaskDefinition is set to 'yes'.
-        With includeTaskDefinition set to 'filtered' or 'no', the included definition will not be part of the background facts.
-        Dropping the definition will then lead to test failures indicating that the definition is not redundant.
+      {-
+        Task definitions that are included in the submission may be marked as redundant
+        iff includeTaskDefinition is set to 'yes'. With includeTaskDefinition set to 'filtered'
+        or 'no', the included definition will not be part of the background facts. Dropping the
+        definition will then lead to test failures indicating that the definition is not redundant.
       -}
       let code =
             [RS.r|
