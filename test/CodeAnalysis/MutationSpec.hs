@@ -17,6 +17,8 @@ codeAnalysis:
   redundantCode:
     status: hint
 
+includeTaskDefinitions: filtered
+
 specifications:
  - 'check([],[])'
  - '-check([1],[])'
@@ -26,11 +28,12 @@ specifications:
  - '-!check([1,2,3],[6,4,2])'
  - '-!check([1,2,3],[2,2,3])'
 ------------------------------
-/* Define a predicate check/2 that checks if the second list
- * is the first list with every list item multiplied by two.
+/* Complete the definition for the predicate check/2 that checks if
+ * the second list is the first list with every list item
+ * multiplied by two.
  */
-------------------------------
 check([],[]).
+------------------------------
 check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
 |]
 
