@@ -32,7 +32,7 @@ toProblem = Problem . displaySuggestion
       vsep
         [ text $ pack "The clause"
         , indent 2 $ text $ pack $ prettifyClause $ Clause n a g
-        , text $ pack "is redundant and can be removed."
+        , text $ pack "seems redundant and can be removed."
         ]
     displaySuggestion (DropGoal (n, a, g) goal) =
       vsep
@@ -40,5 +40,5 @@ toProblem = Problem . displaySuggestion
         , indent 2 $ text $ pack $ prettifyTerm goal
         , text $ pack "in clause"
         , indent 2 $ text $ pack $ prettifyClause $ Clause n a g
-        , text $ pack "is redundant and can be removed."
+        , text $ pack "seems redundant and can be removed."
         ]
