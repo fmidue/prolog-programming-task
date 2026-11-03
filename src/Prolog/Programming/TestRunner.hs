@@ -135,7 +135,7 @@ runTests stopOnTimeout = runTests' 0 []
         Timeout
           | stopOnTimeout ->
               pure
-                ( Finished $ SomeTimeouts (NonEmpty.reverse (x :| ts))
+                ( Finished $ SomeTimeouts (NonEmpty.reverse (x :| []))
                 , (n, length xs)
                 )
           | otherwise -> runTests' n (x : ts) xs check
