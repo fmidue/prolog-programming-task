@@ -17,8 +17,6 @@ codeAnalysis:
   redundantCode:
     status: hint
 
-includeTaskDefinitions: filtered
-
 specifications:
  - 'check([],[])'
  - '-check([1],[])'
@@ -40,7 +38,7 @@ check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
 spec :: Spec
 spec = describe "Mutation" $ do
   describe "tests on an actual task" $ do
-    let config = toInstance taskConfig
+    let config = toInstance $ "includeTaskDefinitions: filtered\n" ++ taskConfig
     it "detects redundant A =:= B goal" $ do
       let code =
             [RS.r|
@@ -73,7 +71,25 @@ check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
       report <- readIORef reportRef
 
       report `shouldSatisfy` any (\p -> "The clause" `isInfixOf` p && "length([], 0)." `isInfixOf` p)
-    it "detects no redundant goal or clause" $ do
+    it "detects redundant task definitions in submission when includeTaskDefinition is set to 'yes'" $ do
+      {- Task definitions that are included in the submission may be marked as redundant iff includeTaskDefinition is set to 'yes'.
+        With includeTaskDefinition set to 'filtered' or 'no', the included definition will not be part of the background facts.
+        Dropping the definition will then lead to test failures indicating that the definition is not redundant.
+      -}
+      let code =
+            [RS.r|
+check([],[]).
+check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
+      |]
+
+      reportRef <- newIORef []
+
+      let config' = toInstance $ "includeTaskDefinitions: yes\n" ++ taskConfig
+      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config' code
+      report <- readIORef reportRef
+
+      report `shouldSatisfy` any (\p -> "The clause" `isInfixOf` p && "check([], [])." `isInfixOf` p)
+    it "does not detect redundant task definitions in submission when includeTaskDefinition is set to 'filtered'" $ do
       let code =
             [RS.r|
 check([],[]).
@@ -83,6 +99,22 @@ check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
       reportRef <- newIORef []
 
       () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config code
+      report <- readIORef reportRef
+
+      report `shouldSatisfy` \case
+        [r] -> "Ok" `isPrefixOf` r
+        _ -> False
+    it "does not detect redundant task definitions in submission when includeTaskDefinition is set to 'no'" $ do
+      let code =
+            [RS.r|
+check([],[]).
+check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
+      |]
+
+      reportRef <- newIORef []
+
+      let config' = toInstance $ "includeTaskDefinitions: no\n" ++ taskConfig
+      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config' code
       report <- readIORef reportRef
 
       report `shouldSatisfy` \case
