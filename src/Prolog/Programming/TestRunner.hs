@@ -34,20 +34,19 @@ import System.Timeout (timeout)
 
 testRunner
   :: TimeoutDuration
-  -> Bool
   -> [ProgramClause]
   -> [ProgramClause]
   -> [Spec]
   -> [(Term, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
-testRunner globalTO stopOnTimeout factProg inputProg specs newDefs = do
+testRunner globalTO factProg inputProg specs newDefs = do
   let
     newProg = useFoundDefsInProgram newDefs factProg
     newSpecs = useFoundDefsInSpecs newDefs specs
     p = newProg ++ map (uncurry3 Clause) inputProg
 
   testCases <- reorderTests newSpecs
-  runTests stopOnTimeout testCases (checkWithTimeout p)
+  runTests testCases (checkWithTimeout p)
   where
     checkWithTimeout p s@(Spec _ _ _ to _) = do
       res <- case to of
@@ -116,16 +115,14 @@ data AbortReason a res
 run a sequence of tests until the first error
 returns the result and the test that produced the error
 additionally the number of passed tests and tests that were not run is returned
-(timeout are only counted as errors when stopTimeout is True or
-otherwise are not counted as errors unless no other error occurs)
+(timeout are not counted as errors unless no other error occurs)
 -}
 runTests
   :: Monad m
-  => Bool
-  -> [a]
+  => [a]
   -> (a -> m (TestResult r))
   -> m (TestSuiteResult a r, (Int, Int))
-runTests stopOnTimeout = runTests' 0 []
+runTests = runTests' 0 []
   where
     runTests' n [] [] _ = pure (Finished AllOk, (n, 0))
     runTests' n (t : ts) [] _ = pure (Finished $ SomeTimeouts (NonEmpty.reverse (t :| ts)), (n, 0))
@@ -135,13 +132,7 @@ runTests stopOnTimeout = runTests' 0 []
         Ok -> runTests' (n + 1) ts xs check
         Wrong g r -> pure (Aborted $ OnWrong x g r, (n, length xs))
         ErrorMsg msg -> pure (Aborted $ OnErrorMsg x msg, (n, length xs))
-        Timeout
-          | stopOnTimeout ->
-              pure
-                ( Finished $ SomeTimeouts (NonEmpty.reverse (x :| ts))
-                , (n, length xs)
-                )
-          | otherwise -> runTests' n (x : ts) xs check
+        Timeout -> runTests' n (x : ts) xs check
 
 checkProgram :: Program -> Spec -> TestResult (Maybe [Unifier])
 checkProgram p (Spec _ t r _ (QueryWithAnswers query expected)) =
