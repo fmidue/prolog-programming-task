@@ -4,7 +4,7 @@ module Prolog.Programming.TestRunner (
   TestSuiteResult (..),
   AreAllOk (..),
   AbortReason (..),
-  testResultToBool,
+  allTestResultsAreOkay,
 ) where
 
 import Control.Exception (evaluate)
@@ -252,6 +252,6 @@ reorderTests = shuffleConcat . classify
     classify' s@(Spec Visible ShowTree PositiveResult _ _) =
       (([s], [], [], [], []), [])
 
-testResultToBool :: TestSuiteResult a res -> Bool
-testResultToBool (Finished AllOk) = True
-testResultToBool _ = False
+allTestResultsAreOkay :: TestSuiteResult a res -> Bool
+allTestResultsAreOkay (Finished AllOk) = True
+allTestResultsAreOkay _ = False

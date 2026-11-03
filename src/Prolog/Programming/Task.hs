@@ -250,7 +250,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       case redundantCode codeAnalysis of
         RedundantCodeConfig Nothing -> pure ()
         RedundantCodeConfig (Just (WithSeverity severity ())) -> do
-          let checker p = testResultToBool . fst <$> testRunner globalTimeout True factProg p specifications newDefs
+          let checker p = allTestResultsAreOkay . fst <$> testRunner globalTimeout True factProg p specifications newDefs
           redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
 
           case redundantCodeProblem of
