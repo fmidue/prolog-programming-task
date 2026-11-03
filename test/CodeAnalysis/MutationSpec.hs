@@ -7,17 +7,8 @@ import Test.Hspec (Spec, describe, it, shouldSatisfy)
 
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.List (isInfixOf, isPrefixOf)
-import Language.Prolog (ProgramClause, Term (..))
 import Prolog.Programming.Task (checkTask, toInstance)
 import qualified Text.RawString.QQ as RS (r)
-
-requirePredicateChecker :: [String] -> [ProgramClause] -> IO Bool
-requirePredicateChecker requiredPredicatesNames prog =
-  pure $ all (\req -> any (\(n, _, _) -> n == req) prog) requiredPredicatesNames
-
-requireGoalChecker :: [Term] -> [ProgramClause] -> IO Bool
-requireGoalChecker requiredGoals prog =
-  pure $ all (\req -> any (\(_, _, gs) -> req `elem` gs) prog) requiredGoals
 
 taskConfig :: String
 taskConfig =
