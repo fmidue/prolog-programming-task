@@ -43,6 +43,7 @@ data TaskConfig = TaskConfig {
   , codeAnalysis :: CodeAnalysisConfig
   , specifications :: [Spec]
   , rigorousValidation :: Bool
+  , errorOnFirstTimeout :: Bool
   }
   deriving (Data, Generic, Reader, Show, ToDoc)
 
