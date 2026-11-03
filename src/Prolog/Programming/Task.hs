@@ -190,10 +190,12 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
               <$$> matchReport
           pure newDefs
 
-      let factProg p =
-            filter (taskFilter includeTaskDefinitions p) visiblePredicates
-              ++ filter (hiddenFilter includeHiddenDefinitions p) hiddenPredicates
-      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout (factProg inProg) inProg specifications newDefs
+      let
+        factProg p =
+          filter (taskFilter includeTaskDefinitions p) visiblePredicates
+            ++ filter (hiddenFilter includeHiddenDefinitions p) hiddenPredicates
+        factInProg = factProg inProg
+      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factInProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
@@ -243,7 +245,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
-      case checkForProblems codeAnalysis inProg (factProg inProg) of
+      case checkForProblems codeAnalysis inProg factInProg of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 
