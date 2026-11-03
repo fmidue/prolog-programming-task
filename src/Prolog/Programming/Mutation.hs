@@ -1,19 +1,15 @@
-module Prolog.Programming.Mutation (testMutantsAndFilterAlive) where
+module Prolog.Programming.Mutation (findFirstAliveMutation) where
 
-import Control.Monad (forM)
-import Data.Maybe (catMaybes)
 import Language.Prolog (ProgramClause)
 import Prolog.Programming.Mutation.Types (Mutant (..), Mutation)
 
-testMutantsAndFilterAlive
+findFirstAliveMutation
   :: ([ProgramClause] -> IO Bool)
   -> [Mutant]
-  -> IO [Mutation]
-testMutantsAndFilterAlive check mutants = do
-  processed <- forM mutants $ \(Mutant mp m) -> do
-    res <- check mp
-    case res of
-      False -> pure Nothing
-      True -> pure $ Just m
-
-  pure $ catMaybes processed
+  -> IO (Maybe Mutation)
+findFirstAliveMutation _ [] = pure Nothing
+findFirstAliveMutation check (Mutant mp m : ms) = do
+  res <- check mp
+  case res of
+    False -> findFirstAliveMutation check ms
+    True -> pure $ Just m

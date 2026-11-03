@@ -3,13 +3,12 @@
 
 module CodeAnalysis.MutationSpec where
 
-import Prolog.Programming.Mutation (testMutantsAndFilterAlive)
+import Prolog.Programming.Mutation (findFirstAliveMutation)
 import Prolog.Programming.Mutation.Mutators (dropClauseMutator, dropGoalMutator)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.List (isInfixOf, isPrefixOf)
-import Data.Maybe (mapMaybe)
 import Language.Prolog (Clause (Clause), ProgramClause, Term (..), consultString, prettifyClause, prettifyTerm, var)
 import Prolog.Programming.Mutation.Types (Mutation (..))
 import Prolog.Programming.Task (checkTask, toInstance)
@@ -60,13 +59,13 @@ q(X) :- p(X).
     case consultString progDef of
       Left err -> fail $ show err
       Right prog -> do
-        result <- testMutantsAndFilterAlive (requirePredicateChecker ["p"]) $ dropClauseMutator prog
+        result <- findFirstAliveMutation (requirePredicateChecker ["p"]) $ dropClauseMutator prog
 
-        let droppedClauses = flip mapMaybe result $ \case
-              DropClause (n, a, g) -> Just $ prettifyClause (Clause n a g)
-              _ -> Nothing
+        let droppedClause = flip fmap result $ \case
+              DropClause (n, a, g) -> prettifyClause (Clause n a g)
+              _ -> error "should not happen"
 
-        droppedClauses `shouldBe` ["q(a).", "q(X) :- p(X)."]
+        droppedClause `shouldBe` Just "q(a)."
   it "reports the all redundant goals" $ do
     let progDef =
           [RS.r|
@@ -77,17 +76,14 @@ q(X) :- d(X).
     case consultString progDef of
       Left err -> fail $ show err
       Right prog -> do
-        result <- testMutantsAndFilterAlive (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
+        result <- findFirstAliveMutation (requireGoalChecker [Struct "b" [var "X"]]) $ dropGoalMutator prog
 
-        let droppedGoalsWithClause = flip mapMaybe result $ \case
-              DropGoal (n, a, gs) g -> Just (prettifyTerm g, prettifyClause $ Clause n a gs)
-              _ -> Nothing
+        let droppedGoalWithClause = flip fmap result $ \case
+              DropGoal (n, a, gs) g -> (prettifyTerm g, prettifyClause $ Clause n a gs)
+              _ -> error "should not happen"
 
-        droppedGoalsWithClause
-          `shouldBe` [ ("a(X)", "p(X) :- a(X), b(X), c(X).")
-                     , ("c(X)", "p(X) :- a(X), b(X), c(X).")
-                     , ("d(X)", "q(X) :- d(X).")
-                     ]
+        droppedGoalWithClause
+          `shouldBe` Just ("a(X)", "p(X) :- a(X), b(X), c(X).")
   describe "tests on an actual task" $ do
     let config = toInstance taskConfig
     it "detects redundant A =:= B goal" $ do
