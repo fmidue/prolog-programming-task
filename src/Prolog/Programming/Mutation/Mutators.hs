@@ -4,17 +4,16 @@ module Prolog.Programming.Mutation.Mutators (
 ) where
 
 import Data.Bifunctor (first)
-import Data.List.Extra (notNull)
 import Data.List.HT (removeEach)
 import Prolog.Programming.Mutation.Types (Mutant (..), Mutation (..), Mutator)
 
 -- | Returns all possible programs where one clause is dropped
 dropClauseMutator :: Mutator
-dropClauseMutator =
+dropClauseMutator [_] = []
+dropClauseMutator prog =
   map
     (\(dropped, newProg) -> Mutant newProg (DropClause dropped))
-    . filter (notNull . snd)
-    . removeEach
+    $ removeEach prog
 
 -- | Returns all possible programs where exactly one goal is dropped
 dropGoalMutator :: Mutator
