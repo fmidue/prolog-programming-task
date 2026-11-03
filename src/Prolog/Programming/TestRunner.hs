@@ -135,7 +135,7 @@ runTests stopOnTimeout = runTests' 0 []
         Wrong g r -> pure (Aborted $ OnWrong x g r, (n, length xs))
         ErrorMsg msg -> pure (Aborted $ OnErrorMsg x msg, (n, length xs))
         Timeout
-          | stopOnTimeout && notNull xs ->
+          | stopOnTimeout && notNull xs -> -- stopOnTimeout implies ts = [] here
               pure
                 ( Aborted $ FirstTimeout x
                 , (n, length xs)
