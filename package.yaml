@@ -36,6 +36,7 @@ dependencies:
   - autolib-reader
   - autolib-todoc
   - autolib-data
+  - utility-ht
 
 library:
   source-dirs: src
@@ -51,6 +52,9 @@ library:
     - Prolog.Programming.CodeAnalysis
     - Prolog.Programming.CodeAnalysis.Types
     - Prolog.Programming.CodeAnalysis.Config
+    - Prolog.Programming.Mutation
+    - Prolog.Programming.Mutation.Types
+    - Prolog.Programming.Mutation.Mutators
 
 executables:
   test-task-prolog:

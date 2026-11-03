@@ -24,6 +24,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   WithSeverity (..),
   ForbiddenPredicatesConfig (..),
   EarlyRecursionConfig (..),
+  RedundantCodeConfig (..),
 )
 where
 
@@ -85,6 +86,9 @@ newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicat
 newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving (Data, Generic, Reader, Show, ToDoc)
 
+newtype RedundantCodeConfig = RedundantCodeConfig (CodeAnalysisRuleConfig ())
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -104,6 +108,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , earlyRecursion :: EarlyRecursionConfig
   -- | Configuration for inlining rule
   , inlining :: InliningConfig
+  -- | Configuration for redundant clause / goal checks
+  , redundantCode :: RedundantCodeConfig
   }
   deriving (Data, Generic, Show, Reader, ToDoc)
 
