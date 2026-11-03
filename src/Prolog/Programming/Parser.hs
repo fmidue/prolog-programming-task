@@ -201,6 +201,7 @@ instance FromJSON TaskConfig where
       <*> v .:? "codeAnalysis" .!= emptyCodeAnalysisConfig
       <*> v .:? "specifications" .!= []
       <*> v .:? "rigorousValidation" .!= True
+      <*> v .:? "errorOnFirstTimeout" .!= False
 
 parseInstance :: String -> Either ParseError TaskInstance
 parseInstance = parse (configuration <* eof) "(config)"

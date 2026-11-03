@@ -13,13 +13,12 @@ import Control.Monad.Random.Class (MonadRandom)
 import Data.List (isPrefixOf, nub, (\\))
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty (reverse)
-import Data.Maybe (fromJust, fromMaybe, isNothing)
+import Data.Maybe (fromMaybe, isNothing)
 
-import Language.Prolog (Atom, Clause (Clause), Goal, Program, ProgramClause, Term (..), Unifier, apply, termSignature)
+import Language.Prolog (Atom, Clause (Clause), Goal, Program, ProgramClause, Term (..), Unifier, apply)
 import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
 
 import Data.Tuple.Extra (uncurry3)
-import Prolog.Programming.Helper (predicateName)
 import Prolog.Programming.Types (
   Expection (..),
   Requirement (..),
@@ -34,19 +33,20 @@ import System.Timeout (timeout)
 
 testRunner
   :: TimeoutDuration
+  -> Bool
   -> [ProgramClause]
   -> [ProgramClause]
   -> [Spec]
-  -> [(Term, Atom)]
+  -> [(Atom, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
-testRunner globalTO factProg inputProg specs newDefs = do
+testRunner globalTO stopOnTimeout factProg inputProg specs newDefs = do
   let
     newProg = useFoundDefsInProgram newDefs factProg
     newSpecs = useFoundDefsInSpecs newDefs specs
     p = newProg ++ map (uncurry3 Clause) inputProg
 
   testCases <- reorderTests newSpecs
-  runTests testCases (checkWithTimeout p)
+  runTests stopOnTimeout testCases (checkWithTimeout p)
   where
     checkWithTimeout p s@(Spec _ _ _ to _) = do
       res <- case to of
@@ -57,7 +57,7 @@ testRunner globalTO factProg inputProg specs newDefs = do
       pure $ fromMaybe Timeout res
     millisecond2microSec = (* 1000)
 
-useFoundDefsInProgram :: [(Term, Atom)] -> [ProgramClause] -> [Clause]
+useFoundDefsInProgram :: [(Atom, Atom)] -> [ProgramClause] -> [Clause]
 useFoundDefsInProgram ds = map updateClause
   where
     replace = replaceHeads ds
@@ -68,7 +68,7 @@ useFoundDefsInProgram ds = map updateClause
         Struct newName newArgs -> Clause newName newArgs $ map replace gs
         _ -> error "should not happen"
 
-useFoundDefsInSpecs :: [(Term, Atom)] -> [Spec] -> [Spec]
+useFoundDefsInSpecs :: [(Atom, Atom)] -> [Spec] -> [Spec]
 useFoundDefsInSpecs ds specs = updateSpec <$> specs
   where
     replace = replaceHeads ds
@@ -82,13 +82,12 @@ useFoundDefsInSpecs ds specs = updateSpec <$> specs
     updateReq (StatementToCheck ts) =
       StatementToCheck $ replace <$> ts
 
-replaceHeads :: [(Term, Atom)] -> Term -> Term
+replaceHeads :: [(Atom, Atom)] -> Term -> Term
 replaceHeads ds = replaceHead
   where
-    substitutions = map (\(tl, tr) -> (predicateName $ fromJust $ termSignature tl, tr)) ds
     replaceHead :: Term -> Term
     replaceHead (Struct h ts) =
-      case lookup h substitutions of
+      case lookup h ds of
         Just r -> Struct r (replaceHead <$> ts)
         Nothing -> Struct h (replaceHead <$> ts)
     replaceHead t = t
@@ -110,19 +109,22 @@ data AreAllOk a
 data AbortReason a res
   = OnWrong a (Maybe Graph) res
   | OnErrorMsg a String
+  | FirstTimeout a
 
 {- |
 run a sequence of tests until the first error
 returns the result and the test that produced the error
 additionally the number of passed tests and tests that were not run is returned
-(timeout are not counted as errors unless no other error occurs)
+(timeouts are only counted as errors when stopOnTimeout is True or
+when no other error occurs)
 -}
 runTests
   :: Monad m
-  => [a]
+  => Bool
+  -> [a]
   -> (a -> m (TestResult r))
   -> m (TestSuiteResult a r, (Int, Int))
-runTests = runTests' 0 []
+runTests stopOnTimeout = runTests' 0 []
   where
     runTests' n [] [] _ = pure (Finished AllOk, (n, 0))
     runTests' n (t : ts) [] _ = pure (Finished $ SomeTimeouts (NonEmpty.reverse (t :| ts)), (n, 0))
@@ -132,7 +134,13 @@ runTests = runTests' 0 []
         Ok -> runTests' (n + 1) ts xs check
         Wrong g r -> pure (Aborted $ OnWrong x g r, (n, length xs))
         ErrorMsg msg -> pure (Aborted $ OnErrorMsg x msg, (n, length xs))
-        Timeout -> runTests' n (x : ts) xs check
+        Timeout
+          | stopOnTimeout ->
+              pure
+                ( Aborted $ FirstTimeout x
+                , (n, length xs)
+                )
+          | otherwise -> runTests' n (x : ts) xs check
 
 checkProgram :: Program -> Spec -> TestResult (Maybe [Unifier])
 checkProgram p (Spec _ t r _ (QueryWithAnswers query expected)) =

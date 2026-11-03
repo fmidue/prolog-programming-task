@@ -52,6 +52,9 @@ specifications:
 # whether to run all tests and checks on the sample solution or not; enabled by default
 rigorousValidation: true
 
+# whether to directly display an error (and stop running further tests) when a test case times out
+errorOnFirstTimeout: false
+
 # setting for code analysis;
 # The status field for each aspect has the following possible values:
 # 'ignore': aspect is ignored
