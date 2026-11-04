@@ -54,6 +54,16 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Types (
+  CodeAnalysisConfig (..),
+  IgnoredPredicates (IgnoredPredicates),
+  InconsistentAritiesConfig (InconsistentAritiesConfig),
+  InliningConfig (InliningConfig),
+  Severity (..),
+  SingletonVariablesConfig (SingletonVariablesConfig),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
+  WithSeverity (WithSeverity),
+ )
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -96,8 +106,26 @@ verifyConfig cfg = case parseInstance cfg of
              solutionErrorDisplay
              (const $ pure ())
              (const $ pure ())
-             (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
+             ( inst {
+                 taskConfig =
+                   taskCfg {
+                     codeAnalysis = escalateAndEnableSelectedChecks codeAnalysis
+                     }
+                 , sampleSolution = undefined
+                 }
+             )
              sampleSolution
+  where
+    withError = Just . WithSeverity Error
+    escalateAndEnableSelectedChecks caConfig =
+      escalateSeverity $
+        caConfig {
+          singletonVariables = SingletonVariablesConfig $ withError ()
+          , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
+          , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
+          , inlining = InliningConfig $ withError ()
+          -- , redundantCode = RedundantCodeConfig $ Just $ WithSeverity Error ()
+          }
 
 toInstance :: Config -> TaskInstance
 toInstance = fromRight (error "config should have been validated before") . parseInstance
