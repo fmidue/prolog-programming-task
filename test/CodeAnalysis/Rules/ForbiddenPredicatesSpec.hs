@@ -1,6 +1,6 @@
 module CodeAnalysis.Rules.ForbiddenPredicatesSpec where
 
-import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
+import CodeAnalysis.Helper (shouldDetectProblemsStrict', shouldNotHaveProblems')
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Data.Set (Set)
@@ -8,6 +8,7 @@ import qualified Data.Set as Set (fromList)
 import Language.Prolog (Signature (Signature))
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (BeforeTests),
   CodeAnalysisConfig (..),
   ForbiddenPredicatesConfig (ForbiddenPredicatesConfig),
  )
@@ -40,16 +41,20 @@ spec = describe "Forbidden predicates" $ do
   describe "Should detect forbidden predicate usage" $
     forM_ withProblems $ \(programCode, forbidden) ->
       it programCode $
-        shouldDetectProblemsStrict
+        shouldDetectProblemsStrict'
+          BeforeTests
           (caConfig forbidden)
           [ \problem ->
               isInfixOf "makes use of forbidden predicates" problem
                 && all (\predicate -> show predicate `isInfixOf` problem) forbidden
           ]
           programCode
+          ""
   describe "Should not detect forbidden predicates in safe clauses" $
     forM_ detectionFree $ \(programCode, forbidden) ->
       it programCode $
-        shouldNotHaveProblems
+        shouldNotHaveProblems'
+          BeforeTests
           (caConfig forbidden)
           programCode
+          ""
