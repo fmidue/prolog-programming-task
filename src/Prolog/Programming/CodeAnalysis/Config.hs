@@ -1,10 +1,13 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Prolog.Programming.CodeAnalysis.Config (
   configuredRules,
   emptyCodeAnalysisConfig,
 )
 where
 
-import Data.Maybe (catMaybes)
+import Data.Bifunctor (first)
+import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (empty, null)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion (earlyRecursionChecker)
@@ -15,6 +18,7 @@ import Prolog.Programming.CodeAnalysis.Rules.Recursion (recursionChecker)
 import Prolog.Programming.CodeAnalysis.Rules.SingletonVariables (singletonVariablesChecker)
 import Prolog.Programming.CodeAnalysis.Rules.UngroupedDefinitions (ungroupedDefinitionsChecker)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (..),
   CodeAnalysisConfig (..),
   CodeAnalysisRuleConfig,
   Context,
@@ -31,8 +35,9 @@ import Prolog.Programming.CodeAnalysis.Types (
   WithSeverity (..),
  )
 
-configuredRules :: CodeAnalysisConfig -> Context -> [WithSeverity ProgramRule]
+configuredRules :: CheckStage -> CodeAnalysisConfig -> Context -> [WithSeverity ProgramRule]
 configuredRules
+  stage
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
@@ -44,7 +49,8 @@ configuredRules
     , inlining = InliningConfig inliningCfg
     }
   taskAndHiddenDefinitions =
-    catMaybes
+    mapMaybe
+      (\case Just (c, s) | s == stage -> Just c; _ -> Nothing)
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
@@ -55,13 +61,13 @@ configuredRules
       , toConfigured inliningCfg (concatMap . const inliningChecker)
       ]
     where
-      toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule)
-      toConfigured config build = fmap (build <$>) config
+      toConfigured :: CodeAnalysisRuleConfig a -> (a -> ProgramRule) -> Maybe (WithSeverity ProgramRule, CheckStage)
+      toConfigured config build = fmap (first (build <$>)) config
 
       configuredForbiddenPredicates =
         if Set.null forbiddenPredicatesCfg
           then Nothing
-          else Just $ WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg)
+          else Just (WithSeverity Error $ concatMap (forbiddenPredicatesChecker forbiddenPredicatesCfg), BeforeTests)
 
 emptyCodeAnalysisConfig :: CodeAnalysisConfig
 emptyCodeAnalysisConfig =

@@ -10,6 +10,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (AfterTests),
   CodeAnalysisConfig (inconsistentArities),
   IgnoredPredicates (IgnoredPredicates),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
@@ -22,7 +23,8 @@ import Test.Hspec (Spec, describe, it)
 caConfig :: [String] -> CodeAnalysisConfig
 caConfig predicates =
   emptyCodeAnalysisConfig {
-    inconsistentArities = InconsistentAritiesConfig $ Just $ WithSeverity Hint $ IgnoredPredicates predicates
+    inconsistentArities =
+      InconsistentAritiesConfig $ Just (WithSeverity Hint $ IgnoredPredicates predicates, AfterTests)
     }
 
 hasMultiple :: [(Code, [String])]
@@ -78,11 +80,13 @@ spec = describe "InconsistentArities" $ do
           programCode
   it "should ignore predicates in task/hidden definitions when configured" $
     shouldNotHaveProblems'
+      AfterTests
       (caConfig ["p"])
       "w."
       "p(X) :- q(Y), p(X,Y)."
   it "should detect violation of forced arity" $
     shouldDetectProblemsStrict'
+      AfterTests
       (caConfig [])
       [isInfixOf "check which is used/defined with wrong arity. It should be check/2."]
       "p(X) :- check(X)."

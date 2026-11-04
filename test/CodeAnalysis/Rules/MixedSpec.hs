@@ -5,6 +5,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
+  CheckStage (AfterTests),
   CodeAnalysisConfig (..),
   CutUsageConfig (..),
   Severity (..),
@@ -18,9 +19,9 @@ caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
     singletonVariables =
-      SingletonVariablesConfig $ Just $ WithSeverity Hint ()
+      SingletonVariablesConfig $ Just (WithSeverity Hint (), AfterTests)
     , cutUsage =
-        CutUsageConfig $ Just $ WithSeverity Error $ AdditionalMessage Nothing
+        CutUsageConfig $ Just (WithSeverity Error $ AdditionalMessage Nothing, AfterTests)
     }
 
 detectsProblems :: Code -> Expectation

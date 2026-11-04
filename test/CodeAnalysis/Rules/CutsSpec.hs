@@ -6,6 +6,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
+  CheckStage (AfterTests),
   CodeAnalysisConfig (..),
   CutUsageConfig (..),
   Severity (..),
@@ -18,7 +19,7 @@ caConfig :: Maybe String -> CodeAnalysisConfig
 caConfig cMsg =
   emptyCodeAnalysisConfig {
     cutUsage =
-      CutUsageConfig $ Just $ WithSeverity Error $ AdditionalMessage cMsg
+      CutUsageConfig $ Just (WithSeverity Error $ AdditionalMessage cMsg, AfterTests)
     }
 
 hasCut :: [Code]
