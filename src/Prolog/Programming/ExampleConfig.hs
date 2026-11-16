@@ -66,7 +66,7 @@ errorOnFirstTimeout: false
 # Possible values are:
 # 'before-tests': run the code analysis checks before running the test suite
 # 'after-tests': run the code analysis checks after running the test suite
-# The default value for this field it 'after-tests'. You may only specify this field when status it not set to 'ignore'.
+# The default value for this field is 'after-tests'. You may only specify this field when status it not set to 'ignore'.
 codeAnalysis:
   singletonVariables:
     # what to do concerning detection of singleton variables
