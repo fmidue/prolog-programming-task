@@ -54,6 +54,12 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
+import Prolog.Programming.CodeAnalysis.Types (
+  CodeAnalysisConfig (redundantCode),
+  RedundantCodeConfig (RedundantCodeConfig),
+  WithSeverity (..),
+ )
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -144,7 +150,8 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 2. Does the program respect a configured ban of head/tail pattern-matching on lists?
 3. Are all required predicates-to-be-defined present?
 4. Is the specification (the tests) fulfilled by the program together with task and hidden predicates?
-5. Does the code analysis run through without rejections?
+5. Does the code analysis - minus dead code detection - run through without rejections?
+6. Is there no dead code?
 
 The procedure aborts once the first check fails.
 -}
@@ -239,6 +246,18 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       case checkForProblems codeAnalysis inProg factProg of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
+
+      case redundantCode codeAnalysis of
+        RedundantCodeConfig Nothing -> pure ()
+        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+          let checker p =
+                allTestResultsAreOkay . fst
+                  <$> testRunner globalTimeout True factProg p specifications newDefs
+          redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
+
+          case redundantCodeProblem of
+            Nothing -> pure ()
+            Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
