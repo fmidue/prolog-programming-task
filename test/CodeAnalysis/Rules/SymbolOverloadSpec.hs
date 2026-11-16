@@ -72,7 +72,7 @@ spec = describe "SymbolOverload" $ do
       it programCode $
         shouldDetectProblemsStrict
           caConfig
-          [isInfixOf "used interchangeably as a predicate and a data constructor"]
+          [isInfixOf "used both as a predicate and as a data constructor"]
           programCode
 
   describe "detects task predicates used as data constructors" $
