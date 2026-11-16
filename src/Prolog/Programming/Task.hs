@@ -122,12 +122,12 @@ verifyConfig cfg = case parseInstance cfg of
     escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
       CodeAnalysisConfig {
         singletonVariables = SingletonVariablesConfig $ withError ()
-        , escalateSeverity cutUsage
+        , cutUsage = escalateSeverity cutUsage
         , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
         , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
-        , escalateSeverity recursion
-        , escalateSeverity forbiddenPredicates
-        , escalateSeverity earlyRecursion
+        , recursion = escalateSeverity recursion
+        , forbiddenPredicates = escalateSeverity forbiddenPredicates
+        , earlyRecursion = escalateSeverity earlyRecursion
         , inlining = InliningConfig $ withError ()
         , redundantCode = RedundantCodeConfig $ withError ()
         }
