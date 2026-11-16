@@ -54,7 +54,19 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
-import Prolog.Programming.CodeAnalysis.Types (CheckStage (..))
+import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
+import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (..),
+  CodeAnalysisConfig (..),
+  IgnoredPredicates (IgnoredPredicates),
+  InconsistentAritiesConfig (InconsistentAritiesConfig),
+  InliningConfig (InliningConfig),
+  RedundantCodeConfig (RedundantCodeConfig),
+  Severity (..),
+  SingletonVariablesConfig (SingletonVariablesConfig),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
+  WithSeverity (..),
+ )
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -97,8 +109,29 @@ verifyConfig cfg = case parseInstance cfg of
              solutionErrorDisplay
              (const $ pure ())
              (const $ pure ())
-             (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
+             ( inst {
+                 taskConfig =
+                   taskCfg {
+                     codeAnalysis = escalateAndEnableSelectedChecks codeAnalysis
+                     }
+                 , sampleSolution = undefined
+                 }
+             )
              sampleSolution
+  where
+    withError = Just . WithSeverity Error
+    escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
+      CodeAnalysisConfig {
+        singletonVariables = SingletonVariablesConfig $ withError ()
+        , cutUsage = escalateSeverity cutUsage
+        , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
+        , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
+        , recursion = escalateSeverity recursion
+        , forbiddenPredicates = escalateSeverity forbiddenPredicates
+        , earlyRecursion = escalateSeverity earlyRecursion
+        , inlining = InliningConfig $ withError ()
+        , redundantCode = RedundantCodeConfig $ withError ()
+        }
 
 toInstance :: Config -> TaskInstance
 toInstance = fromRight (error "config should have been validated before") . parseInstance
@@ -145,7 +178,8 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 2. Does the program respect a configured ban of head/tail pattern-matching on lists?
 3. Are all required predicates-to-be-defined present?
 4. Is the specification (the tests) fulfilled by the program together with task and hidden predicates?
-5. Does the code analysis run through without rejections?
+5. Does the code analysis - minus dead code detection - run through without rejections?
+6. Is there no dead code?
 
 The procedure aborts once the first check fails.
 -}
@@ -243,6 +277,18 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
             )
 
       codeChecks AfterTests inProg factProg
+
+      case redundantCode codeAnalysis of
+        RedundantCodeConfig Nothing -> pure ()
+        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+          let checker p =
+                allTestResultsAreOkay . fst
+                  <$> testRunner globalTimeout True factProg p specifications newDefs
+          redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
+
+          case redundantCodeProblem of
+            Nothing -> pure ()
+            Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)

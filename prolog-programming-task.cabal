@@ -31,8 +31,12 @@ library
       Prolog.Programming.CodeAnalysis
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
+      Prolog.Programming.Mutation
+      Prolog.Programming.Mutation.Types
+      Prolog.Programming.Mutation.Mutators
   other-modules:
       Prolog.Programming.CodeAnalysis.Helper
+      Prolog.Programming.CodeAnalysis.Other.RedundantCode
       Prolog.Programming.CodeAnalysis.Rules.Cuts
       Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion
       Prolog.Programming.CodeAnalysis.Rules.ForbiddenPredicates
@@ -70,6 +74,7 @@ library
     , raw-strings-qq
     , syb >=0.3
     , text
+    , utility-ht
     , wl-pprint-text
     , yaml
   default-language: Haskell2010
@@ -101,6 +106,7 @@ executable test-task-prolog
     , raw-strings-qq
     , syb >=0.3
     , text
+    , utility-ht
     , wl-pprint-text
     , yaml
   default-language: Haskell2010
@@ -111,6 +117,7 @@ test-suite prolog-programming-task-test
   other-modules:
       CodeAnalysis.CheckStageSpec
       CodeAnalysis.Helper
+      CodeAnalysis.MutationSpec
       CodeAnalysis.Rules.CutsSpec
       CodeAnalysis.Rules.EarlyRecursionSpec
       CodeAnalysis.Rules.ForbiddenPredicatesSpec
@@ -147,6 +154,7 @@ test-suite prolog-programming-task-test
     , raw-strings-qq
     , syb >=0.3
     , text
+    , utility-ht
     , wl-pprint-text
     , yaml
   default-language: Haskell2010

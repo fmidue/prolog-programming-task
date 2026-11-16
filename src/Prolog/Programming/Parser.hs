@@ -43,6 +43,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InconsistentAritiesConfig (..),
   InliningConfig (..),
   RecursionConfig (..),
+  RedundantCodeConfig (..),
   SingletonVariablesConfig (..),
   UngroupedDefinitionsConfig (..),
   WithSeverity (..),
@@ -183,6 +184,9 @@ instance FromJSON ForbiddenPredicatesConfig where
 instance FromJSON EarlyRecursionConfig where
   parseJSON = withRuleParser EarlyRecursionConfig Nothing
 
+instance FromJSON RedundantCodeConfig where
+  parseJSON = withRuleParser RedundantCodeConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -196,6 +200,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
       <*> v .:? "earlyRecursion" .!= EarlyRecursionConfig Nothing
       <*> v .:? "inlining" .!= InliningConfig Nothing
+      <*> v .:? "redundantCode" .!= RedundantCodeConfig Nothing
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
