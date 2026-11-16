@@ -54,6 +54,7 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
 import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   IgnoredPredicates (IgnoredPredicates),
@@ -64,7 +65,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   SingletonVariablesConfig (SingletonVariablesConfig),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
-import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
+ )
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -125,7 +126,7 @@ verifyConfig cfg = case parseInstance cfg of
           , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
           , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
           , inlining = InliningConfig $ withError ()
-          -- , redundantCode = RedundantCodeConfig $ Just $ WithSeverity Error ()
+          , redundantCode = RedundantCodeConfig $ Just $ WithSeverity Error ()
           }
 
 toInstance :: Config -> TaskInstance
