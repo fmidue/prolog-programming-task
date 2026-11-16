@@ -56,8 +56,14 @@ import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
 import Prolog.Programming.CodeAnalysis.Types (
-  CodeAnalysisConfig (redundantCode),
+  CodeAnalysisConfig (..),
+  IgnoredPredicates (IgnoredPredicates),
+  InconsistentAritiesConfig (InconsistentAritiesConfig),
+  InliningConfig (InliningConfig),
   RedundantCodeConfig (RedundantCodeConfig),
+  Severity (..),
+  SingletonVariablesConfig (SingletonVariablesConfig),
+  UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
 import Prolog.Programming.Types (
@@ -102,8 +108,29 @@ verifyConfig cfg = case parseInstance cfg of
              solutionErrorDisplay
              (const $ pure ())
              (const $ pure ())
-             (inst {taskConfig = escalateSeverity taskCfg, sampleSolution = undefined})
+             ( inst {
+                 taskConfig =
+                   taskCfg {
+                     codeAnalysis = escalateAndEnableSelectedChecks codeAnalysis
+                     }
+                 , sampleSolution = undefined
+                 }
+             )
              sampleSolution
+  where
+    withError = Just . WithSeverity Error
+    escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
+      CodeAnalysisConfig {
+        singletonVariables = SingletonVariablesConfig $ withError ()
+        , cutUsage = escalateSeverity cutUsage
+        , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
+        , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
+        , recursion = escalateSeverity recursion
+        , forbiddenPredicates = escalateSeverity forbiddenPredicates
+        , earlyRecursion = escalateSeverity earlyRecursion
+        , inlining = InliningConfig $ withError ()
+        , redundantCode = RedundantCodeConfig $ withError ()
+        }
 
 toInstance :: Config -> TaskInstance
 toInstance = fromRight (error "config should have been validated before") . parseInstance
