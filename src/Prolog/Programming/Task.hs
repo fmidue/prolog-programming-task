@@ -126,7 +126,7 @@ verifyConfig cfg = case parseInstance cfg of
         , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
         , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
         , recursion = escalateSeverity recursion
-        , forbiddenPredicates = escalateSeverity forbiddenPredicates
+        , forbiddenPredicates
         , earlyRecursion = escalateSeverity earlyRecursion
         , inlining = InliningConfig $ withError ()
         , redundantCode = RedundantCodeConfig $ withError ()
