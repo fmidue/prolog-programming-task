@@ -40,7 +40,7 @@ import Data.Void (absurd)
 import Language.Prolog (
   Atom,
   Clause (..),
-  Goal,
+  ProgramClause,
   Term (..),
   Unifier,
   consultString,
@@ -54,6 +54,12 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
+import Prolog.Programming.CodeAnalysis.Types (
+  CodeAnalysisConfig (redundantCode),
+  RedundantCodeConfig (RedundantCodeConfig),
+  WithSeverity (..),
+ )
 import Prolog.Programming.Types (
   Expection (..),
   Include (..),
@@ -144,7 +150,8 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 2. Does the program respect a configured ban of head/tail pattern-matching on lists?
 3. Are all required predicates-to-be-defined present?
 4. Is the specification (the tests) fulfilled by the program together with task and hidden predicates?
-5. Does the code analysis run through without rejections?
+5. Does the code analysis - minus dead code detection - run through without rejections?
+6. Is there no dead code?
 
 The procedure aborts once the first check fails.
 -}
@@ -186,7 +193,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       let factProg =
             filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
               ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
-      testResult <- liftIO $ testRunner globalTimeout factProg inProg specifications newDefs
+      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
@@ -240,6 +247,18 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 
+      case redundantCode codeAnalysis of
+        RedundantCodeConfig Nothing -> pure ()
+        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+          let checker p =
+                allTestResultsAreOkay . fst
+                  <$> testRunner globalTimeout True factProg p specifications newDefs
+          redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
+
+          case redundantCodeProblem of
+            Nothing -> pure ()
+            Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
+
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
   => (Doc -> m ())
@@ -252,12 +271,12 @@ displaySampleSolution inform TaskInstance {sampleSolution} =
       , text $ pack sampleSolution
       ]
 
-taskFilter :: IncludeTask -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
+taskFilter :: IncludeTask -> [ProgramClause] -> ProgramClause -> Bool
 taskFilter Yes _ = const True
 taskFilter No {} _ = const False
 taskFilter Filtered prog = (`notElem` prog)
 
-hiddenFilter :: IncludeHidden -> [(Atom, [Term], [Goal])] -> (Atom, [Term], [Goal]) -> Bool
+hiddenFilter :: IncludeHidden -> [ProgramClause] -> ProgramClause -> Bool
 hiddenFilter Yes _ = const True
 hiddenFilter (No x) _ = absurd x
 hiddenFilter Filtered prog = \(name, args, _) ->
@@ -289,6 +308,15 @@ explainReason = explainResult
             <$$> resultMsg mActual
               <> treeMsg mTree
       , mTree
+      )
+    explainResult (FirstTimeout x) =
+      ( nested $
+          line
+            <> vcat
+              [ describeSpec x
+              , text "The test case timed out."
+              ]
+      , Nothing
       )
 
 treeMsg :: Maybe Graph -> Doc
@@ -347,7 +375,7 @@ isNewPredDecl _ = False
 requiresNewPredicates :: [Spec] -> Bool
 requiresNewPredicates = any isNewPredDecl
 
-findNewPredicateDefs :: [Spec] -> [(Atom, [Term], [Goal])] -> (Doc, Maybe [(Term, Atom)])
+findNewPredicateDefs :: [Spec] -> [ProgramClause] -> (Doc, Maybe [(Atom, Atom)])
 findNewPredicateDefs specs clauses = (report, result)
   where
     newDecls = mapMaybe extractNewDeclArgs specs
@@ -375,8 +403,8 @@ data MatchResult
   | WrongArity (String, Arity) (Atom, Arity)
   | MissingPredicate String
 
-fromSuccess :: MatchResult -> Maybe (Term, Atom)
-fromSuccess (MatchSuccess tl tr _) = Just (tl, tr)
+fromSuccess :: MatchResult -> Maybe (Atom, Atom)
+fromSuccess (MatchSuccess (Struct name _) tr _) = Just (name, tr)
 fromSuccess _ = Nothing
 
 reportMatch :: MatchResult -> Doc
@@ -409,7 +437,7 @@ grabFormatting :: TreeStyle -> GraphFormatting
 grabFormatting QueryStyle = queryStyle
 grabFormatting ResolutionStyle = resolutionStyle
 
-containsHeadTailPattern :: [(Atom, [Term], [Goal])] -> Maybe Clause
+containsHeadTailPattern :: [ProgramClause] -> Maybe Clause
 containsHeadTailPattern [] = Nothing
 containsHeadTailPattern ((name, args, goals) : clauses) =
   case hasHeadTailPattern (Struct name args) <> mconcat (map hasHeadTailPattern goals) of

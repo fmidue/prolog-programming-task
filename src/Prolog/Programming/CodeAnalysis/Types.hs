@@ -25,6 +25,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   ForbiddenPredicatesConfig (..),
   EarlyRecursionConfig (..),
   SymbolOverloadConfig (..),
+  RedundantCodeConfig (..),
 )
 where
 
@@ -34,7 +35,7 @@ import Autolib.ToDoc (ToDoc)
 import Data.Data (Data)
 import Data.Set (Set)
 import GHC.Generics (Generic)
-import Language.Prolog (Atom, Goal, Signature (..), Term)
+import Language.Prolog (ProgramClause, Signature (..))
 import Text.PrettyPrint.Leijen.Text (Doc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
@@ -46,13 +47,13 @@ newtype Problem = Problem {
   deriving Show
 {- FOURMOLU_ENABLE -}
 
-type Context = [(Atom, [Term], [Goal])]
+type Context = [ProgramClause]
 
 -- | Definition for a code analysis checker that looks for violations in a given clause
-type ClauseRule = (Atom, [Term], [Goal]) -> [Problem]
+type ClauseRule = ProgramClause -> [Problem]
 
 -- | Definition for a code analysis checker that looks for violations in a given program
-type ProgramRule = [(Atom, [Term], [Goal])] -> [Problem]
+type ProgramRule = [ProgramClause] -> [Problem]
 
 type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
 
@@ -89,6 +90,9 @@ newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig Addi
 newtype SymbolOverloadConfig = SymbolOverloadConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Generic, Reader, Show, ToDoc)
 
+newtype RedundantCodeConfig = RedundantCodeConfig (CodeAnalysisRuleConfig ())
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed
 -- | Configuration for code analysis checks
 data CodeAnalysisConfig = CodeAnalysisConfig {
@@ -110,6 +114,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , inlining :: InliningConfig
   -- | Configuration for symbolOverload rule
   , symbolOverload :: SymbolOverloadConfig
+  -- | Configuration for redundant clause / goal checks
+  , redundantCode :: RedundantCodeConfig
   }
   deriving (Data, Generic, Show, Reader, ToDoc)
 

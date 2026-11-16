@@ -44,12 +44,16 @@ specifications:
   - '-a_statement_that_has_to_be_false' # also works for all other test statements given above
   # When combining multiple flags, the order has to be: <timeout><negative><tree><hidden><space>*<test>
   - 'new a_predicate_to_define(X): predicate description'
+  - 'a_predicate_to_define(X): a_predicate_to_define(a)'
   # Require the definition of a predicate with a user chosen name. Use a_predicate_to_define to refer to this predicate in other tests.
   # New predicates will be mapped to required predicates in the order they are defined.
   # (The initial solution automatically provides comments helping the user with the correct ordering.)
 
 # whether to run all tests and checks on the sample solution or not; enabled by default
 rigorousValidation: true
+
+# whether to directly display an error (and stop running further tests) when a test case times out
+errorOnFirstTimeout: false
 
 # setting for code analysis;
 # The status field for each aspect has the following possible values:
@@ -96,7 +100,10 @@ codeAnalysis:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
   symbolOverload:
-    # what do do concerning usage of symbol both as predicate and data constructor
+    # what to do concerning usage of symbol both as predicate and data constructor
+    status: hint
+  redundantCode:
+    # what to do concerning redundant clauses or goals being present
     status: hint
 
   # which predicates are not allowed to be used
@@ -130,7 +137,7 @@ a_test_with_resolution_tree(right_branch) :- fail.
  * The provided solution needs to pass all tests and checks specified in the first section of the config.
  * It will be verified on upload.
  */
-p(_).
+p(a).
 a_predicate(expected_foo1,expected_bar1).
 a_predicate(expected_foo2,expected_bar2).
 a_predicate_whose_answers_are_hidden(expected_foo1,expected_bar1).

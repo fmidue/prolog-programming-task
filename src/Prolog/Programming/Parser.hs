@@ -42,6 +42,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InconsistentAritiesConfig (..),
   InliningConfig (..),
   RecursionConfig (..),
+  RedundantCodeConfig (..),
   SingletonVariablesConfig (..),
   SymbolOverloadConfig (..),
   UngroupedDefinitionsConfig (..),
@@ -172,6 +173,9 @@ instance FromJSON EarlyRecursionConfig where
 instance FromJSON SymbolOverloadConfig where
   parseJSON = withRuleParser SymbolOverloadConfig
 
+instance FromJSON RedundantCodeConfig where
+  parseJSON = withRuleParser RedundantCodeConfig
+
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @CodeAnalysisConfig) v
@@ -186,6 +190,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "earlyRecursion" .!= EarlyRecursionConfig Nothing
       <*> v .:? "inlining" .!= InliningConfig Nothing
       <*> v .:? "symbolOverload" .!= SymbolOverloadConfig Nothing
+      <*> v .:? "redundantCode" .!= RedundantCodeConfig Nothing
 
 instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
@@ -201,6 +206,7 @@ instance FromJSON TaskConfig where
       <*> v .:? "codeAnalysis" .!= emptyCodeAnalysisConfig
       <*> v .:? "specifications" .!= []
       <*> v .:? "rigorousValidation" .!= True
+      <*> v .:? "errorOnFirstTimeout" .!= False
 
 parseInstance :: String -> Either ParseError TaskInstance
 parseInstance = parse (configuration <* eof) "(config)"

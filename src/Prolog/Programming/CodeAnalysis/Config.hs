@@ -26,6 +26,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   InliningConfig (..),
   ProgramRule,
   RecursionConfig (..),
+  RedundantCodeConfig (RedundantCodeConfig),
   Severity (Error),
   SingletonVariablesConfig (..),
   SymbolOverloadConfig (SymbolOverloadConfig),
@@ -45,6 +46,7 @@ configuredRules
     , earlyRecursion = EarlyRecursionConfig earlyRecursionCfg
     , inlining = InliningConfig inliningCfg
     , symbolOverload = SymbolOverloadConfig symbolOverloadCfg
+    , redundantCode = _ -- redundant code is not checked via rules
     }
   taskAndHiddenDefinitions =
     catMaybes
@@ -79,4 +81,5 @@ emptyCodeAnalysisConfig =
     , earlyRecursion = EarlyRecursionConfig Nothing
     , inlining = InliningConfig Nothing
     , symbolOverload = SymbolOverloadConfig Nothing
+    , redundantCode = RedundantCodeConfig Nothing
     }

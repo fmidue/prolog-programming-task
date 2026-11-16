@@ -13,10 +13,10 @@ import Data.Map (Map)
 import qualified Data.Map as Map (empty, singleton, unionWith)
 import Data.Set (Set)
 import qualified Data.Set as Set (empty, insert, singleton, unions)
-import Language.Prolog (Atom, Goal, Signature (Signature), Term (..), VariableName (..))
+import Language.Prolog (ProgramClause, Signature (Signature), Term (..), VariableName (..))
 
 -- | Return predicate information (name and arity) for left- and right-hand side of a program clause
-clauseIdentities :: Bool -> (Atom, [Term], [Goal]) -> (Signature, Set Signature)
+clauseIdentities :: Bool -> ProgramClause -> (Signature, Set Signature)
 clauseIdentities includeWrapperPredicates (name, args, rs) =
   (Signature name (length args), Set.unions $ map (grabPredicateIdentities includeWrapperPredicates) rs)
 
