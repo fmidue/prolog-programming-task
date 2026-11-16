@@ -126,7 +126,7 @@ verifyConfig cfg = case parseInstance cfg of
           , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
           , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
           , inlining = InliningConfig $ withError ()
-          , redundantCode = RedundantCodeConfig $ Just $ WithSeverity Error ()
+          , redundantCode = RedundantCodeConfig $ withError ()
           }
 
 toInstance :: Config -> TaskInstance
