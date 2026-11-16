@@ -119,12 +119,16 @@ verifyConfig cfg = case parseInstance cfg of
              sampleSolution
   where
     withError = Just . WithSeverity Error
-    escalateAndEnableSelectedChecks caConfig =
+    escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
       escalateSeverity $
-        caConfig {
+        CodeAnalysisConfig {
           singletonVariables = SingletonVariablesConfig $ withError ()
+          , cutUsage
           , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
           , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
+          , recursion
+          , forbiddenPredicates
+          , earlyRecursion
           , inlining = InliningConfig $ withError ()
           , redundantCode = RedundantCodeConfig $ withError ()
           }
