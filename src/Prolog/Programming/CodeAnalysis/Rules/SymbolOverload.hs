@@ -103,5 +103,5 @@ toSubmissionProblem name =
     hsep
       [ "Your program contains the symbol with name"
       , string $ pack $ show name
-      , "which is used interchangeably as a predicate and a data constructor."
+      , "which is used both as a predicate and as a data constructor."
       ]
