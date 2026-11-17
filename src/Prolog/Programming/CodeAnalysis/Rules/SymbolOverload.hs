@@ -38,7 +38,7 @@ symbolOverloadChecker otherDefinitions prog
         , toProblems (toTaskProblem "predicate" "data constructor") taskDataConsAsSubmissionPredicates
         , toProblems toSubmissionProblem
             $ Set.difference submissionIntersection
-            $ Set.union taskDataConsAsSubmissionPredicates taskDataConsAsSubmissionPredicates
+            $ Set.union taskPredicatesAsSubmissionDataCons taskDataConsAsSubmissionPredicates
         ]
   where
     (taskPredicates, taskDataCons) =
