@@ -279,8 +279,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       codeChecks AfterTests inProg factProg
 
       case redundantCode codeAnalysis of
-        RedundantCodeConfig Nothing -> pure ()
-        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+        RedundantCodeConfig (Just (WithSeverity severity (), AfterTests)) -> do
           let checker p =
                 allTestResultsAreOkay . fst
                   <$> testRunner globalTimeout True factProg p specifications newDefs
@@ -289,6 +288,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
           case redundantCodeProblem of
             Nothing -> pure ()
             Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
+        RedundantCodeConfig _ -> pure ()
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
