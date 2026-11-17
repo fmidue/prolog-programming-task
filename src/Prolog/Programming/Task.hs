@@ -197,10 +197,12 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
     drawTree tree = do
       svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
       drawPicture svg
+
     codeChecks stage factProg = case checkForProblems stage codeAnalysis inProg factProg of
       [] -> pure ()
       pbs -> either reject inform $ displayProblems pbs
-  in do
+  in
+    do
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
