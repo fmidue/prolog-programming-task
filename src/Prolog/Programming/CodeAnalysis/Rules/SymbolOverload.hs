@@ -18,20 +18,15 @@ import qualified Data.Set as Set (
  )
 import Data.Text.Lazy (pack)
 import Language.Prolog (Atom, ProgramClause, Term (Struct))
+import Prolog.Programming.CodeAnalysis.Helper (internalErrorProblem)
 import Prolog.Programming.CodeAnalysis.Types (Context, Problem (..), ProgramRule)
-import Text.PrettyPrint.Leijen.Text (hsep, string, vcat)
+import Text.PrettyPrint.Leijen.Text (hsep, string)
 
 symbolOverloadChecker :: Context -> ProgramRule
 symbolOverloadChecker otherDefinitions prog
   | notNull (Set.intersection taskPredicates taskDataCons) =
-      singleton
-        $ Problem
-        $ vcat
-          [ "An unexpected error occurred."
-          , "This is usually not caused by a fault within your submission."
-          , "Please contact your lecturers, providing the following error message:"
-          , "Task instance has mixed usage of predicates and data constructors under same name."
-          ]
+      singleton $
+        internalErrorProblem "Task instance has mixed usage of predicates and data constructors under same name."
   | otherwise =
       concat
         [ toProblems (toTaskProblem "data constructor" "predicate") taskPredicatesAsSubmissionDataCons
