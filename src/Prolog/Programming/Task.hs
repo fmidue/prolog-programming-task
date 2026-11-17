@@ -43,7 +43,6 @@ import Language.Prolog (
   ProgramClause,
   Term (..),
   Unifier,
-  consultString,
   prettifyClause,
   prettifyTerm,
   prettifyVariableName,
@@ -190,16 +189,13 @@ checkTask
   -> (Doc -> m ())
   -> (ByteString -> m ())
   -> TaskInstance
-  -> Code
+  -> [ProgramClause]
   -> m ()
-checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} input = do
-  let drawTree tree = do
-        svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-        drawPicture svg
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg = do
+      let drawTree tree = do
+            svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+            drawPicture svg
 
-  case consultString input of
-    Left err -> reject . text . pack $ show err
-    Right inProg -> do
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
@@ -294,11 +290,10 @@ displaySampleSolution
   -> TaskInstance
   -> m ()
 displaySampleSolution inform TaskInstance {sampleSolution} =
-  inform $
-    vsep
-      [ text (pack "A sample solution for this task is:") <> linebreak
-      , text $ pack sampleSolution
-      ]
+  inform
+    $ vsep
+    $ (text (pack "A sample solution for this task is:") <> linebreak)
+      : map (text . pack . prettifyClause . uncurry3 Clause) sampleSolution
 
 taskFilter :: IncludeTask -> [ProgramClause] -> ProgramClause -> Bool
 taskFilter Yes _ = const True
