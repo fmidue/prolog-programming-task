@@ -106,7 +106,7 @@ codeAnalysis:
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
-    # it is recommended to keep the checkStage at 'after-tests' here, since setting it to 'before-tests' would potentially alter semantics (termination; in a positive regard)
+    # it is recommended to keep the checkStage at 'after-tests' here, since setting it to 'before-tests' might suggest refactorings that alter semantics (termination; in a positive regard)
   symbolOverload:
     # what to do concerning usage of a symbol both as predicate and as data constructor
     status: hint
