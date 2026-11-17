@@ -290,11 +290,10 @@ displaySampleSolution
   -> TaskInstance
   -> m ()
 displaySampleSolution inform TaskInstance {sampleSolution} =
-  inform $
-    vsep
-      [ text (pack "A sample solution for this task is:") <> linebreak
-      , text $ pack sampleSolution
-      ]
+  inform
+    $ vsep
+    $ (text (pack "A sample solution for this task is:") <> linebreak)
+      : map (text . pack . prettifyClause . uncurry3 Clause) sampleSolution
 
 taskFilter :: IncludeTask -> [ProgramClause] -> ProgramClause -> Bool
 taskFilter Yes _ = const True
