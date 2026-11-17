@@ -108,8 +108,16 @@ verifyConfig cfg = case parseInstance cfg of
          when (includeHiddenDefinitions == Yes && showSWISHButton && notNull hiddenPredicates) $
            fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
-         when (any (\case (WithSeverity Hint _, BeforeTests) -> True; (WithSeverity Warn _, BeforeTests) -> True; _ -> False) $ configuredRules codeAnalysis []) $
-           fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
+         when
+           ( any
+               ( \case
+                   (WithSeverity Hint _, BeforeTests) -> True
+                   (WithSeverity Warn _, BeforeTests) -> True
+                   _ -> False
+               )
+               $ configuredRules codeAnalysis []
+           )
+           $ fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
 
          when rigorousValidation $
            checkTask
