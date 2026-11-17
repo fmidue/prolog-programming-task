@@ -2,6 +2,7 @@ module CodeAnalysis.Helper where
 
 import Language.Prolog (consultString)
 import Prolog.Programming.CodeAnalysis (checkForProblems)
+import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Types (
   CheckStage (..),
   CodeAnalysisConfig (..),
@@ -20,7 +21,7 @@ shouldDetectProblemsStrict' stage cfg pts code other = case consultString code o
   Left err -> assertFailure $ "Failed to parse prolog program:\n" ++ show err
   Right prog -> case consultString other of
     Left err -> assertFailure $ "Failed to parse other definitions:\n " ++ show err
-    Right otherDefs -> case checkForProblems stage cfg prog otherDefs of
+    Right otherDefs -> case checkForProblems stage prog $ configuredRules cfg otherDefs of
       [] -> assertFailure "No problems found"
       pbs
         | length pbs /= length pts ->
@@ -37,6 +38,6 @@ shouldNotHaveProblems' stage cfg code other = case consultString code of
   Right prog -> case consultString other of
     Left err -> assertFailure $ "Failed to parse other definitions:\n " ++ show err
     Right otherDefs ->
-      case checkForProblems stage cfg prog otherDefs of
+      case checkForProblems stage prog $ configuredRules cfg otherDefs of
         [] -> pure ()
         _ -> assertFailure "Detected problem(s) even though they should not exist."
