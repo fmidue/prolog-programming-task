@@ -119,7 +119,7 @@ verifyConfig cfg = case parseInstance cfg of
              )
              sampleSolution
   where
-    withError = Just . WithSeverity Error
+    withError a = Just (WithSeverity Error a, AfterTests)
     escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
       CodeAnalysisConfig {
         singletonVariables = SingletonVariablesConfig $ withError ()
