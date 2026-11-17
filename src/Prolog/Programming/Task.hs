@@ -284,6 +284,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       codeChecks AfterTests factProg
 
       case redundantCode codeAnalysis of
+        RedundantCodeConfig Nothing -> pure ()
         RedundantCodeConfig (Just (WithSeverity severity (), AfterTests)) -> do
           let checker p =
                 allTestResultsAreOkay . fst
@@ -293,7 +294,6 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
           case redundantCodeProblem of
             Nothing -> pure ()
             Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
-        RedundantCodeConfig Nothing -> pure ()
         RedundantCodeConfig _ -> error "BeforeTests cannot possibly occur here"
 
 displaySampleSolution
