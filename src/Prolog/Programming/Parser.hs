@@ -101,11 +101,11 @@ instance FromJSON Spec where
     Right s -> pure s
   parseJSON _ = fail "Invalid value type"
 
-parseStatus :: Value -> Parser (CodeAnalysisRuleConfig ())
+parseStatus :: Value -> Parser (Maybe (WithSeverity ()))
 parseStatus (String "ignore") = pure Nothing
-parseStatus (String "hint") = pure $ Just (WithSeverity CA.Hint (), undefined)
-parseStatus (String "warn") = pure $ Just (WithSeverity CA.Warn (), undefined)
-parseStatus (String "reject") = pure $ Just (WithSeverity CA.Error (), undefined)
+parseStatus (String "hint") = pure $ Just $ WithSeverity CA.Hint ()
+parseStatus (String "warn") = pure $ Just $ WithSeverity CA.Warn ()
+parseStatus (String "reject") = pure $ Just $ WithSeverity CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
 parseStage :: Value -> Parser CheckStage
@@ -128,7 +128,7 @@ withRuleParser cons fixedStage = withObject (typeName @b) $ \v -> do
     Nothing -> do
       rejectUnknownFields ["status"] v
       pure $ cons Nothing
-    Just (base, _) -> do
+    Just base -> do
       stage <- case fixedStage of
         Just s -> pure s
         Nothing -> do
