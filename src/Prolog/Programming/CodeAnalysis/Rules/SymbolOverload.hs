@@ -17,7 +17,7 @@ import qualified Data.Set as Set (
   unions,
  )
 import Data.Text.Lazy (pack)
-import Language.Prolog (Atom, Goal, Term (Struct))
+import Language.Prolog (Atom, ProgramClause, Term (Struct))
 import Prolog.Programming.CodeAnalysis.Types (Context, Problem (..), ProgramRule)
 import Text.PrettyPrint.Leijen.Text (hsep, string, vcat)
 
@@ -62,7 +62,7 @@ symbolOverloadChecker otherDefinitions prog
     partition (Right sig) (ps, ds) = (ps, Set.insert sig ds)
 
 -- Left constructor is used for Predicates; Right for data constructors
-grabPredicatesAndDataConstructorsFromClause :: (Atom, [Term], [Goal]) -> Set (Either Atom Atom)
+grabPredicatesAndDataConstructorsFromClause :: ProgramClause -> Set (Either Atom Atom)
 grabPredicatesAndDataConstructorsFromClause (name, args, goals) =
   Set.union fromClauseHead $ Set.unions $ map grabPredicatesAndDataConstructors goals
   where
