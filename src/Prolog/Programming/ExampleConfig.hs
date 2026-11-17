@@ -67,7 +67,7 @@ errorOnFirstTimeout: false
 # 'before-tests': run the code analysis checks before running the test suite
 # 'after-tests': run the code analysis checks after running the test suite
 # The default value for this field is 'after-tests'. You may only specify this field when status it not set to 'ignore'.
-# You also may only set the stage to 'before-tests' if the status is 'reject'.
+# You must not set the stage to 'before-tests' unless the status is 'reject'.
 # The field cannot be specified for the redundantCode checker (always runs after tests) and the forbiddenPredicates checker (always runs before tests).
 codeAnalysis:
   singletonVariables:
