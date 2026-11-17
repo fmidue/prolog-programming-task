@@ -62,7 +62,7 @@ errorOnFirstTimeout: false
 # 'warn': detections are reported with severity warn
 # 'reject': programs with detections are rejected
 # The default value for these fields is 'ignore' (in which case the aspect's mention can be omitted as well).
-# The status field can be accompanied by the checkStage field, which determines when to run the checks.
+# The status field can be accompanied by the stage field, which determines when to run the checks.
 # Possible values are:
 # 'before-tests': run the code analysis checks before running the test suite
 # 'after-tests': run the code analysis checks after running the test suite
@@ -106,7 +106,7 @@ codeAnalysis:
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
-    # it is recommended to keep the checkStage at 'after-tests' here, since setting it to 'before-tests' might suggest refactorings that alter semantics (termination; in a positive regard)
+    # it is recommended to keep the stage at 'after-tests' here, since setting it to 'before-tests' might suggest refactorings that alter semantics (termination; in a positive regard)
   symbolOverload:
     # what to do concerning usage of a symbol both as predicate and as data constructor
     status: hint

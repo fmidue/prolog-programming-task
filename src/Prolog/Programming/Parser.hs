@@ -111,7 +111,7 @@ parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'rejec
 parseStage :: Value -> Parser CheckStage
 parseStage (String "before-tests") = pure BeforeTests
 parseStage (String "after-tests") = pure AfterTests
-parseStage _ = fail "checkStage must be one of: 'before-tests', 'after-tests'"
+parseStage _ = fail "stage must be one of: 'before-tests', 'after-tests'"
 
 withRuleParser
   :: forall a b
@@ -132,14 +132,14 @@ withRuleParser cons fixedStage = withObject (typeName @b) $ \v -> do
       stage <- case fixedStage of
         Just s -> pure s
         Nothing -> do
-          mStage <- v .:? "checkStage"
+          mStage <- v .:? "stage"
           maybe (pure AfterTests) parseStage mStage
 
       case fromJSON (Object v) of
         Error err -> fail $ show err
         Success extra -> do
           let knownFields = "status" : recordFieldNames @a
-          rejectUnknownFields ((["checkStage" | isNothing fixedStage]) ++ knownFields) v
+          rejectUnknownFields ((["stage" | isNothing fixedStage]) ++ knownFields) v
           pure $ cons $ Just (extra <$ base, stage)
 
 instance FromJSON SingletonVariablesConfig where
