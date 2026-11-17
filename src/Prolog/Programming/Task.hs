@@ -43,7 +43,6 @@ import Language.Prolog (
   ProgramClause,
   Term (..),
   Unifier,
-  consultString,
   prettifyClause,
   prettifyTerm,
   prettifyVariableName,
@@ -191,20 +190,17 @@ checkTask
   -> (Doc -> m ())
   -> (ByteString -> m ())
   -> TaskInstance
-  -> Code
+  -> [ProgramClause]
   -> m ()
-checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} input = do
-  let
-    drawTree tree = do
-      svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-      drawPicture svg
-    codeChecks stage inProg factProg = case checkForProblems stage codeAnalysis inProg factProg of
-      [] -> pure ()
-      pbs -> either reject inform $ displayProblems pbs
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg = do
+      let
+        drawTree tree = do
+          svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+          drawPicture svg
+        codeChecks stage factProg = case checkForProblems stage codeAnalysis inProg factProg of
+          [] -> pure ()
+          pbs -> either reject inform $ displayProblems pbs
 
-  case consultString input of
-    Left err -> reject . text . pack $ show err
-    Right inProg -> do
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
@@ -227,7 +223,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       let factProg =
             filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
               ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
-      codeChecks BeforeTests inProg factProg
+      codeChecks BeforeTests factProg
       testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
@@ -278,7 +274,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
-      codeChecks AfterTests inProg factProg
+      codeChecks AfterTests factProg
 
       case redundantCode codeAnalysis of
         RedundantCodeConfig (Just (WithSeverity severity (), AfterTests)) -> do
@@ -298,11 +294,10 @@ displaySampleSolution
   -> TaskInstance
   -> m ()
 displaySampleSolution inform TaskInstance {sampleSolution} =
-  inform $
-    vsep
-      [ text (pack "A sample solution for this task is:") <> linebreak
-      , text $ pack sampleSolution
-      ]
+  inform
+    $ vsep
+    $ (text (pack "A sample solution for this task is:") <> linebreak)
+      : map (text . pack . prettifyClause . uncurry3 Clause) sampleSolution
 
 taskFilter :: IncludeTask -> [ProgramClause] -> ProgramClause -> Bool
 taskFilter Yes _ = const True

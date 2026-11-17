@@ -244,16 +244,18 @@ configuration = do
           hiddenPredicateCode = if null optionalLs then [] else unlines $ fromJust $ listToMaybe optionalLs
           taskCode = unlines taskLs
 
-        (visibleDefs', hiddenDefs') <- case consultString taskCode of
+        (visibleDefs', hiddenDefs', sampleSol) <- case consultString taskCode of
           Left err -> fail $ "Failed to load task definitions: " ++ show err
           Right visibleDefs -> case consultString hiddenPredicateCode of
             Left err -> fail $ "Failed to load hidden definitions: " ++ show err
-            Right hiddenDefs -> pure (visibleDefs, hiddenDefs)
+            Right hiddenDefs -> case consultString $ unlines solutionLs of
+              Left err -> fail $ "Failed to load sample solution: " ++ show err
+              Right sampleProgram -> pure (visibleDefs, hiddenDefs, sampleProgram)
 
         pure $
           TaskInstance {
             taskConfig = taskCfg
-            , sampleSolution = unlines solutionLs
+            , sampleSolution = sampleSol
             , taskDescription = taskCode
             , visiblePredicates = visibleDefs'
             , hiddenPredicates = hiddenDefs'

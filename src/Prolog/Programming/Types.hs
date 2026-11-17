@@ -49,7 +49,7 @@ data TaskConfig = TaskConfig {
 
 data TaskInstance = TaskInstance {
   taskConfig :: TaskConfig
-  , sampleSolution :: Code
+  , sampleSolution :: [ProgramClause]
   , taskDescription :: Code
   , visiblePredicates :: [ProgramClause]
   , hiddenPredicates :: [ProgramClause]

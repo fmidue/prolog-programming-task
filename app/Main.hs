@@ -6,6 +6,7 @@ import System.Environment (getArgs)
 
 import Text.PrettyPrint.Leijen.Text ()
 
+import Language.Prolog (consultString)
 import Prolog.Programming.Data (Code, Config)
 import Prolog.Programming.Task
 
@@ -24,8 +25,11 @@ runMain config code = do
   verifyConfig config
 
   let inst = toInstance config
-  checkTask (fail . show) print writeTreeToDisk inst code
-  displaySampleSolution print inst
+  case consultString code of
+    Left err -> putStrLn $ "Failed to parse program: " ++ show err
+    Right inProg -> do
+      checkTask (fail . show) print writeTreeToDisk inst inProg
+      displaySampleSolution print inst
 
 writeTreeToDisk :: BS.ByteString -> IO ()
 writeTreeToDisk g = BS.writeFile "tree.svg" g >> putStrLn "wrote tree to file://tree.svg"

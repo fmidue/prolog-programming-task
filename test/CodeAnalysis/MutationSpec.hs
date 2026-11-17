@@ -5,12 +5,14 @@ module CodeAnalysis.MutationSpec where
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
+import Control.Exception (IOException, try)
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.List (isInfixOf, isPrefixOf)
-import Language.Prolog (Atom, Term (..))
+import Language.Prolog (Atom, Term (..), consultString)
 import Prolog.Programming.Mutation.Mutators (dropGoalMutator)
 import Prolog.Programming.Mutation.Types (Mutant (..), Mutation (..))
-import Prolog.Programming.Task (checkTask, toInstance)
+import Prolog.Programming.Task (TaskInstance, checkTask, toInstance)
+import Test.HUnit (assertFailure)
 import qualified Text.RawString.QQ as RS (r)
 
 taskConfig :: String
@@ -47,6 +49,20 @@ con l r = Struct "," [l, r]
 dis :: Term -> Term -> Term
 dis l r = Struct ";" [l, r]
 
+evaluateCheck :: TaskInstance -> String -> IO [String]
+evaluateCheck inst code = case consultString code of
+  Left err -> assertFailure $ "failed to parse program" ++ show err
+  Right inProg -> do
+    ref <- newIORef id
+
+    let updateInform doc = modifyIORef ref (\is -> is . (show doc :))
+
+    _ <- try (checkTask (fail . show) updateInform (const $ pure ()) inst inProg) :: IO (Either IOException ())
+
+    infos <- readIORef ref
+
+    pure $ infos []
+
 spec :: Spec
 spec = describe "Mutation" $ do
   describe "dropGoalMutator" $ do
@@ -76,10 +92,7 @@ check([],[]).
 check([X|Xs],[Y|Ys]) :- Y is X * 2, length(Xs,A), length(Ys,B), A =:= B, check(Xs,Ys).
       |]
 
-      reportRef <- newIORef []
-
-      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config code
-      report <- readIORef reportRef
+      report <- evaluateCheck config code
 
       report `shouldSatisfy` any (\p -> "The goal" `isInfixOf` p && "A =:= B" `isInfixOf` p)
     it "detects redundant length([],0) clause" $ do
@@ -92,10 +105,7 @@ check([],[]).
 check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
       |]
 
-      reportRef <- newIORef []
-
-      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config code
-      report <- readIORef reportRef
+      report <- evaluateCheck config code
 
       report `shouldSatisfy` any (\p -> "The clause" `isInfixOf` p && "length([], 0)." `isInfixOf` p)
     it "detects redundant task definitions in submission when includeTaskDefinition is set to 'yes'" $ do
@@ -111,11 +121,8 @@ check([],[]).
 check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
       |]
 
-      reportRef <- newIORef []
-
       let config' = toInstance $ "includeTaskDefinitions: yes\n" ++ taskConfig
-      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config' code
-      report <- readIORef reportRef
+      report <- evaluateCheck config' code
 
       report `shouldSatisfy` any (\p -> "The clause" `isInfixOf` p && "check([], [])." `isInfixOf` p)
     it "does not detect redundant task definitions in submission when includeTaskDefinition is set to 'filtered'" $ do
@@ -125,10 +132,7 @@ check([],[]).
 check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
       |]
 
-      reportRef <- newIORef []
-
-      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config code
-      report <- readIORef reportRef
+      report <- evaluateCheck config code
 
       report `shouldSatisfy` \case
         [r] -> "Ok" `isPrefixOf` r
@@ -140,11 +144,8 @@ check([],[]).
 check([X|Xs],[Y|Ys]) :- Y is X * 2, check(Xs,Ys).
       |]
 
-      reportRef <- newIORef []
-
       let config' = toInstance $ "includeTaskDefinitions: no\n" ++ taskConfig
-      () <- checkTask (fail . show) (\doc -> modifyIORef reportRef (show doc :)) (const $ pure ()) config' code
-      report <- readIORef reportRef
+      report <- evaluateCheck config' code
 
       report `shouldSatisfy` \case
         [r] -> "Ok" `isPrefixOf` r
