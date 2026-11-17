@@ -138,8 +138,8 @@ withRuleParser cons fixedStage = withObject (typeName @b) $ \v -> do
       case fromJSON (Object v) of
         Error err -> fail $ show err
         Success extra -> do
-          let unknownFields = "status" : recordFieldNames @a
-          rejectUnknownFields ((["checkStage" | isNothing fixedStage]) ++ unknownFields) v
+          let knownFields = "status" : recordFieldNames @a
+          rejectUnknownFields ((["checkStage" | isNothing fixedStage]) ++ knownFields) v
           pure $ cons $ Just (extra <$ base, stage)
 
 instance FromJSON SingletonVariablesConfig where
