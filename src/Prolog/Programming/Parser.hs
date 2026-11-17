@@ -111,7 +111,7 @@ parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'rejec
 parseStage :: Value -> Parser CheckStage
 parseStage (String "before-tests") = pure BeforeTests
 parseStage (String "after-tests") = pure AfterTests
-parseStage _ = fail "stage muse be one of: 'before-tests', 'after-tests'"
+parseStage _ = fail "checkStage muse be one of: 'before-tests', 'after-tests'"
 
 withRuleParser
   :: forall a b
