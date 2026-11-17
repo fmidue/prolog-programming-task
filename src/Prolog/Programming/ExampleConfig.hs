@@ -71,18 +71,15 @@ codeAnalysis:
   singletonVariables:
     # what to do concerning detection of singleton variables
     status: hint
-    checkStage: after-tests
   cutUsage:
     # what to do concerning detection of cut usage
     status: warn
-    checkStage: after-tests
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
   inconsistentArities:
     # what to do concerning detection of inconsistent arities
     status: warn
-    checkStage: after-tests
     # predicates to ignore for detection
     # useful when predicates provided by libraries can be used with different arities
     # ignorePredicates:
@@ -91,11 +88,9 @@ codeAnalysis:
   ungroupedDefinitions:
     # what to do concerning detection of ungrouped predicate definitions
     status: hint
-    checkStage: after-tests
   recursion:
     # what to do concerning detection of recursive predicates
     status: ignore
-    # checkStage: after-tests
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
@@ -109,7 +104,6 @@ codeAnalysis:
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
-    checkStage: after-tests
   redundantCode:
     # what to do concerning redundant clauses or goals being present
     status: hint
