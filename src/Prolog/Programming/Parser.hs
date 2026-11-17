@@ -45,6 +45,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RecursionConfig (..),
   RedundantCodeConfig (..),
   SingletonVariablesConfig (..),
+  SymbolOverloadConfig (..),
   UngroupedDefinitionsConfig (..),
   WithSeverity (..),
  )
@@ -184,6 +185,9 @@ instance FromJSON ForbiddenPredicatesConfig where
 instance FromJSON EarlyRecursionConfig where
   parseJSON = withRuleParser EarlyRecursionConfig Nothing
 
+instance FromJSON SymbolOverloadConfig where
+  parseJSON = withRuleParser SymbolOverloadConfig
+
 instance FromJSON RedundantCodeConfig where
   parseJSON = withRuleParser RedundantCodeConfig (Just AfterTests)
 
@@ -200,6 +204,7 @@ instance FromJSON CodeAnalysisConfig where
       <*> v .:? "forbiddenPredicates" .!= ForbiddenPredicatesConfig Set.empty
       <*> v .:? "earlyRecursion" .!= EarlyRecursionConfig Nothing
       <*> v .:? "inlining" .!= InliningConfig Nothing
+      <*> v .:? "symbolOverload" .!= SymbolOverloadConfig Nothing
       <*> v .:? "redundantCode" .!= RedundantCodeConfig Nothing
 
 instance FromJSON TaskConfig where

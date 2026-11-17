@@ -64,6 +64,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RedundantCodeConfig (RedundantCodeConfig),
   Severity (..),
   SingletonVariablesConfig (SingletonVariablesConfig),
+  SymbolOverloadConfig (SymbolOverloadConfig),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
@@ -130,6 +131,7 @@ verifyConfig cfg = case parseInstance cfg of
         , forbiddenPredicates
         , earlyRecursion = escalateSeverity earlyRecursion
         , inlining = InliningConfig $ withError ()
+        , symbolOverload = SymbolOverloadConfig $ withError ()
         , redundantCode = RedundantCodeConfig $ withError ()
         }
 

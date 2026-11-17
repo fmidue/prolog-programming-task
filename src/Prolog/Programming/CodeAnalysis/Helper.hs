@@ -1,10 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Prolog.Programming.CodeAnalysis.Helper (
   clauseIdentities,
   countVariables,
   containsCut,
   grabPredicateIdentities,
+  internalErrorProblem,
 ) where
 
 import Data.Data (Data)
@@ -13,7 +15,10 @@ import Data.Map (Map)
 import qualified Data.Map as Map (empty, singleton, unionWith)
 import Data.Set (Set)
 import qualified Data.Set as Set (empty, insert, singleton, unions)
+import Data.Text.Lazy (pack)
 import Language.Prolog (ProgramClause, Signature (Signature), Term (..), VariableName (..))
+import Prolog.Programming.CodeAnalysis.Types (Problem (..))
+import Text.PrettyPrint.Leijen.Text (string, vcat)
 
 -- | Return predicate information (name and arity) for left- and right-hand side of a program clause
 clauseIdentities :: Bool -> ProgramClause -> (Signature, Set Signature)
@@ -44,3 +49,13 @@ containsCut :: Data a => a -> Bool
 containsCut = everything (||) $ mkQ False $ \case
   Cut _ -> True
   _ -> False
+
+internalErrorProblem :: String -> Problem
+internalErrorProblem message =
+  Problem $
+    vcat
+      [ "An unexpected error occurred."
+      , "This is usually not caused by a fault within your submission."
+      , "Please contact your lecturers, providing the following error message:"
+      , string $ pack message
+      ]

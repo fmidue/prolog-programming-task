@@ -24,8 +24,9 @@ module Prolog.Programming.CodeAnalysis.Types (
   WithSeverity (..),
   ForbiddenPredicatesConfig (..),
   EarlyRecursionConfig (..),
-  CheckStage (..),
+  SymbolOverloadConfig (..),
   RedundantCodeConfig (..),
+  CheckStage (..),
 )
 where
 
@@ -90,6 +91,9 @@ newtype ForbiddenPredicatesConfig = ForbiddenPredicatesConfig {forbiddenPredicat
 newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig AdditionalMessage)
   deriving (Data, Generic, Reader, Show, ToDoc)
 
+newtype SymbolOverloadConfig = SymbolOverloadConfig (CodeAnalysisRuleConfig ())
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
 newtype RedundantCodeConfig = RedundantCodeConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Generic, Reader, Show, ToDoc)
 
@@ -112,6 +116,8 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , earlyRecursion :: EarlyRecursionConfig
   -- | Configuration for inlining rule
   , inlining :: InliningConfig
+  -- | Configuration for symbolOverload rule
+  , symbolOverload :: SymbolOverloadConfig
   -- | Configuration for redundant clause / goal checks
   , redundantCode :: RedundantCodeConfig
   }
