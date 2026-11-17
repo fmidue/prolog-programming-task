@@ -130,8 +130,8 @@ verifyConfig cfg = case parseInstance cfg of
         , forbiddenPredicates = escalateSeverity forbiddenPredicates
         , earlyRecursion = escalateSeverity earlyRecursion
         , inlining = InliningConfig $ withError ()
-        , redundantCode = RedundantCodeConfig $ withError ()
         , symbolOverload = SymbolOverloadConfig $ withError ()
+        , redundantCode = RedundantCodeConfig $ withError ()
         }
 
 toInstance :: Config -> TaskInstance
