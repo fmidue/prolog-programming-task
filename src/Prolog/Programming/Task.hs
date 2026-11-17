@@ -108,7 +108,7 @@ verifyConfig cfg = case parseInstance cfg of
          when (includeHiddenDefinitions == Yes && showSWISHButton && notNull hiddenPredicates) $
            fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
-         when (any (\case WithSeverity Error _ -> False; _ -> True) $ configuredRules BeforeTests codeAnalysis []) $
+         when (any (\case (WithSeverity Hint _, BeforeTests) -> True; (WithSeverity Warn _, BeforeTests) -> True; _ -> False) $ configuredRules codeAnalysis []) $
            fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
 
          when rigorousValidation $
@@ -227,11 +227,14 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                <$$> matchReport
            pure newDefs
 
-       let factProg =
-             filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
-               ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
+       let
+         factProg =
+           filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
+             ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
 
-       case checkForProblems BeforeTests codeAnalysis inProg factProg of
+         rulesConfigured = configuredRules codeAnalysis factProg
+
+       case checkForProblems BeforeTests inProg rulesConfigured of
          [] -> pure ()
          pbs -> either reject undefined $ displayProblems pbs
 
@@ -285,7 +288,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                      else ""
              )
 
-       case checkForProblems AfterTests codeAnalysis inProg factProg of
+       case checkForProblems AfterTests inProg rulesConfigured of
          [] -> pure ()
          pbs -> either reject inform $ displayProblems pbs
 

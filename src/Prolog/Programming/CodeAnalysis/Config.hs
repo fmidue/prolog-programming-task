@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Prolog.Programming.CodeAnalysis.Config (
   configuredRules,
   emptyCodeAnalysisConfig,
@@ -7,7 +5,7 @@ module Prolog.Programming.CodeAnalysis.Config (
 where
 
 import Data.Bifunctor (first)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (catMaybes)
 import qualified Data.Set as Set (empty, null)
 import Prolog.Programming.CodeAnalysis.Rules.Cuts (cutsChecker)
 import Prolog.Programming.CodeAnalysis.Rules.EarlyRecursion (earlyRecursionChecker)
@@ -38,9 +36,8 @@ import Prolog.Programming.CodeAnalysis.Types (
   WithSeverity (..),
  )
 
-configuredRules :: CheckStage -> CodeAnalysisConfig -> Context -> [WithSeverity ProgramRule]
+configuredRules :: CodeAnalysisConfig -> Context -> [(WithSeverity ProgramRule, CheckStage)]
 configuredRules
-  stage
   CodeAnalysisConfig {
     singletonVariables = SingletonVariablesConfig singletonVarsCfg
     , cutUsage = CutUsageConfig cutsCfg
@@ -54,8 +51,7 @@ configuredRules
     , redundantCode = _ -- redundant code is not checked via rules
     }
   taskAndHiddenDefinitions =
-    mapMaybe
-      (\case Just (c, s) | s == stage -> Just c; _ -> Nothing)
+    catMaybes
       [ toConfigured singletonVarsCfg (concatMap . const singletonVariablesChecker)
       , toConfigured cutsCfg (concatMap . cutsChecker)
       , toConfigured inconsistentAritiesCfg (inconsistentAritiesChecker taskAndHiddenDefinitions)
