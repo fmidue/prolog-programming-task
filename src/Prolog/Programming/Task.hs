@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# HLINT ignore "Use unless" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -51,6 +52,7 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.Generics (Data, everywhere, mkT)
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
@@ -124,19 +126,23 @@ verifyConfig cfg = case parseInstance cfg of
              )
              sampleSolution
   where
-    withError a = Just (WithSeverity Error a, AfterTests)
+    withError a = Just (WithSeverity Error a, BeforeTests)
+
+    escalate :: Data a => a -> a
+    escalate = everywhere (mkT (\(_ :: CheckStage) -> BeforeTests)) . escalateSeverity
+
     escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
       CodeAnalysisConfig {
         singletonVariables = SingletonVariablesConfig $ withError ()
-        , cutUsage = escalateSeverity cutUsage
+        , cutUsage = escalate cutUsage
         , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
         , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
-        , recursion = escalateSeverity recursion
+        , recursion = escalate recursion
         , forbiddenPredicates
-        , earlyRecursion = escalateSeverity earlyRecursion
+        , earlyRecursion = escalate earlyRecursion
         , inlining = InliningConfig $ withError ()
         , symbolOverload = SymbolOverloadConfig $ withError ()
-        , redundantCode = RedundantCodeConfig $ withError ()
+        , redundantCode = RedundantCodeConfig $ Just (WithSeverity Error (), AfterTests)
         }
 
 toInstance :: Config -> TaskInstance
