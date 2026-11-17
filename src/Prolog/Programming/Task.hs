@@ -293,10 +293,10 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
           case redundantCodeProblem of
             Nothing -> pure ()
             Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
-
-        RedundantCodeConfig (Just _) -> error "BeforeTests cannot possibly occur here"
         
         RedundantCodeConfig Nothing -> pure ()
+
+        RedundantCodeConfig _ -> error "BeforeTests cannot possibly occur here"
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
