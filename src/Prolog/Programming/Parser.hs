@@ -186,7 +186,7 @@ instance FromJSON EarlyRecursionConfig where
   parseJSON = withRuleParser EarlyRecursionConfig Nothing
 
 instance FromJSON SymbolOverloadConfig where
-  parseJSON = withRuleParser SymbolOverloadConfig
+  parseJSON = withRuleParser SymbolOverloadConfig Nothing
 
 instance FromJSON RedundantCodeConfig where
   parseJSON = withRuleParser RedundantCodeConfig (Just AfterTests)
