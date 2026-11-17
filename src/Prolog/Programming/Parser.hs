@@ -185,7 +185,7 @@ instance FromJSON EarlyRecursionConfig where
   parseJSON = withRuleParser EarlyRecursionConfig Nothing
 
 instance FromJSON RedundantCodeConfig where
-  parseJSON = withRuleParser RedundantCodeConfig
+  parseJSON = withRuleParser RedundantCodeConfig (Just AfterTests)
 
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do
