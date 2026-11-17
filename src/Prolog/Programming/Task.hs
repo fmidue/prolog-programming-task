@@ -203,17 +203,11 @@ checkTask
   -> TaskInstance
   -> [ProgramClause]
   -> m ()
-checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg =
-  let
-    drawTree tree = do
-      svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-      drawPicture svg
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg = do
+      let drawTree tree = do
+            svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+            drawPicture svg
 
-    codeChecks stage factProg = case checkForProblems stage codeAnalysis inProg factProg of
-      [] -> pure ()
-      pbs -> either reject inform $ displayProblems pbs
-  in
-    do
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
@@ -236,7 +230,11 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       let factProg =
             filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
               ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
-      codeChecks BeforeTests factProg
+
+      case checkForProblems BeforeTests codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject undefined $ displayProblems pbs
+
       testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
@@ -287,7 +285,9 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
-      codeChecks AfterTests factProg
+      case checkForProblems AfterTests codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject inform $ displayProblems pbs
 
       case redundantCode codeAnalysis of
         RedundantCodeConfig Nothing -> pure ()
