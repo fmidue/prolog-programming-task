@@ -63,6 +63,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RedundantCodeConfig (RedundantCodeConfig),
   Severity (..),
   SingletonVariablesConfig (SingletonVariablesConfig),
+  SymbolOverloadConfig (SymbolOverloadConfig),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
@@ -130,6 +131,7 @@ verifyConfig cfg = case parseInstance cfg of
         , earlyRecursion = escalateSeverity earlyRecursion
         , inlining = InliningConfig $ withError ()
         , redundantCode = RedundantCodeConfig $ withError ()
+        , symbolOverload = SymbolOverloadConfig $ withError ()
         }
 
 toInstance :: Config -> TaskInstance
