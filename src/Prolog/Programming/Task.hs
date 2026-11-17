@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
@@ -53,6 +54,7 @@ import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolut
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
 import Prolog.Programming.CodeAnalysis.Types (
   CheckStage (..),
@@ -103,6 +105,9 @@ verifyConfig cfg = case parseInstance cfg of
     in do
          when (includeHiddenDefinitions == Yes && showSWISHButton && notNull hiddenPredicates) $
            fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
+
+         when (any (\case WithSeverity Error _ -> False; _ -> True) $ configuredRules BeforeTests codeAnalysis []) $
+           fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
 
          when rigorousValidation $
            checkTask
