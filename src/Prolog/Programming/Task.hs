@@ -192,15 +192,17 @@ checkTask
   -> TaskInstance
   -> [ProgramClause]
   -> m ()
-checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg = do
-      let
-        drawTree tree = do
-          svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-          drawPicture svg
-        codeChecks stage factProg = case checkForProblems stage codeAnalysis inProg factProg of
-          [] -> pure ()
-          pbs -> either reject inform $ displayProblems pbs
-
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg =
+  let
+    drawTree tree = do
+      svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+      drawPicture svg
+  in
+    let
+      codeChecks stage factProg = case checkForProblems stage codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject inform $ displayProblems pbs
+    in do
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
