@@ -192,97 +192,97 @@ checkTask
   -> [ProgramClause]
   -> m ()
 checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg = do
-  let drawTree tree = do
-        svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-        drawPicture svg
+      let drawTree tree = do
+            svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+            drawPicture svg
 
-  when (not allowListPatternMatching) $
-    case containsHeadTailPattern inProg of
-      Nothing -> pure ()
-      Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ prettifyClause t
+      when (not allowListPatternMatching) $
+        case containsHeadTailPattern inProg of
+          Nothing -> pure ()
+          Just t -> reject . text . pack $ "forbidden use of head/tail-list-matching in " ++ prettifyClause t
 
-  newDefs <- case findNewPredicateDefs specifications inProg of
-    (matchReport, Nothing) -> do
-      let errMsg =
-            text "Error while looking for required predicates."
-              <$$> text "Using the following definitions for required predicates:"
+      newDefs <- case findNewPredicateDefs specifications inProg of
+        (matchReport, Nothing) -> do
+          let errMsg =
+                text "Error while looking for required predicates."
+                  <$$> text "Using the following definitions for required predicates:"
+                  <$$> matchReport
+          [] <$ reject errMsg
+        (matchReport, Just newDefs) -> do
+          when (requiresNewPredicates specifications)
+            $ inform
+            $ text "Using the following definitions for required predicates:"
               <$$> matchReport
-      [] <$ reject errMsg
-    (matchReport, Just newDefs) -> do
-      when (requiresNewPredicates specifications)
-        $ inform
-        $ text "Using the following definitions for required predicates:"
-          <$$> matchReport
-      pure newDefs
+          pure newDefs
 
-  let factProg =
-        filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
-          ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
-  testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
-  case testResult of
-    (Finished AllOk, (passed, _)) ->
-      inform $
-        vcat
-          [ text "Ok"
-          , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
-          ]
-    (Finished (SomeTimeouts (t :| ts)), (passed, _)) -> do
-      let testsRun = passed + 1 + length ts
-      reject $
-        vcat
-          [ text "No."
-          , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
-          ]
-          <> nested
-            ( line
-                <> describeSpec t
-                <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
-                <> line
-                <> if not (null ts)
-                  then
-                    text
-                      ( pack $
-                          show (length ts)
-                            ++ " additional test "
-                            ++ plural (length ts) "case" "cases"
-                            ++ " also timed out"
-                      )
-                  else empty
+      let factProg =
+            filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
+              ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
+      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
+      case testResult of
+        (Finished AllOk, (passed, _)) ->
+          inform $
+            vcat
+              [ text "Ok"
+              , text (pack $ unwords [show passed, plural passed "test was" "tests were", "run"])
+              ]
+        (Finished (SomeTimeouts (t :| ts)), (passed, _)) -> do
+          let testsRun = passed + 1 + length ts
+          reject $
+            vcat
+              [ text "No."
+              , text (pack $ unwords [show testsRun, plural testsRun "test was" "tests were", "run"])
+              ]
+              <> nested
+                ( line
+                    <> describeSpec t
+                    <> nested (line <> text "*it appears to be non-terminating* (test case timeout)")
+                    <> line
+                    <> if not (null ts)
+                      then
+                        text
+                          ( pack $
+                              show (length ts)
+                                ++ " additional test "
+                                ++ plural (length ts) "case" "cases"
+                                ++ " also timed out"
+                          )
+                      else empty
+                )
+        (Aborted reason, (passed, notRun)) -> do
+          let (reasonDoc, mTree) = explainReason reason
+          inform $
+            vcat
+              [ text "No."
+              , text (pack $ unwords [show (passed + 1), plural (passed + 1) "test was" "tests were", "run"])
+              , text "The following test case failed:"
+              ]
+              <> reasonDoc
+          maybe (pure ()) drawTree mTree
+          reject
+            ( text . pack $
+                "tests passed: "
+                  ++ show passed
+                  ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
+                    then ", tests not run: " ++ show notRun
+                    else ""
             )
-    (Aborted reason, (passed, notRun)) -> do
-      let (reasonDoc, mTree) = explainReason reason
-      inform $
-        vcat
-          [ text "No."
-          , text (pack $ unwords [show (passed + 1), plural (passed + 1) "test was" "tests were", "run"])
-          , text "The following test case failed:"
-          ]
-          <> reasonDoc
-      maybe (pure ()) drawTree mTree
-      reject
-        ( text . pack $
-            "tests passed: "
-              ++ show passed
-              ++ if notRun > 0 -- only show remaining tests if there is at least one test that was not run
-                then ", tests not run: " ++ show notRun
-                else ""
-        )
 
-  case checkForProblems codeAnalysis inProg factProg of
-    [] -> pure ()
-    pbs -> either reject inform $ displayProblems pbs
+      case checkForProblems codeAnalysis inProg factProg of
+        [] -> pure ()
+        pbs -> either reject inform $ displayProblems pbs
 
-  case redundantCode codeAnalysis of
-    RedundantCodeConfig Nothing -> pure ()
-    RedundantCodeConfig (Just (WithSeverity severity ())) -> do
-      let checker p =
-            allTestResultsAreOkay . fst
-              <$> testRunner globalTimeout True factProg p specifications newDefs
-      redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
+      case redundantCode codeAnalysis of
+        RedundantCodeConfig Nothing -> pure ()
+        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+          let checker p =
+                allTestResultsAreOkay . fst
+                  <$> testRunner globalTimeout True factProg p specifications newDefs
+          redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
 
-      case redundantCodeProblem of
-        Nothing -> pure ()
-        Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
+          case redundantCodeProblem of
+            Nothing -> pure ()
+            Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)

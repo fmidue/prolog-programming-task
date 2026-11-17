@@ -137,7 +137,7 @@ a_test_with_resolution_tree(right_branch) :- fail.
  * The provided solution needs to pass all tests and checks specified in the first section of the config.
  * It will be verified on upload.
  *
- * All comments in the sample solution will be stripped before showing it to the student.
+ * All comments in the sample solution will be stripped away before showing it to the student.
  */
 p(a).
 a_predicate(expected_foo1,expected_bar1).
