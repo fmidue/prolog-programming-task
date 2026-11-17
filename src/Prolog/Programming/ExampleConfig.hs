@@ -99,6 +99,9 @@ codeAnalysis:
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
+  symbolOverload:
+    # what to do concerning usage of a symbol both as predicate and as data constructor
+    status: hint
   redundantCode:
     # what to do concerning redundant clauses or goals being present
     status: hint

@@ -10,7 +10,7 @@ import qualified Data.Map as Map (empty, insert, lookup)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set (filter, insert, unions)
 import Data.Text.Lazy (pack)
-import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities)
+import Prolog.Programming.CodeAnalysis.Helper (clauseIdentities, internalErrorProblem)
 import Prolog.Programming.CodeAnalysis.Types (
   Context,
   IgnoredPredicates (..),
@@ -18,19 +18,13 @@ import Prolog.Programming.CodeAnalysis.Types (
   ProgramRule,
  )
 import Prolog.Programming.Helper (predicateArity, predicateName)
-import Text.PrettyPrint.Leijen.Text (string, vcat)
+import Text.PrettyPrint.Leijen.Text (string)
 
 inconsistentAritiesChecker :: Context -> IgnoredPredicates -> ProgramRule
 inconsistentAritiesChecker otherDefinitions (IgnoredPredicates ignore) clauses =
   case forcedIdentities (identities otherDefinitions) of
     Nothing ->
-      [ Problem $
-          vcat
-            [ "An unexpected error occurred."
-            , "This is usually not caused by a fault within your submission."
-            , "Please contact your lecturers, providing the following error message:"
-            , "Task instance does not satisfy arity constraint."
-            ]
+      [ internalErrorProblem "Task instance does not satisfy arity constraint."
       ]
     Just forced ->
       mapMaybe
