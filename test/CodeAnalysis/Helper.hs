@@ -1,5 +1,6 @@
 module CodeAnalysis.Helper where
 
+import Data.Maybe (mapMaybe)
 import Language.Prolog (consultString)
 import Prolog.Programming.CodeAnalysis (checkForProblems)
 import Prolog.Programming.CodeAnalysis.Config (configuredRules)
@@ -22,7 +23,7 @@ shouldDetectProblemsStrict' stage cfg pts code other = case consultString code o
   Right prog -> case consultString other of
     Left err -> assertFailure $ "Failed to parse other definitions:\n " ++ show err
     Right otherDefs ->
-      let rules = map fst $ filter ((== stage) . snd) $ configuredRules cfg otherDefs
+      let rules = mapMaybe (\(r, s) -> if s == stage then Just r else Nothing) $ configuredRules cfg otherDefs
       in case checkForProblems prog rules of
            [] -> assertFailure "No problems found"
            pbs
@@ -40,7 +41,7 @@ shouldNotHaveProblems' stage cfg code other = case consultString code of
   Right prog -> case consultString other of
     Left err -> assertFailure $ "Failed to parse other definitions:\n " ++ show err
     Right otherDefs ->
-      let rules = map fst $ filter ((== stage) . snd) $ configuredRules cfg otherDefs
+      let rules = mapMaybe (\(r, s) -> if s == stage then Just r else Nothing) $ configuredRules cfg otherDefs
       in case checkForProblems prog rules of
            [] -> pure ()
            _ -> assertFailure "Detected problem(s) even though they should not exist."
