@@ -213,7 +213,7 @@ checkTask
   -> [ProgramClause]
   -> m ()
 checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg =
-  let 
+  let
     drawTree tree = do
       svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
       drawPicture svg
@@ -242,14 +242,13 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
               <$$> matchReport
           pure newDefs
 
-      let
-        (rulesBeforeTests, rulesAfterTests) =
-          bimap
-            (map fst)
-            (map fst)
-            $ partition
-              ((== BeforeTests) . snd)
-            $ configuredRules codeAnalysis factProg
+      let (rulesBeforeTests, rulesAfterTests) =
+            bimap
+              (map fst)
+              (map fst)
+              $ partition
+                ((== BeforeTests) . snd)
+              $ configuredRules codeAnalysis factProg
 
       case checkForProblems inProg rulesBeforeTests of
         [] -> pure ()
