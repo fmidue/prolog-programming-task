@@ -21,13 +21,15 @@ shouldDetectProblemsStrict' stage cfg pts code other = case consultString code o
   Left err -> assertFailure $ "Failed to parse prolog program:\n" ++ show err
   Right prog -> case consultString other of
     Left err -> assertFailure $ "Failed to parse other definitions:\n " ++ show err
-    Right otherDefs -> case checkForProblems stage prog $ configuredRules cfg otherDefs of
-      [] -> assertFailure "No problems found"
-      pbs
-        | length pbs /= length pts ->
-            assertFailure $ "Found " ++ show (length pbs) ++ " instead of " ++ show (length pts) ++ " problems."
-        | all (\t -> any (t . show . problemDisplay . value) pbs) pts -> pure ()
-        | otherwise -> assertFailure "Found problems that does not match"
+    Right otherDefs ->
+      let rules = map fst $ filter ((== stage) . snd) $ configuredRules cfg otherDefs
+      in case checkForProblems prog rules of
+           [] -> assertFailure "No problems found"
+           pbs
+             | length pbs /= length pts ->
+                 assertFailure $ "Found " ++ show (length pbs) ++ " instead of " ++ show (length pts) ++ " problems."
+             | all (\t -> any (t . show . problemDisplay . value) pbs) pts -> pure ()
+             | otherwise -> assertFailure "Found problems that does not match"
 
 shouldNotHaveProblems :: CodeAnalysisConfig -> Code -> Expectation
 shouldNotHaveProblems cfg code = shouldNotHaveProblems' AfterTests cfg code ""
@@ -38,6 +40,7 @@ shouldNotHaveProblems' stage cfg code other = case consultString code of
   Right prog -> case consultString other of
     Left err -> assertFailure $ "Failed to parse other definitions:\n " ++ show err
     Right otherDefs ->
-      case checkForProblems stage prog $ configuredRules cfg otherDefs of
-        [] -> pure ()
-        _ -> assertFailure "Detected problem(s) even though they should not exist."
+      let rules = map fst $ filter ((== stage) . snd) $ configuredRules cfg otherDefs
+      in case checkForProblems prog rules of
+           [] -> pure ()
+           _ -> assertFailure "Detected problem(s) even though they should not exist."

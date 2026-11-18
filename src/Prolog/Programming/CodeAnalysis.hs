@@ -9,7 +9,6 @@ where
 import Data.Text.Lazy (pack)
 import Language.Prolog (ProgramClause)
 import Prolog.Programming.CodeAnalysis.Types (
-  CheckStage,
   Problem (..),
   ProgramRule,
   Severity (Error),
@@ -17,8 +16,8 @@ import Prolog.Programming.CodeAnalysis.Types (
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
-checkForProblems :: CheckStage -> [ProgramClause] -> [(WithSeverity ProgramRule, CheckStage)] -> [WithSeverity Problem]
-checkForProblems stage program = concatMap (traverse ($ program) . fst) . filter ((== stage) . snd)
+checkForProblems :: [ProgramClause] -> [WithSeverity ProgramRule] -> [WithSeverity Problem]
+checkForProblems program = concatMap (traverse ($ program))
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =

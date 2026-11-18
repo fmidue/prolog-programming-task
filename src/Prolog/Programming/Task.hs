@@ -33,7 +33,7 @@ import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
 import Data.Either (fromRight)
-import Data.List (intercalate)
+import Data.List (intercalate, partition)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
@@ -52,6 +52,7 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.Bifunctor (bimap)
 import Data.Generics (Data, everywhere, mkT)
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
@@ -240,9 +241,15 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
            filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
              ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
 
-         rulesConfigured = configuredRules codeAnalysis factProg
+         (rulesBeforeTests, rulesAfterTests) =
+           bimap
+             (map fst)
+             (map fst)
+             $ partition
+               ((== BeforeTests) . snd)
+             $ configuredRules codeAnalysis factProg
 
-       case checkForProblems BeforeTests inProg rulesConfigured of
+       case checkForProblems inProg rulesBeforeTests of
          [] -> pure ()
          pbs -> either reject undefined $ displayProblems pbs
 
@@ -296,7 +303,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                      else ""
              )
 
-       case checkForProblems AfterTests inProg rulesConfigured of
+       case checkForProblems inProg rulesAfterTests of
          [] -> pure ()
          pbs -> either reject inform $ displayProblems pbs
 
