@@ -21,7 +21,7 @@ caConfig =
 
 spec :: Spec
 spec = describe "Check stages work" $ do
-  it "should apply checker at the specified staged" $
+  it "should apply checker at the specified stage" $
     shouldDetectProblemsStrict'
       AfterTests
       caConfig
