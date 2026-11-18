@@ -116,7 +116,7 @@ verifyConfig cfg = case parseInstance cfg of
                    (WithSeverity Warn _, BeforeTests) -> True
                    _ -> False
                )
-               $ configuredRules codeAnalysis []
+               $ configuredRules codeAnalysis undefined
            )
            $ fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
 
