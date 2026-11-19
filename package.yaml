@@ -50,6 +50,7 @@ library:
   exposed-modules:
     - Prolog.Programming.Data
     - Prolog.Programming.Task
+    - Prolog.Programming.Types
     - Prolog.Programming.CodeAnalysis
     - Prolog.Programming.CodeAnalysis.Types
     - Prolog.Programming.CodeAnalysis.Config
