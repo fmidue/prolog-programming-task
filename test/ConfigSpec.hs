@@ -1,27 +1,32 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module ConfigSpec where
 
-import Control.Exception (SomeException, try)
-import qualified Data.Text as T (pack, replace, unpack)
+import Control.Exception (IOException, try)
+import Data.Either.Extra (mapLeft)
+import Data.List (isInfixOf, isPrefixOf)
 import Prolog.Programming.Data (Config)
 import Prolog.Programming.Task (exampleConfig, verifyConfig)
-import Test.Hspec (Spec, describe, it, shouldReturn)
+import Test.Hspec (Spec, describe, it, shouldReturn, shouldSatisfy)
 
-doesNotThrow :: forall a. IO a -> IO Bool
-doesNotThrow action = do
-  result <- try action :: IO (Either SomeException a)
-  pure $ case result of
-    Left _ -> False
-    Right _ -> True
+evaluateVerify :: Config -> IO (Either String ())
+evaluateVerify config = do
+  result <- try (verifyConfig config) :: IO (Either IOException ())
 
-invalidConfig :: Config
-invalidConfig = T.unpack $ T.replace "globalTimeout" "globalTiimeout" $ T.pack exampleConfig -- no-spell-check
+  pure $ mapLeft show result
+
+withoutConfigPart :: Config
+withoutConfigPart = "\n" ++ unlines (dropWhile (not . isPrefixOf "---") $ lines exampleConfig)
 
 spec :: Spec
 spec = describe "ExampleConfig" $ do
   it "example config should be valid" $
-    doesNotThrow (verifyConfig exampleConfig :: IO ()) `shouldReturn` True
-  it "rejects config with unknown fields" $
-    doesNotThrow (verifyConfig invalidConfig :: IO ()) `shouldReturn` False
+    evaluateVerify exampleConfig `shouldReturn` Right ()
+  it "rejects config with unknown fields" $ do
+    result <-
+      evaluateVerify $ "globalTiimeout: 10000" ++ withoutConfigPart -- no-spell-check
+    result `shouldSatisfy` \case
+      Right () -> False
+      Left msg -> "Unknown or forbidden fields: globalTiimeout" `isInfixOf` msg -- no-spell-check
