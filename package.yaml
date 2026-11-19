@@ -37,6 +37,7 @@ dependencies:
   - autolib-todoc
   - autolib-data
   - utility-ht
+  - ghc-lib-parser
 
 library:
   source-dirs: src

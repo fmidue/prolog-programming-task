@@ -33,7 +33,7 @@ import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
 import Data.Either (fromRight)
-import Data.List (intercalate, partition)
+import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (mapMaybe)
 import Data.Text.Lazy (pack)
@@ -52,10 +52,10 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
-import Data.Bifunctor (bimap)
 import Data.Generics (Data, everywhere, mkT)
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
+import GHC.Utils.Misc (partitionWith)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
 import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
@@ -243,11 +243,8 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
           pure newDefs
 
       let (rulesBeforeTests, rulesAfterTests) =
-            bimap
-              (map fst)
-              (map fst)
-              $ partition
-                ((== BeforeTests) . snd)
+            partitionWith
+              (\(rule, stage) -> (if stage == BeforeTests then Left else Right) rule)
               $ configuredRules codeAnalysis factProg
 
       case checkForProblems inProg rulesBeforeTests of

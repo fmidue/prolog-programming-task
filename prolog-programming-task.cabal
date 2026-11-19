@@ -67,6 +67,7 @@ library
     , containers
     , data-ordlist
     , extra
+    , ghc-lib-parser
     , mtl
     , parsec
     , prolog
@@ -98,6 +99,7 @@ executable test-task-prolog
     , containers
     , data-ordlist
     , extra
+    , ghc-lib-parser
     , mtl
     , parsec
     , prolog
@@ -146,6 +148,7 @@ test-suite prolog-programming-task-test
     , containers
     , data-ordlist
     , extra
+    , ghc-lib-parser
     , hspec
     , mtl
     , parsec
