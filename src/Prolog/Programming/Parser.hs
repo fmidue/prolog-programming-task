@@ -22,7 +22,7 @@ import qualified Data.Aeson.KeyMap as KM (keys)
 import qualified Data.ByteString.Char8 as BS (pack)
 import Data.Data (Typeable)
 import Data.Foldable (toList)
-import Data.Maybe (fromJust, listToMaybe)
+import Data.Maybe (fromJust, isNothing, listToMaybe)
 import qualified Data.Set as Set (empty, fromList)
 import qualified Data.Text as T (split, unpack)
 import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withArray, withObject, (.!=), (.:?))
@@ -33,6 +33,7 @@ import Prolog.Programming.CodeAnalysis.Config (
  )
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (..),
+  CheckStage (..),
   CodeAnalysisConfig (CodeAnalysisConfig),
   CodeAnalysisRuleConfig,
   CutUsageConfig (..),
@@ -100,20 +101,26 @@ instance FromJSON Spec where
     Right s -> pure s
   parseJSON _ = fail "Invalid value type"
 
-parseStatus :: Value -> Parser (CodeAnalysisRuleConfig ())
+parseStatus :: Value -> Parser (Maybe (WithSeverity ()))
 parseStatus (String "ignore") = pure Nothing
 parseStatus (String "hint") = pure $ Just $ WithSeverity CA.Hint ()
 parseStatus (String "warn") = pure $ Just $ WithSeverity CA.Warn ()
 parseStatus (String "reject") = pure $ Just $ WithSeverity CA.Error ()
 parseStatus _ = fail "status must be one of: 'ignore', 'hint', 'warn', or 'reject'"
 
+parseStage :: Value -> Parser CheckStage
+parseStage (String "before-tests") = pure BeforeTests
+parseStage (String "after-tests") = pure AfterTests
+parseStage _ = fail "stage must be one of: 'before-tests', 'after-tests'"
+
 withRuleParser
   :: forall a b
    . (FieldNames (Rep a), FromJSON a, Generic a, Typeable b)
   => (CodeAnalysisRuleConfig a -> b)
+  -> Maybe CheckStage
   -> Value
   -> Parser b
-withRuleParser cons = withObject (typeName @b) $ \v -> do
+withRuleParser cons fixedStage = withObject (typeName @b) $ \v -> do
   mStatus <- v .:? "status"
   status <- maybe (pure Nothing) parseStatus mStatus
 
@@ -121,14 +128,22 @@ withRuleParser cons = withObject (typeName @b) $ \v -> do
     Nothing -> do
       rejectUnknownFields ["status"] v
       pure $ cons Nothing
-    Just base -> case fromJSON (Object v) of
-      Error err -> fail $ show err
-      Success extra -> do
-        rejectUnknownFields ("status" : recordFieldNames @a) v
-        pure $ cons $ Just (extra <$ base)
+    Just base -> do
+      stage <- case fixedStage of
+        Just s -> pure s
+        Nothing -> do
+          mStage <- v .:? "stage"
+          maybe (pure AfterTests) parseStage mStage
+
+      case fromJSON (Object v) of
+        Error err -> fail $ show err
+        Success extra -> do
+          let knownFields = "status" : recordFieldNames @a
+          rejectUnknownFields (["stage" | isNothing fixedStage] ++ knownFields) v
+          pure $ cons $ Just (extra <$ base, stage)
 
 instance FromJSON SingletonVariablesConfig where
-  parseJSON = withRuleParser SingletonVariablesConfig
+  parseJSON = withRuleParser SingletonVariablesConfig Nothing
 
 instance FromJSON AdditionalMessage where
   parseJSON = withObject "AdditionalMessage" $ \v ->
@@ -136,10 +151,10 @@ instance FromJSON AdditionalMessage where
       <$> v .:? "additionalMessage"
 
 instance FromJSON InliningConfig where
-  parseJSON = withRuleParser InliningConfig
+  parseJSON = withRuleParser InliningConfig Nothing
 
 instance FromJSON CutUsageConfig where
-  parseJSON = withRuleParser CutUsageConfig
+  parseJSON = withRuleParser CutUsageConfig Nothing
 
 instance FromJSON IgnoredPredicates where
   parseJSON = withObject "IgnoredPredicates" $ \v ->
@@ -147,13 +162,13 @@ instance FromJSON IgnoredPredicates where
       <$> v .:? "ignorePredicates" .!= []
 
 instance FromJSON InconsistentAritiesConfig where
-  parseJSON = withRuleParser InconsistentAritiesConfig
+  parseJSON = withRuleParser InconsistentAritiesConfig Nothing
 
 instance FromJSON UngroupedDefinitionsConfig where
-  parseJSON = withRuleParser UngroupedDefinitionsConfig
+  parseJSON = withRuleParser UngroupedDefinitionsConfig Nothing
 
 instance FromJSON RecursionConfig where
-  parseJSON = withRuleParser RecursionConfig
+  parseJSON = withRuleParser RecursionConfig Nothing
 
 instance FromJSON Signature where
   parseJSON (String s) = case T.split (== '/') s of
@@ -168,13 +183,13 @@ instance FromJSON ForbiddenPredicatesConfig where
     ForbiddenPredicatesConfig . Set.fromList <$> traverse parseJSON (toList v)
 
 instance FromJSON EarlyRecursionConfig where
-  parseJSON = withRuleParser EarlyRecursionConfig
+  parseJSON = withRuleParser EarlyRecursionConfig Nothing
 
 instance FromJSON SymbolOverloadConfig where
-  parseJSON = withRuleParser SymbolOverloadConfig
+  parseJSON = withRuleParser SymbolOverloadConfig Nothing
 
 instance FromJSON RedundantCodeConfig where
-  parseJSON = withRuleParser RedundantCodeConfig
+  parseJSON = withRuleParser RedundantCodeConfig (Just AfterTests)
 
 instance FromJSON CodeAnalysisConfig where
   parseJSON = withObject "CodeAnalysisConfig" $ \v -> do

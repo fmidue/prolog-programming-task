@@ -9,6 +9,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (AfterTests),
   CodeAnalysisConfig (..),
   Severity (..),
   SymbolOverloadConfig (SymbolOverloadConfig),
@@ -21,7 +22,7 @@ caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
     symbolOverload =
-      SymbolOverloadConfig $ Just $ WithSeverity Hint ()
+      SymbolOverloadConfig $ Just (WithSeverity Hint (), AfterTests)
     }
 
 submissionOverloads :: [Code]
@@ -79,6 +80,7 @@ spec = describe "SymbolOverload" $ do
     forM_ taskPredicateConflicts $ \(otherDefinitions, programCode) ->
       it programCode $
         shouldDetectProblemsStrict'
+          AfterTests
           caConfig
           [isInfixOf "which is used as a data constructor but should really be used as a predicate"]
           programCode
@@ -88,6 +90,7 @@ spec = describe "SymbolOverload" $ do
     forM_ taskDataConstructorConflicts $ \(otherDefinitions, programCode) ->
       it programCode $
         shouldDetectProblemsStrict'
+          AfterTests
           caConfig
           [isInfixOf "which is used as a predicate but should really be used as a data constructor"]
           programCode

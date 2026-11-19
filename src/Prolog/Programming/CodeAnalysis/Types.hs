@@ -26,6 +26,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   EarlyRecursionConfig (..),
   SymbolOverloadConfig (..),
   RedundantCodeConfig (..),
+  CheckStage (..),
 )
 where
 
@@ -55,7 +56,10 @@ type ClauseRule = ProgramClause -> [Problem]
 -- | Definition for a code analysis checker that looks for violations in a given program
 type ProgramRule = [ProgramClause] -> [Problem]
 
-type CodeAnalysisRuleConfig a = Maybe (WithSeverity a)
+data CheckStage = BeforeTests | AfterTests
+  deriving (Data, Eq, Generic, Reader, Show, ToDoc)
+
+type CodeAnalysisRuleConfig a = Maybe (WithSeverity a, CheckStage)
 
 newtype SingletonVariablesConfig = SingletonVariablesConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Generic, Reader, Show, ToDoc)

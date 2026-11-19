@@ -8,18 +8,16 @@ where
 
 import Data.Text.Lazy (pack)
 import Language.Prolog (ProgramClause)
-import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Types (
-  CodeAnalysisConfig (..),
-  Context,
   Problem (..),
+  ProgramRule,
   Severity (Error),
   WithSeverity (..),
  )
 import Text.PrettyPrint.Leijen.Text (Doc, brackets, string, vsep, (<$$>))
 
-checkForProblems :: CodeAnalysisConfig -> [ProgramClause] -> Context -> [WithSeverity Problem]
-checkForProblems cfg program = concatMap (traverse ($ program)) . configuredRules cfg
+checkForProblems :: [ProgramClause] -> [WithSeverity ProgramRule] -> [WithSeverity Problem]
+checkForProblems program = concatMap (traverse ($ program))
 
 displayProblems :: [WithSeverity Problem] -> Either Doc Doc
 displayProblems pbs =

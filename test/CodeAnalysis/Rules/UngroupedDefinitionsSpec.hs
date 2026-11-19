@@ -5,6 +5,7 @@ module CodeAnalysis.Rules.UngroupedDefinitionsSpec where
 import CodeAnalysis.Helper (shouldDetectProblemsStrict, shouldNotHaveProblems)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (AfterTests),
   CodeAnalysisConfig (..),
   Severity (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
@@ -19,7 +20,7 @@ import qualified Text.RawString.QQ as RS (r)
 caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
-    ungroupedDefinitions = UngroupedDefinitionsConfig $ Just $ WithSeverity Hint ()
+    ungroupedDefinitions = UngroupedDefinitionsConfig $ Just (WithSeverity Hint (), AfterTests)
     }
 
 spec :: Spec

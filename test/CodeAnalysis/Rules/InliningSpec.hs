@@ -5,6 +5,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (AfterTests),
   CodeAnalysisConfig (..),
   InliningConfig (..),
   Severity (..),
@@ -16,7 +17,7 @@ caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
     inlining =
-      InliningConfig $ Just $ WithSeverity Hint ()
+      InliningConfig $ Just (WithSeverity Hint (), AfterTests)
     }
 
 hasSuggestionsOnlyOneUnification :: [(String, [String])]

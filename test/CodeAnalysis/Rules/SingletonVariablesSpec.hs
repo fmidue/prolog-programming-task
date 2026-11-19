@@ -5,6 +5,7 @@ import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (AfterTests),
   CodeAnalysisConfig (..),
   Severity (..),
   SingletonVariablesConfig (..),
@@ -17,7 +18,7 @@ caConfig :: CodeAnalysisConfig
 caConfig =
   emptyCodeAnalysisConfig {
     singletonVariables =
-      SingletonVariablesConfig $ Just $ WithSeverity Hint ()
+      SingletonVariablesConfig $ Just (WithSeverity Hint (), AfterTests)
     }
 
 unmarkedSingletons :: [(Code, [String])]

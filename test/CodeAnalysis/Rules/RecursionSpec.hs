@@ -6,6 +6,7 @@ import Data.List (isInfixOf)
 import Prolog.Programming.CodeAnalysis.Config (emptyCodeAnalysisConfig)
 import Prolog.Programming.CodeAnalysis.Types (
   AdditionalMessage (AdditionalMessage),
+  CheckStage (AfterTests),
   CodeAnalysisConfig (recursion),
   RecursionConfig (..),
   Severity (..),
@@ -18,7 +19,7 @@ caConfig :: Maybe String -> CodeAnalysisConfig
 caConfig cMsg =
   emptyCodeAnalysisConfig {
     recursion =
-      RecursionConfig $ Just $ WithSeverity Hint $ AdditionalMessage cMsg
+      RecursionConfig $ Just (WithSeverity Hint $ AdditionalMessage cMsg, AfterTests)
     }
 
 recursivePrograms :: [(Code, String, String)]

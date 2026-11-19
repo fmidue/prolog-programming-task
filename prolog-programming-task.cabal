@@ -28,6 +28,7 @@ library
   exposed-modules:
       Prolog.Programming.Data
       Prolog.Programming.Task
+      Prolog.Programming.Types
       Prolog.Programming.CodeAnalysis
       Prolog.Programming.CodeAnalysis.Types
       Prolog.Programming.CodeAnalysis.Config
@@ -51,7 +52,6 @@ library
       Prolog.Programming.Parser
       Prolog.Programming.TestRunner
       Prolog.Programming.TypeHelper
-      Prolog.Programming.Types
       Paths_prolog_programming_task
   hs-source-dirs:
       src
@@ -67,6 +67,7 @@ library
     , containers
     , data-ordlist
     , extra
+    , ghc-lib-parser
     , mtl
     , parsec
     , prolog
@@ -98,6 +99,7 @@ executable test-task-prolog
     , containers
     , data-ordlist
     , extra
+    , ghc-lib-parser
     , mtl
     , parsec
     , prolog
@@ -116,6 +118,7 @@ test-suite prolog-programming-task-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      CodeAnalysis.CheckStageSpec
       CodeAnalysis.Helper
       CodeAnalysis.MutationSpec
       CodeAnalysis.Rules.CutsSpec
@@ -145,6 +148,7 @@ test-suite prolog-programming-task-test
     , containers
     , data-ordlist
     , extra
+    , ghc-lib-parser
     , hspec
     , mtl
     , parsec

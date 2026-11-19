@@ -1,7 +1,9 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# HLINT ignore "Use unless" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -50,11 +52,15 @@ import Language.Prolog (
 import Language.Prolog.GraphViz (Graph, asInlineSvgWith)
 import Language.Prolog.GraphViz.Formatting (GraphFormatting, queryStyle, resolutionStyle)
 
+import Data.Generics (Data, everywhere, mkT)
 import Data.List.Extra (notNull, nubOrd)
 import Data.Tuple.Extra (uncurry3)
+import GHC.Utils.Misc (partitionWith)
 import Prolog.Programming.CodeAnalysis (checkForProblems, displayProblems)
+import Prolog.Programming.CodeAnalysis.Config (configuredRules)
 import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCode)
 import Prolog.Programming.CodeAnalysis.Types (
+  CheckStage (..),
   CodeAnalysisConfig (..),
   IgnoredPredicates (IgnoredPredicates),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
@@ -103,6 +109,17 @@ verifyConfig cfg = case parseInstance cfg of
          when (includeHiddenDefinitions == Yes && showSWISHButton && notNull hiddenPredicates) $
            fail "SWISH Button must not be enabled together with unfiltered hidden predicates."
 
+         when
+           ( any
+               ( \case
+                   (WithSeverity Hint _, BeforeTests) -> True
+                   (WithSeverity Warn _, BeforeTests) -> True
+                   _ -> False
+               )
+               $ configuredRules codeAnalysis undefined
+           )
+           $ fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
+
          when rigorousValidation $
            checkTask
              solutionErrorDisplay
@@ -118,19 +135,23 @@ verifyConfig cfg = case parseInstance cfg of
              )
              sampleSolution
   where
-    withError = Just . WithSeverity Error
+    withError a = Just (WithSeverity Error a, BeforeTests)
+
+    escalate :: Data a => a -> a
+    escalate = everywhere (mkT (\(_ :: CheckStage) -> BeforeTests)) . escalateSeverity
+
     escalateAndEnableSelectedChecks CodeAnalysisConfig {..} =
       CodeAnalysisConfig {
         singletonVariables = SingletonVariablesConfig $ withError ()
-        , cutUsage = escalateSeverity cutUsage
+        , cutUsage = escalate cutUsage
         , inconsistentArities = InconsistentAritiesConfig $ withError $ IgnoredPredicates []
         , ungroupedDefinitions = UngroupedDefinitionsConfig $ withError ()
-        , recursion = escalateSeverity recursion
+        , recursion = escalate recursion
         , forbiddenPredicates
-        , earlyRecursion = escalateSeverity earlyRecursion
+        , earlyRecursion = escalate earlyRecursion
         , inlining = InliningConfig $ withError ()
         , symbolOverload = SymbolOverloadConfig $ withError ()
-        , redundantCode = RedundantCodeConfig $ withError ()
+        , redundantCode = RedundantCodeConfig $ Just (WithSeverity Error (), AfterTests)
         }
 
 toInstance :: Config -> TaskInstance
@@ -191,11 +212,17 @@ checkTask
   -> TaskInstance
   -> [ProgramClause]
   -> m ()
-checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg = do
-      let drawTree tree = do
-            svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
-            drawPicture svg
+checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, ..} inProg =
+  let
+    drawTree tree = do
+      svg <- liftIO $ asInlineSvgWith (grabFormatting treeStyle) tree
+      drawPicture svg
 
+    factProg =
+      filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
+        ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
+  in
+    do
       when (not allowListPatternMatching) $
         case containsHeadTailPattern inProg of
           Nothing -> pure ()
@@ -215,9 +242,15 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
               <$$> matchReport
           pure newDefs
 
-      let factProg =
-            filter (taskFilter includeTaskDefinitions inProg) visiblePredicates
-              ++ filter (hiddenFilter includeHiddenDefinitions inProg) hiddenPredicates
+      let (rulesBeforeTests, rulesAfterTests) =
+            partitionWith
+              (\(rule, stage) -> (if stage == BeforeTests then Left else Right) rule)
+              $ configuredRules codeAnalysis factProg
+
+      case checkForProblems inProg rulesBeforeTests of
+        [] -> pure ()
+        pbs -> either reject undefined $ displayProblems pbs
+
       testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
@@ -268,13 +301,13 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
                     else ""
             )
 
-      case checkForProblems codeAnalysis inProg factProg of
+      case checkForProblems inProg rulesAfterTests of
         [] -> pure ()
         pbs -> either reject inform $ displayProblems pbs
 
       case redundantCode codeAnalysis of
         RedundantCodeConfig Nothing -> pure ()
-        RedundantCodeConfig (Just (WithSeverity severity ())) -> do
+        RedundantCodeConfig (Just (WithSeverity severity (), AfterTests)) -> do
           let checker p =
                 allTestResultsAreOkay . fst
                   <$> testRunner globalTimeout True factProg p specifications newDefs
@@ -283,6 +316,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
           case redundantCodeProblem of
             Nothing -> pure ()
             Just problem -> either reject inform $ displayProblems [WithSeverity severity problem]
+        RedundantCodeConfig _ -> error "BeforeTests cannot possibly occur here"
 
 displaySampleSolution
   :: (MonadIO m, MonadRandom m)
