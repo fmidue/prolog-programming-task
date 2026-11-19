@@ -142,8 +142,8 @@ a_test_with_resolution_tree(right_branch) :- fail.
 /* This is the sample solution shown to students after deadline.
  * It is required and needs to be in the third section.
  *
- * The provided solution needs to pass all tests and checks specified in the first section of the config.
- * It will be verified on upload.
+ * The provided solution needs to pass all tests and selected code analysis checks (including the ones specified in the first section).
+ * It will be verified on upload (and on each student attempt) if 'rigorousValidation' is enabled.
  *
  * All comments in the sample solution will be stripped away before showing it to the student.
  */
