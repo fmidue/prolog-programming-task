@@ -48,7 +48,7 @@ spec = describe "ExampleConfig" $ do
       evaluateVerify $ "globalTimeout: -10000" ++ withoutConfigPart
     result `shouldSatisfy` \case
       Right () -> False
-      Left msg -> "globalTimeout must be non-negative" `isInfixOf` msg 
+      Left msg -> "globalTimeout must be non-negative" `isInfixOf` msg
   it "rejects code analysis configs with stage set to 'before-tests' and status unlike 'reject'" $ do
     result <-
       evaluateVerify $
