@@ -64,7 +64,6 @@ import Prolog.Programming.CodeAnalysis.Types (
   CodeAnalysisConfig (..),
   IgnoredPredicates (IgnoredPredicates),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
-  InliningConfig (InliningConfig),
   RedundantCodeConfig (RedundantCodeConfig),
   Severity (..),
   SingletonVariablesConfig (SingletonVariablesConfig),
@@ -149,7 +148,7 @@ verifyConfig cfg = case parseInstance cfg of
         , recursion = escalate recursion
         , forbiddenPredicates
         , earlyRecursion = escalate earlyRecursion
-        , inlining = InliningConfig $ withError ()
+        , inlining = escalate inlining
         , symbolOverload = SymbolOverloadConfig $ withError ()
         , redundantCode = RedundantCodeConfig $ Just (WithSeverity Error (), AfterTests)
         }
