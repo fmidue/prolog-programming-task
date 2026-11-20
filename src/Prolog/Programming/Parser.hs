@@ -46,6 +46,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RedundantCodeConfig (..),
   SingletonVariablesConfig (..),
   SymbolOverloadConfig (..),
+  TimeoutDivisor (..),
   UngroupedDefinitionsConfig (..),
   WithSeverity (..),
  )
@@ -187,6 +188,14 @@ instance FromJSON EarlyRecursionConfig where
 
 instance FromJSON SymbolOverloadConfig where
   parseJSON = withRuleParser SymbolOverloadConfig Nothing
+
+instance FromJSON TimeoutDivisor where
+  parseJSON = withObject "TimeoutDivisor" $ \v -> do
+    divisor <- v .:? "timeoutDivisor" .!= 1
+
+    if divisor <= 0
+      then fail "timeoutDivisor must be greater than zero"
+      else pure $ TimeoutDivisor divisor
 
 instance FromJSON RedundantCodeConfig where
   parseJSON = withRuleParser RedundantCodeConfig (Just AfterTests)

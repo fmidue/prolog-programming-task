@@ -16,6 +16,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   RedundantCodeConfig (..),
   Severity (..),
   SymbolOverloadConfig (..),
+  TimeoutDivisor (TimeoutDivisor),
   WithSeverity (WithSeverity),
  )
 import Prolog.Programming.Data (Config)
@@ -97,7 +98,7 @@ codeAnalysis:
       Left _ -> False
       Right () -> case codeAnalysis $ taskConfig $ toInstance config of
         CodeAnalysisConfig {
-          redundantCode = RedundantCodeConfig (Just (WithSeverity Warn (), AfterTests))
+          redundantCode = RedundantCodeConfig (Just (WithSeverity Warn (TimeoutDivisor 1), AfterTests))
           , symbolOverload = SymbolOverloadConfig (Just (WithSeverity Error (), BeforeTests))
           , inlining = InliningConfig (Just (WithSeverity Hint (), AfterTests))
           } -> True

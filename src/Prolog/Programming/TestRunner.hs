@@ -20,6 +20,7 @@ import Language.Prolog.GraphViz (Graph, resolveFirstTree, resolveTree)
 
 import Data.List.Extra (notNull)
 import Data.Tuple.Extra (uncurry3)
+import Prolog.Programming.CodeAnalysis.Types (TimeoutDivisor (..))
 import Prolog.Programming.Types (
   Expection (..),
   Requirement (..),
@@ -34,13 +35,14 @@ import System.Timeout (timeout)
 
 testRunner
   :: TimeoutDuration
+  -> TimeoutDivisor
   -> Bool
   -> [ProgramClause]
   -> [ProgramClause]
   -> [Spec]
   -> [(Atom, Atom)]
   -> IO (TestSuiteResult Spec (Maybe [Unifier]), (Int, Int))
-testRunner globalTO stopOnTimeout factProg inputProg specs newDefs = do
+testRunner globalTO (TimeoutDivisor divisor) stopOnTimeout factProg inputProg specs newDefs = do
   let
     newProg = useFoundDefsInProgram newDefs factProg
     newSpecs = useFoundDefsInSpecs newDefs specs
@@ -52,9 +54,9 @@ testRunner globalTO stopOnTimeout factProg inputProg specs newDefs = do
     checkWithTimeout p s@(Spec _ _ _ to _) = do
       res <- case to of
         GlobalTimeout -> do
-          timeout (millisecond2microSec globalTO) $ evaluate (checkProgram p s)
+          timeout (millisecond2microSec globalTO `div` divisor) $ evaluate (checkProgram p s)
         LocalTimeout d -> do
-          timeout (millisecond2microSec d) $ evaluate (checkProgram p s)
+          timeout (millisecond2microSec d `div` divisor) $ evaluate (checkProgram p s)
       pure $ fromMaybe Timeout res
     millisecond2microSec = (* 1000)
 

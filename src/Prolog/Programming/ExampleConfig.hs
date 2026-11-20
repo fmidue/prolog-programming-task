@@ -113,6 +113,9 @@ codeAnalysis:
   redundantCode:
     # what to do concerning redundant clauses or goals being present
     status: hint
+    # divisor for timeouts during redundancy check (not used during rigorous validation)
+    # timeoutDivisor: 2
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to 1).
 
   # which predicates are not allowed to be used
   forbiddenPredicates:
