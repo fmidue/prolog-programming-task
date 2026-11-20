@@ -211,9 +211,12 @@ instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @TaskConfig) v
 
-    TaskConfig
-      <$> v .:? "globalTimeout" .!= 10000
-      <*> v .:? "treeStyle" .!= QueryStyle
+    globalTO <- v .:? "globalTimeout" .!= 10000
+
+    when (globalTO < 0) $ fail "globalTimeout must be non-negative"
+
+    TaskConfig globalTO
+      <$> v .:? "treeStyle" .!= QueryStyle
       <*> v .:? "includeTaskDefinitions" .!= Yes
       <*> v .:? "includeHiddenDefinitions" .!= Yes
       <*> v .:? "allowListPatternMatching" .!= True
