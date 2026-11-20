@@ -4,7 +4,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
 {-# HLINT ignore "Use unless" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -373,8 +372,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-              <$$> resultMsg mActual
-            <> treeMsg mTree
+            <$$> resultMsg mActual
+              <> treeMsg mTree
       , mTree
       )
     explainResult (FirstTimeout x) =
