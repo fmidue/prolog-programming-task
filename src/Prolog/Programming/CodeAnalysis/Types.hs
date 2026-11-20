@@ -27,6 +27,7 @@ module Prolog.Programming.CodeAnalysis.Types (
   SymbolOverloadConfig (..),
   RedundantCodeConfig (..),
   CheckStage (..),
+  TimeoutDivisor (..),
 )
 where
 
@@ -94,7 +95,10 @@ newtype EarlyRecursionConfig = EarlyRecursionConfig (CodeAnalysisRuleConfig Addi
 newtype SymbolOverloadConfig = SymbolOverloadConfig (CodeAnalysisRuleConfig ())
   deriving (Data, Generic, Reader, Show, ToDoc)
 
-newtype RedundantCodeConfig = RedundantCodeConfig (CodeAnalysisRuleConfig ())
+newtype TimeoutDivisor = TimeoutDivisor {timeoutDivisor :: Int}
+  deriving (Data, Generic, Reader, Show, ToDoc)
+
+newtype RedundantCodeConfig = RedundantCodeConfig (CodeAnalysisRuleConfig TimeoutDivisor)
   deriving (Data, Generic, Reader, Show, ToDoc)
 
 {- FOURMOLU_DISABLE -} -- Remove when https://github.com/fourmolu/fourmolu/issues/552 is fixed

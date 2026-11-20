@@ -4,6 +4,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 {-# HLINT ignore "Use unless" #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -68,6 +69,7 @@ import Prolog.Programming.CodeAnalysis.Types (
   Severity (..),
   SingletonVariablesConfig (SingletonVariablesConfig),
   SymbolOverloadConfig (SymbolOverloadConfig),
+  TimeoutDivisor (..),
   UngroupedDefinitionsConfig (UngroupedDefinitionsConfig),
   WithSeverity (..),
  )
@@ -150,7 +152,12 @@ verifyConfig cfg = case parseInstance cfg of
         , earlyRecursion = escalate earlyRecursion
         , inlining = escalate inlining
         , symbolOverload = SymbolOverloadConfig $ withError ()
-        , redundantCode = RedundantCodeConfig $ Just (WithSeverity Error (), AfterTests)
+        , redundantCode = RedundantCodeConfig $
+            Just $
+              (,AfterTests) . WithSeverity Error $
+                case redundantCode of
+                  RedundantCodeConfig Nothing -> TimeoutDivisor 1
+                  RedundantCodeConfig (Just (WithSeverity _ timeoutDivisor, _)) -> timeoutDivisor
         }
 
 toInstance :: Config -> TaskInstance
@@ -250,7 +257,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         [] -> pure ()
         pbs -> either reject undefined $ displayProblems pbs
 
-      testResult <- liftIO $ testRunner globalTimeout errorOnFirstTimeout factProg inProg specifications newDefs
+      testResult <- liftIO $ testRunner globalTimeout 1 errorOnFirstTimeout factProg inProg specifications newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
@@ -306,10 +313,10 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
 
       case redundantCode codeAnalysis of
         RedundantCodeConfig Nothing -> pure ()
-        RedundantCodeConfig (Just (WithSeverity severity (), AfterTests)) -> do
+        RedundantCodeConfig (Just (WithSeverity severity (TimeoutDivisor timeoutDivisor), AfterTests)) -> do
           let checker p =
                 allTestResultsAreOkay . fst
-                  <$> testRunner globalTimeout True factProg p specifications newDefs
+                  <$> testRunner globalTimeout timeoutDivisor True factProg p specifications newDefs
           redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
 
           case redundantCodeProblem of
