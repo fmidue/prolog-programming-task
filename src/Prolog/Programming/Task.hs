@@ -152,12 +152,7 @@ verifyConfig cfg = case parseInstance cfg of
         , earlyRecursion = escalate earlyRecursion
         , inlining = escalate inlining
         , symbolOverload = SymbolOverloadConfig $ withError ()
-        , redundantCode = RedundantCodeConfig $
-            Just $
-              (,AfterTests) . WithSeverity Error $
-                case redundantCode of
-                  RedundantCodeConfig Nothing -> TimeoutDivisor 1
-                  RedundantCodeConfig (Just (WithSeverity _ timeoutDivisor, _)) -> timeoutDivisor
+        , redundantCode = RedundantCodeConfig $ Just (WithSeverity Error (TimeoutDivisor 1), AfterTests)
         }
 
 toInstance :: Config -> TaskInstance
@@ -378,8 +373,8 @@ explainReason = explainResult
       ( nested $
           line
             <> describeSpec x
-            <$$> resultMsg mActual
-              <> treeMsg mTree
+              <$$> resultMsg mActual
+            <> treeMsg mTree
       , mTree
       )
     explainResult (FirstTimeout x) =
