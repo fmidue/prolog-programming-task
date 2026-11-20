@@ -43,6 +43,12 @@ spec = describe "ExampleConfig" $ do
     result `shouldSatisfy` \case
       Right () -> False
       Left msg -> "Unknown or forbidden fields: globalTiimeout" `isInfixOf` msg -- no-spell-check
+  it "rejects config with negative globalTimeout" $ do
+    result <-
+      evaluateVerify $ "globalTimeout: -10000" ++ withoutConfigPart
+    result `shouldSatisfy` \case
+      Right () -> False
+      Left msg -> "globalTimeout must be non-negative" `isInfixOf` msg 
   it "rejects code analysis configs with stage set to 'before-tests' and status unlike 'reject'" $ do
     result <-
       evaluateVerify $
