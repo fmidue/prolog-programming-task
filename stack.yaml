@@ -6,7 +6,7 @@ extra-deps:
   - git: https://github.com/fmidue/prolog
     commit: 96d2ff0cc2d26ada866487c7ccf4d43a0f419153
   - git: https://github.com/fmidue/prolog-graph-lib
-    commit: 519d412b219b38ef5ac77d1a5dcccd27fbe33cbb
+    commit: 3200aea5c3289a89f18559bd37d0ec67ac57a8cb
 
   - fgl-5.8.1.1
 
