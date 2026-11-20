@@ -257,7 +257,16 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         [] -> pure ()
         pbs -> either reject undefined $ displayProblems pbs
 
-      testResult <- liftIO $ testRunner globalTimeout 1 errorOnFirstTimeout factProg inProg specifications newDefs
+      testResult <-
+        liftIO $
+          testRunner
+            globalTimeout
+            (TimeoutDivisor 1)
+            errorOnFirstTimeout
+            factProg
+            inProg
+            specifications
+            newDefs
       case testResult of
         (Finished AllOk, (passed, _)) ->
           inform $
@@ -313,7 +322,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
 
       case redundantCode codeAnalysis of
         RedundantCodeConfig Nothing -> pure ()
-        RedundantCodeConfig (Just (WithSeverity severity (TimeoutDivisor timeoutDivisor), AfterTests)) -> do
+        RedundantCodeConfig (Just (WithSeverity severity timeoutDivisor, AfterTests)) -> do
           let checker p =
                 allTestResultsAreOkay . fst
                   <$> testRunner globalTimeout timeoutDivisor True factProg p specifications newDefs
