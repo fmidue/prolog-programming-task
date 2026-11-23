@@ -15,7 +15,7 @@ exampleConfig =
 globalTimeout: 1000
 
 # style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
-treeStyle: query
+# treeStyle: resolution
 
 # The two include options control if and how the hidden definitions and definitions from the task description should be included into the submission.
 # 'yes': include as is,
@@ -24,15 +24,15 @@ treeStyle: query
 #    - For task definitions clauses that occur identically in the input program are filtered out
 # 'no': do not include (only available for includeTaskDefinitions).
 # Both default to yes
-# includeTaskDefinitions: yes
-# includeHiddenDefinitions: yes
+# includeTaskDefinitions: filtered
+# includeHiddenDefinitions: filtered
 
 # whether to allow the use of [H|T] matching on list values, defaults to 'true' (experimental: might not recognize all instances of the pattern)
-# allowListPatternMatching: true
+# allowListPatternMatching: false
 
 # whether to enable display of button that allows students to transfer code to SWISH; disabled by default
 # Only the student's submission will be transferred to SWISH. This is problematic when a solution could potentially use a hidden definition that is not already present on SWISH.
-# showSWISHButton: false
+showSWISHButton: true
 
 # prefixing a test with [<time out in ms>] sets a local timeout for that test
 specifications:
@@ -51,10 +51,10 @@ specifications:
   # (The initial solution automatically provides comments helping the user with the correct ordering.)
 
 # whether to run all tests and checks on the sample solution or not; enabled by default
-rigorousValidation: true
+# rigorousValidation: false
 
 # whether to directly display an error (and stop running further tests) when a test case times out; defaults to false
-errorOnFirstTimeout: false
+# errorOnFirstTimeout: true
 
 # setting for code analysis;
 # The status field for each aspect has the following possible values:
@@ -91,16 +91,17 @@ codeAnalysis:
   ungroupedDefinitions:
     # what to do concerning detection of ungrouped predicate definitions
     status: hint
-  recursion:
+  # recursion:
     # what to do concerning detection of recursive predicates
-    status: ignore
+    # status: reject
+    # stage: before-tests
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
-  earlyRecursion:
+  # earlyRecursion:
     # what to do concerning detection of recursion not happening at the end of clauses;
     # as this is more a performance/termination optimization, setting this field to 'reject' is discouraged
-    status: ignore
+    # status: hint
     # additional message to display next to default feedback
     # additionalMessage: "Early recursive calls often have an impact on performance or termination."
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
@@ -119,11 +120,11 @@ codeAnalysis:
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to 1).
 
   # which predicates are not allowed to be used
-  forbiddenPredicates:
-   - not/1
-   - \+/1
-   - \=/2
-   - \==/2
+  # forbiddenPredicates:
+  #  - not/1
+  #  - \+/1
+  #  - \=/2
+  #  - \==/2
   # This field is optional (defaults to no forbidden predicates) and otherwise takes a list of predicate identities.
 ------------------------------
 /* Everything in this section
