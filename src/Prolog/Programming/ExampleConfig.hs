@@ -15,23 +15,25 @@ exampleConfig =
 globalTimeout: 1000
 
 # style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
-treeStyle: query
+# treeStyle: resolution
 
-# The two include options control if and how the hidden definitions and definitions from the task description should be included into the submission.
+# The two include options control if and how the hidden definitions and definitions from the task description should be included into the submission during grading.
 # 'yes': include as is,
 # 'filtered':
 #    - For hidden definitions all clauses for predicate pred/k are filtered out if the input program also contains clauses for pred/k,
 #    - For task definitions clauses that occur identically in the input program are filtered out
 # 'no': do not include (only available for includeTaskDefinitions).
 # Both default to yes
-# includeTaskDefinitions: yes
-# includeHiddenDefinitions: yes
+# includeTaskDefinitions: filtered
+# includeHiddenDefinitions: filtered
 
 # whether to allow the use of [H|T] matching on list values, defaults to 'true' (experimental: might not recognize all instances of the pattern)
-# allowListPatternMatching: true
+# allowListPatternMatching: false
 
 # whether to enable display of button that allows students to transfer code to SWISH; disabled by default
-# showSWISHButton: false
+# Clicking this button will transfer the student's submission to SWISH, together with all task predicates (unless includeTaskDefinitions is set to 'no').
+# Hidden definitions will never be transferred, which can lead to errors when programs try to use them (and they are not already present on SWISH due to a library).
+showSWISHButton: true
 
 # prefixing a test with [<time out in ms>] sets a local timeout for that test
 specifications:
@@ -50,10 +52,10 @@ specifications:
   # (The initial solution automatically provides comments helping the user with the correct ordering.)
 
 # whether to run all tests and checks on the sample solution or not; enabled by default
-rigorousValidation: true
+# rigorousValidation: false
 
-# whether to directly display an error (and stop running further tests) when a test case times out
-errorOnFirstTimeout: false
+# whether to directly display an error (and stop running further tests) when a test case times out; defaults to false
+# errorOnFirstTimeout: true
 
 # setting for code analysis;
 # The status field for each aspect has the following possible values:
@@ -78,7 +80,7 @@ codeAnalysis:
     status: warn
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
   inconsistentArities:
     # what to do concerning detection of inconsistent arities
     status: warn
@@ -86,23 +88,24 @@ codeAnalysis:
     # useful when predicates provided by libraries can be used with different arities
     # ignorePredicates:
     #  - append # append/2 and append/3 are both provided by SWI-Prolog
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no ignored predicates).
   ungroupedDefinitions:
     # what to do concerning detection of ungrouped predicate definitions
     status: hint
-  recursion:
+  # recursion:
     # what to do concerning detection of recursive predicates
-    status: ignore
+    # status: reject
+    # stage: before-tests
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
-  earlyRecursion:
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
+  # earlyRecursion:
     # what to do concerning detection of recursion not happening at the end of clauses;
     # as this is more a performance/termination optimization, setting this field to 'reject' is discouraged
-    status: ignore
+    # status: hint
     # additional message to display next to default feedback
     # additionalMessage: "Early recursive calls often have an impact on performance or termination."
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
@@ -118,12 +121,12 @@ codeAnalysis:
     # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to 1).
 
   # which predicates are not allowed to be used
-  forbiddenPredicates:
-   - not/1
-   - \+/1
-   - \=/2
-   - \==/2
-  # This field is optional and otherwise takes a list of predicate identities.
+  # forbiddenPredicates:
+  #  - not/1
+  #  - \+/1
+  #  - \=/2
+  #  - \==/2
+  # This field is optional (defaults to no forbidden predicates) and otherwise takes a list of predicate identities.
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.
