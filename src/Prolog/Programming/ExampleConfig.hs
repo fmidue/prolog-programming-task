@@ -32,6 +32,7 @@ globalTimeout: 1000
 
 # whether to enable display of button that allows students to transfer code to SWISH; disabled by default
 # Only the student's submission will be transferred to SWISH. This is problematic when a solution could potentially use a hidden definition that is not already present on SWISH.
+# Task definitions will be transferred unless includeTaskDefinitions is set to 'no'.
 showSWISHButton: true
 
 # prefixing a test with [<time out in ms>] sets a local timeout for that test
