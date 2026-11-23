@@ -53,7 +53,7 @@ specifications:
 # whether to run all tests and checks on the sample solution or not; enabled by default
 rigorousValidation: true
 
-# whether to directly display an error (and stop running further tests) when a test case times out
+# whether to directly display an error (and stop running further tests) when a test case times out; defaults to false
 errorOnFirstTimeout: false
 
 # setting for code analysis;
@@ -79,7 +79,7 @@ codeAnalysis:
     status: warn
     # additional message to display next to default feedback
     # additionalMessage: "We didn't introduce this operator yet."
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
   inconsistentArities:
     # what to do concerning detection of inconsistent arities
     status: warn
@@ -87,7 +87,7 @@ codeAnalysis:
     # useful when predicates provided by libraries can be used with different arities
     # ignorePredicates:
     #  - append # append/2 and append/3 are both provided by SWI-Prolog
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no ignored predicates).
   ungroupedDefinitions:
     # what to do concerning detection of ungrouped predicate definitions
     status: hint
@@ -96,14 +96,14 @@ codeAnalysis:
     status: ignore
     # additional message to display next to default feedback
     # additionalMessage: "Recursion is not part of this exercise yet."
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
   earlyRecursion:
     # what to do concerning detection of recursion not happening at the end of clauses;
     # as this is more a performance/termination optimization, setting this field to 'reject' is discouraged
     status: ignore
     # additional message to display next to default feedback
     # additionalMessage: "Early recursive calls often have an impact on performance or termination."
-    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional.
+    # This field is only allowed to appear when status is not set to 'ignore', and even otherwise it is optional (defaults to no message).
   inlining:
     # what to do concerning unifications in the clause body that can be directly applied
     status: hint
@@ -124,7 +124,7 @@ codeAnalysis:
    - \+/1
    - \=/2
    - \==/2
-  # This field is optional and otherwise takes a list of predicate identities.
+  # This field is optional (defaults to no forbidden predicates) and otherwise takes a list of predicate identities.
 ------------------------------
 /* Everything in this section
  * will be part of the visible exercise description.
