@@ -31,8 +31,8 @@ globalTimeout: 1000
 # allowListPatternMatching: false
 
 # whether to enable display of button that allows students to transfer code to SWISH; disabled by default
-# Clicking this button will transfer the student's submission together with all task predicates to SWISH (unless includeTaskDefinitions is set to 'no').
-# Hidden definitions will not be transferred and can lead to errors when programs try to use them.
+# Clicking this button will transfer the student's submission to SWISH, together with all task predicates (unless includeTaskDefinitions is set to 'no').
+# Hidden definitions will never be transferred, which can lead to errors when programs try to use them (and they are not already present on SWISH due to a library).
 showSWISHButton: true
 
 # prefixing a test with [<time out in ms>] sets a local timeout for that test
