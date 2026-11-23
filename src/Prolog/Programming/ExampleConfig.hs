@@ -17,7 +17,7 @@ globalTimeout: 1000
 # style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
 # treeStyle: resolution
 
-# The two include options control if and how the hidden definitions and definitions from the task description should be included into the submission.
+# The two include options control if and how the hidden definitions and definitions from the task description should be included into the submission during grading.
 # 'yes': include as is,
 # 'filtered':
 #    - For hidden definitions all clauses for predicate pred/k are filtered out if the input program also contains clauses for pred/k,
@@ -31,8 +31,8 @@ globalTimeout: 1000
 # allowListPatternMatching: false
 
 # whether to enable display of button that allows students to transfer code to SWISH; disabled by default
-# Only the student's submission will be transferred to SWISH. This is problematic when a solution could potentially use a hidden definition that is not already present on SWISH.
-# Task definitions will be transferred unless includeTaskDefinitions is set to 'no'.
+# Clicking this button will transfer the student's submission together with all task predicates to SWISH (unless includeTaskDefinitions is set to 'no').
+# Hidden definitions will not be transferred and can lead to errors when programs try to use them.
 showSWISHButton: true
 
 # prefixing a test with [<time out in ms>] sets a local timeout for that test
