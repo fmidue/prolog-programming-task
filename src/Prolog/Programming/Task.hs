@@ -253,7 +253,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
       testResult <-
         liftIO $
           testRunner
-            globalTimeout
+            mainTestTimeout
             (TimeoutDivisor 1)
             errorOnFirstTimeout
             factProg
@@ -318,7 +318,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         RedundantCodeConfig (Just (WithSeverity severity timeoutDivisor, AfterTests)) -> do
           let checker p =
                 allTestResultsAreOkay . fst
-                  <$> testRunner globalTimeout timeoutDivisor True factProg p specifications newDefs
+                  <$> testRunner mainTestTimeout timeoutDivisor True factProg p specifications newDefs
           redundantCodeProblem <- liftIO $ checkForRedundantCode checker inProg
 
           case redundantCodeProblem of

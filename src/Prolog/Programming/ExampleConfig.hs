@@ -12,7 +12,7 @@ exampleConfig =
 # uses the last provided values if fields are provided multiple times
 
 # timeout per test in ms (defaults to 10000)
-globalTimeout: 1000
+mainTestTimeout: 1000
 
 # style of derivation tree rendering can be either 'query' or 'resolution' (defaults to 'query')
 # treeStyle: resolution
