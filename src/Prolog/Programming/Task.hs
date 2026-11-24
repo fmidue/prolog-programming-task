@@ -124,8 +124,8 @@ verifyConfig cfg = case parseInstance cfg of
 
          case (recursion codeAnalysis, earlyRecursion codeAnalysis) of
            ( RecursionConfig (Just (WithSeverity Error _, _))
-             , EarlyRecursionConfig (Just (WithSeverity _ _, _))
-             ) -> fail "You may not enable the earlyRecursion checker when recursion is forbidden."
+             , EarlyRecursionConfig (Just _)
+             ) -> fail "You cannot enable the earlyRecursion checker when recursion is forbidden."
            _ -> pure ()
 
          when rigorousValidation $
