@@ -27,7 +27,7 @@ import qualified Data.Set as Set (empty, fromList)
 import qualified Data.Text as T (split, unpack)
 import Data.Yaml (FromJSON (..), Object, Value (..), decodeEither', withArray, withObject, (.!=), (.:?))
 import Data.Yaml.Aeson (Parser)
-import GHC.Generics (Generic, Rep)
+import GHC.Generics (Rep)
 import Prolog.Programming.CodeAnalysis.Config (
   emptyCodeAnalysisConfig,
  )
@@ -116,7 +116,7 @@ parseStage _ = fail "stage must be one of: 'before-tests', 'after-tests'"
 
 withRuleParser
   :: forall a b
-   . (FieldNames (Rep a), FromJSON a, Generic a, Typeable b)
+   . (FieldNames (Rep a), FromJSON a, Typeable b)
   => (CodeAnalysisRuleConfig a -> b)
   -> Maybe CheckStage
   -> Value
