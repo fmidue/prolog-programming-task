@@ -53,7 +53,7 @@ instance FieldNames f => FieldNames (M1 D d f) where
   fieldNames = fieldNames @f
 
 recordFieldNames
-  :: forall a. (FieldNames (Rep a), Generic a) => [String]
+  :: forall a. FieldNames (Rep a) => [String]
 recordFieldNames = fieldNames @(Rep a)
 
 typeName :: forall a. Typeable a => String

@@ -28,7 +28,6 @@ import Prolog.Programming.Parser (parseInstance)
 import Prolog.Programming.TestRunner
 
 import Control.Monad (when)
-import Control.Monad.Random.Class (MonadRandom)
 import Control.Monad.Trans (MonadIO (liftIO))
 
 import Data.ByteString (ByteString)
@@ -100,7 +99,7 @@ import Text.PrettyPrint.Leijen.Text (
   (<+>),
  )
 
-verifyConfig :: (MonadFail m, MonadIO m, MonadRandom m) => Config -> m ()
+verifyConfig :: (MonadFail m, MonadIO m) => Config -> m ()
 verifyConfig cfg = case parseInstance cfg of
   Left err -> fail $ show err
   Right inst@TaskInstance {taskConfig = taskCfg@TaskConfig {..}, ..} ->
@@ -205,7 +204,7 @@ displaySWISHButton TaskInstance {taskConfig = TaskConfig {..}} = showSWISHButton
 The procedure aborts once the first check fails.
 -}
 checkTask
-  :: (MonadIO m, MonadRandom m)
+  :: MonadIO m
   => (forall a. Doc -> m a)
   -> (Doc -> m ())
   -> (ByteString -> m ())
@@ -328,8 +327,7 @@ checkTask reject inform drawPicture TaskInstance {taskConfig = TaskConfig {..}, 
         RedundantCodeConfig _ -> error "BeforeTests cannot possibly occur here"
 
 displaySampleSolution
-  :: (MonadIO m, MonadRandom m)
-  => (Doc -> m ())
+  :: (Doc -> m ())
   -> TaskInstance
   -> m ()
 displaySampleSolution inform TaskInstance {sampleSolution} =
