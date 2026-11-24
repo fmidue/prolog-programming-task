@@ -62,8 +62,10 @@ import Prolog.Programming.CodeAnalysis.Other.RedundantCode (checkForRedundantCod
 import Prolog.Programming.CodeAnalysis.Types (
   CheckStage (..),
   CodeAnalysisConfig (..),
+  EarlyRecursionConfig (..),
   IgnoredPredicates (IgnoredPredicates),
   InconsistentAritiesConfig (InconsistentAritiesConfig),
+  RecursionConfig (..),
   RedundantCodeConfig (RedundantCodeConfig),
   Severity (..),
   SingletonVariablesConfig (SingletonVariablesConfig),
@@ -119,6 +121,12 @@ verifyConfig cfg = case parseInstance cfg of
                $ configuredRules codeAnalysis undefined
            )
            $ fail "Code analysis configs using the 'before-tests' stage must use the 'reject' status"
+
+         case (recursion codeAnalysis, earlyRecursion codeAnalysis) of
+           ( RecursionConfig (Just (WithSeverity Error _, _))
+             , EarlyRecursionConfig (Just (WithSeverity _ _, _))
+             ) -> fail "You may not enable the earlyRecursion checker when recursion is forbidden."
+           _ -> pure ()
 
          when rigorousValidation $
            checkTask
