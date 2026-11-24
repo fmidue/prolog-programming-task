@@ -34,7 +34,7 @@ type AllowListMatching = Bool
 type ShowSWISHButton = Bool
 
 data TaskConfig = TaskConfig {
-  globalTimeout :: TimeoutDuration
+  mainTestTimeout :: TimeoutDuration
   , treeStyle :: TreeStyle
   , includeTaskDefinitions :: IncludeTask
   , includeHiddenDefinitions :: IncludeHidden

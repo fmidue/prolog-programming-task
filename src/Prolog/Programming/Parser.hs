@@ -220,11 +220,11 @@ instance FromJSON TaskConfig where
   parseJSON = withObject "TaskConfig" $ \v -> do
     rejectUnknownFields (recordFieldNames @TaskConfig) v
 
-    globalTO <- v .:? "globalTimeout" .!= 10000
+    mainTestTO <- v .:? "mainTestTimeout" .!= 10000
 
-    when (globalTO < 0) $ fail "globalTimeout must be non-negative"
+    when (mainTestTO < 0) $ fail "mainTestTimeout must be non-negative"
 
-    TaskConfig globalTO
+    TaskConfig mainTestTO
       <$> v .:? "treeStyle" .!= QueryStyle
       <*> v .:? "includeTaskDefinitions" .!= Yes
       <*> v .:? "includeHiddenDefinitions" .!= Yes

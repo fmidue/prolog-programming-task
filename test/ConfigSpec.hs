@@ -40,16 +40,16 @@ spec = describe "ExampleConfig" $ do
     evaluateVerify exampleConfig `shouldReturn` Right ()
   it "rejects config with unknown fields" $ do
     result <-
-      evaluateVerify $ "globalTiimeout: 10000" ++ withoutConfigPart -- no-spell-check
+      evaluateVerify $ "mainTesTimeout: 10000" ++ withoutConfigPart -- no-spell-check
     result `shouldSatisfy` \case
       Right () -> False
-      Left msg -> "Unknown or forbidden fields: globalTiimeout" `isInfixOf` msg -- no-spell-check
-  it "rejects config with negative globalTimeout" $ do
+      Left msg -> "Unknown or forbidden fields: mainTesTimeout" `isInfixOf` msg -- no-spell-check
+  it "rejects config with negative mainTestTimeout" $ do
     result <-
-      evaluateVerify $ "globalTimeout: -10000" ++ withoutConfigPart
+      evaluateVerify $ "mainTestTimeout: -10000" ++ withoutConfigPart
     result `shouldSatisfy` \case
       Right () -> False
-      Left msg -> "globalTimeout must be non-negative" `isInfixOf` msg
+      Left msg -> "mainTestTimeout must be non-negative" `isInfixOf` msg
   it "rejects code analysis configs with stage set to 'before-tests' and status unlike 'reject'" $ do
     result <-
       evaluateVerify $
