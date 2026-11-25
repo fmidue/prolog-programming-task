@@ -23,17 +23,17 @@ mainTestTimeout: 1000
 #    - For hidden definitions all clauses for predicate pred/k are filtered out if the input program also contains clauses for pred/k,
 #    - For task definitions clauses that occur identically in the input program are filtered out
 # 'no': do not include (only available for includeTaskDefinitions).
-# Both default to yes
+# Both default to 'yes'
 # includeTaskDefinitions: filtered
 # includeHiddenDefinitions: filtered
 
-# whether to allow the use of [H|T] matching on list values, defaults to 'true' (experimental: might not recognize all instances of the pattern)
-# allowListPatternMatching: false
+# whether to allow the use of [H|T] matching on list values, enabled by default (experimental: might not recognize all instances of the pattern)
+# allowListPatternMatching: no
 
-# whether to enable display of button that allows students to transfer code to SWISH; disabled by default
+# whether to offer button that allows students to transfer code to SWISH; disabled by default
 # Clicking this button will transfer the student's submission to SWISH, together with all task predicates (unless includeTaskDefinitions is set to 'no').
 # Hidden definitions will never be transferred, which can lead to errors when programs try to use them (and they are not already present on SWISH due to a library).
-showSWISHButton: true
+showSWISHButton: yes
 
 # prefixing a test with [<time out in ms>] sets a local timeout for that test
 specifications:
@@ -52,10 +52,10 @@ specifications:
   # (The initial solution automatically provides comments helping the user with the correct ordering.)
 
 # whether to run all tests and checks on the sample solution or not; enabled by default
-# rigorousValidation: false
+# rigorousValidation: no
 
-# whether to directly display an error (and stop running further tests) when a test case times out; defaults to false
-# errorOnFirstTimeout: true
+# whether to directly display an error (and stop running further tests) when a test case times out; disabled by default
+# errorOnFirstTimeout: yes
 
 # setting for code analysis;
 # The status field for each aspect has the following possible values:
