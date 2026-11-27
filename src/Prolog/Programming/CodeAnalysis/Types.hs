@@ -116,13 +116,13 @@ data CodeAnalysisConfig = CodeAnalysisConfig {
   , recursion :: RecursionConfig
   -- | Configuration for forbiddenPredicates rule
   , forbiddenPredicates :: ForbiddenPredicatesConfig
-  -- | Configuration for detecting recursive calls before the last goal
+  -- | Configuration for detecting recursive calls before the last literal in a clause body
   , earlyRecursion :: EarlyRecursionConfig
   -- | Configuration for inlining rule
   , inlining :: InliningConfig
   -- | Configuration for symbolOverload rule
   , symbolOverload :: SymbolOverloadConfig
-  -- | Configuration for redundant clause / goal checks
+  -- | Configuration for redundant clause / literal checks
   , redundantCode :: RedundantCodeConfig
   }
   deriving (Data, Generic, Show, Reader, ToDoc)

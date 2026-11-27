@@ -164,7 +164,7 @@ toProblem originalClause equality fixedClause =
         , indent 2 $ string $ pack $ prettifyClause originalClause
         , string $ pack "uses the unification"
         , indent 2 $ string $ pack $ prettifyTerm equality
-        , string $ pack "as a goal that can also directly be applied to the clause."
+        , string $ pack "as a literal in the body that can also directly be applied to the clause."
         , string $ pack "Doing that would result in:"
         , indent 2 $ string $ pack $ prettifyClause fixedClause
         ]
