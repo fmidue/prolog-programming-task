@@ -114,7 +114,7 @@ codeAnalysis:
     # what to do concerning usage of a symbol both as predicate and as data constructor
     status: hint
   redundantCode:
-    # what to do concerning redundant clauses or goals being present
+    # what to do concerning redundant clauses or literals being present
     status: hint
     # divisor for timeouts during redundancy check (not used during rigorous validation)
     # timeoutDivisor: 2

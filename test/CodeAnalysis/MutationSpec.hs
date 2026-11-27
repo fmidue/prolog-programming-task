@@ -94,7 +94,7 @@ check([X|Xs],[Y|Ys]) :- Y is X * 2, length(Xs,A), length(Ys,B), A =:= B, check(X
 
       report <- evaluateCheck config code
 
-      report `shouldSatisfy` any (\p -> "The goal" `isInfixOf` p && "A =:= B" `isInfixOf` p)
+      report `shouldSatisfy` any (\p -> "One literal" `isInfixOf` p && "A =:= B" `isInfixOf` p)
     it "detects redundant length([],0) clause" $ do
       let code =
             [RS.r|

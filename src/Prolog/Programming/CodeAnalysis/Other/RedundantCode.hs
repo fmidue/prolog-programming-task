@@ -36,9 +36,9 @@ toProblem = Problem . displaySuggestion
         ]
     displaySuggestion (DropGoal (n, a, g) goal) =
       vsep
-        [ text $ pack "One goal"
+        [ text $ pack "One literal"
         , indent 2 $ text $ pack $ prettifyTerm goal
-        , text $ pack "in clause"
+        , text $ pack "in the body of clause"
         , indent 2 $ text $ pack $ prettifyClause $ Clause n a g
         , text $ pack "seems redundant and can be removed."
         ]

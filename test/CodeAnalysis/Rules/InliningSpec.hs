@@ -201,7 +201,7 @@ detects cases =
         caConfig
         ( map
             ( \fixedClause display ->
-                isInfixOf "as a goal that can also directly be applied to the clause." display
+                isInfixOf "as a literal in the body that can also directly be applied to the clause." display
                   && isInfixOf fixedClause display
             )
             expectedFixedClauses
